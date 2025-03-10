@@ -30,7 +30,7 @@
 
 ### 2. 项目结构
 ```plaintext
-SHPES/
+phsical/
 ├── shpes-ui/                    # 前端项目
 │   ├── src/
 │   │   ├── api/                # API接口

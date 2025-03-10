@@ -1,0 +1,59 @@
+const state = {
+  sidebar: {
+    opened: localStorage.getItem('sidebarStatus') ? !!+localStorage.getItem('sidebarStatus') : true
+  },
+  device: 'desktop',
+  size: localStorage.getItem('size') || 'medium',
+  theme: localStorage.getItem('theme') || 'light'
+}
+
+const mutations = {
+  TOGGLE_SIDEBAR: state => {
+    state.sidebar.opened = !state.sidebar.opened
+    if (state.sidebar.opened) {
+      localStorage.setItem('sidebarStatus', '1')
+    } else {
+      localStorage.setItem('sidebarStatus', '0')
+    }
+  },
+  CLOSE_SIDEBAR: state => {
+    state.sidebar.opened = false
+    localStorage.setItem('sidebarStatus', '0')
+  },
+  SET_DEVICE: (state, device) => {
+    state.device = device
+  },
+  SET_SIZE: (state, size) => {
+    state.size = size
+    localStorage.setItem('size', size)
+  },
+  SET_THEME: (state, theme) => {
+    state.theme = theme
+    localStorage.setItem('theme', theme)
+  }
+}
+
+const actions = {
+  toggleSideBar({ commit }) {
+    commit('TOGGLE_SIDEBAR')
+  },
+  closeSideBar({ commit }) {
+    commit('CLOSE_SIDEBAR')
+  },
+  setDevice({ commit }, device) {
+    commit('SET_DEVICE', device)
+  },
+  setSize({ commit }, size) {
+    commit('SET_SIZE', size)
+  },
+  setTheme({ commit }, theme) {
+    commit('SET_THEME', theme)
+  }
+}
+
+export default {
+  namespaced: true,
+  state,
+  mutations,
+  actions
+}
