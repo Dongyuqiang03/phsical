@@ -1,6 +1,7 @@
 const state = {
   sidebar: {
-    opened: localStorage.getItem('sidebarStatus') ? !!+localStorage.getItem('sidebarStatus') : true
+    opened: localStorage.getItem('sidebarStatus') ? !!+localStorage.getItem('sidebarStatus') : true,
+    withoutAnimation: false
   },
   device: 'desktop',
   size: localStorage.getItem('size') || 'medium',
@@ -10,17 +11,19 @@ const state = {
 const mutations = {
   TOGGLE_SIDEBAR: state => {
     state.sidebar.opened = !state.sidebar.opened
+    state.sidebar.withoutAnimation = false
     if (state.sidebar.opened) {
-      localStorage.setItem('sidebarStatus', '1')
+      localStorage.setItem('sidebarStatus', 1)
     } else {
-      localStorage.setItem('sidebarStatus', '0')
+      localStorage.setItem('sidebarStatus', 0)
     }
   },
-  CLOSE_SIDEBAR: state => {
+  CLOSE_SIDEBAR: (state, withoutAnimation) => {
+    localStorage.setItem('sidebarStatus', 0)
     state.sidebar.opened = false
-    localStorage.setItem('sidebarStatus', '0')
+    state.sidebar.withoutAnimation = withoutAnimation
   },
-  SET_DEVICE: (state, device) => {
+  TOGGLE_DEVICE: (state, device) => {
     state.device = device
   },
   SET_SIZE: (state, size) => {
@@ -37,11 +40,11 @@ const actions = {
   toggleSideBar({ commit }) {
     commit('TOGGLE_SIDEBAR')
   },
-  closeSideBar({ commit }) {
-    commit('CLOSE_SIDEBAR')
+  closeSideBar({ commit }, { withoutAnimation }) {
+    commit('CLOSE_SIDEBAR', withoutAnimation)
   },
-  setDevice({ commit }, device) {
-    commit('SET_DEVICE', device)
+  toggleDevice({ commit }, device) {
+    commit('TOGGLE_DEVICE', device)
   },
   setSize({ commit }, size) {
     commit('SET_SIZE', size)

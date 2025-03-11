@@ -12,6 +12,8 @@
 </template>
 
 <script>
+import pathToRegexp from 'path-to-regexp'
+
 export default {
   name: 'Breadcrumb',
   data() {
@@ -20,21 +22,23 @@ export default {
     }
   },
   watch: {
-    $route: {
-      handler(route) {
-        this.getBreadcrumb()
-      },
-      immediate: true
+    $route() {
+      this.getBreadcrumb()
     }
+  },
+  created() {
+    this.getBreadcrumb()
   },
   methods: {
     getBreadcrumb() {
       let matched = this.$route.matched.filter(item => item.meta && item.meta.title)
       const first = matched[0]
+
       if (!this.isDashboard(first)) {
         matched = [{ path: '/dashboard', meta: { title: '首页' }}].concat(matched)
       }
-      this.levelList = matched
+
+      this.levelList = matched.filter(item => item.meta && item.meta.title && item.meta.breadcrumb !== false)
     },
     isDashboard(route) {
       const name = route && route.name
@@ -43,13 +47,18 @@ export default {
       }
       return name.trim().toLocaleLowerCase() === 'Dashboard'.toLocaleLowerCase()
     },
+    pathCompile(path) {
+      const { params } = this.$route
+      var toPath = pathToRegexp.compile(path)
+      return toPath(params)
+    },
     handleLink(item) {
       const { redirect, path } = item
       if (redirect) {
         this.$router.push(redirect)
         return
       }
-      this.$router.push(path)
+      this.$router.push(this.pathCompile(path))
     }
   }
 }
@@ -77,6 +86,10 @@ export default {
 .breadcrumb-leave-active {
   opacity: 0;
   transform: translateX(20px);
+}
+
+.breadcrumb-move {
+  transition: all .5s;
 }
 
 .breadcrumb-leave-active {

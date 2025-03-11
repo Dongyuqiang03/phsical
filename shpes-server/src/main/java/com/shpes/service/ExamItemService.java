@@ -1,46 +1,53 @@
 package com.shpes.service;
 
-import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.baomidou.mybatisplus.extension.service.IService;
+import com.shpes.common.api.CommonPage;
 import com.shpes.entity.ExamItem;
+import com.shpes.vo.ExamItemVO;
 
-public interface ExamItemService extends IService<ExamItem> {
+import java.util.List;
 
-    /**
-     * 分页查询体检项目
-     * @param page 页码
-     * @param size 每页大小
-     * @param itemName 项目名称（可选）
-     * @param categoryId 分类ID（可选）
-     * @return 分页结果
-     */
-    IPage<ExamItem> getExamItemPage(int page, int size, String itemName, Long categoryId);
+/**
+ * 体检项目服务接口
+ */
+public interface ExamItemService {
 
     /**
-     * 添加体检项目
-     * @param examItem 体检项目信息
-     * @return 是否成功
+     * 分页查询项目
      */
-    boolean addExamItem(ExamItem examItem);
+    CommonPage<ExamItemVO> getItemPage(Integer pageNum, Integer pageSize, String keyword);
+
+    /**
+     * 获取所有体检项目
+     */
+    List<ExamItem> getAllItems();
+
+    /**
+     * 根据ID获取体检项目
+     */
+    ExamItem getItem(Long id);
+
+    /**
+     * 创建体检项目
+     */
+    void createItem(ExamItem item);
 
     /**
      * 更新体检项目
-     * @param examItem 体检项目信息
-     * @return 是否成功
      */
-    boolean updateExamItem(ExamItem examItem);
+    void updateItem(ExamItem item);
 
     /**
      * 删除体检项目
-     * @param id 体检项目ID
-     * @return 是否成功
      */
-    boolean deleteExamItem(Long id);
+    void deleteItem(Long id);
 
     /**
-     * 获取体检项目详情
-     * @param id 体检项目ID
-     * @return 体检项目信息
+     * 更新体检项目状态
      */
-    ExamItem getExamItemById(Long id);
+    void updateStatus(Long id, Integer status);
+
+    /**
+     * 获取项目参考值
+     */
+    ExamItemVO getItemReference(Long id);
 }

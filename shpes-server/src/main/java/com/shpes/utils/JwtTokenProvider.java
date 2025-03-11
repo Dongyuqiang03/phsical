@@ -1,4 +1,4 @@
-package com.shpes.security.jwt;
+package com.shpes.utils;
 
 import io.jsonwebtoken.*;
 import org.springframework.beans.factory.annotation.Value;
@@ -93,4 +93,4 @@ public class JwtTokenProvider {
             return false;
         }
     }
-}
+} 

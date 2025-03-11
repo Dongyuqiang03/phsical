@@ -1,30 +1,38 @@
 package com.shpes.entity;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
-import java.time.LocalDateTime;
-
+/**
+ * 部门实体
+ */
 @Data
+@EqualsAndHashCode(callSuper = true)
 @TableName("sys_department")
-public class SysDepartment {
+@ApiModel("部门")
+public class SysDepartment extends BaseEntity {
 
-    @TableId(type = IdType.AUTO)
-    private Long id;
+    @ApiModelProperty("部门名称")
+    private String name;
 
-    private String deptName;
+    @ApiModelProperty("部门编码")
+    private String code;
 
-    private String deptCode;
+    @ApiModelProperty("负责人")
+    private String leader;
 
-    private Long parentId;
+    @ApiModelProperty("联系电话")
+    private String phone;
 
-    private String description;
+    @ApiModelProperty("排序")
+    private Integer sort;
 
+    @ApiModelProperty("状态：0-禁用，1-启用")
     private Integer status;
 
-    private LocalDateTime createTime;
-
-    private LocalDateTime updateTime;
+    @ApiModelProperty("备注")
+    private String remark;
 }

@@ -1,31 +1,41 @@
 package com.shpes.entity;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
-
+/**
+ * 体检套餐实体
+ */
 @Data
+@EqualsAndHashCode(callSuper = true)
 @TableName("exam_package")
-public class ExamPackage {
+@ApiModel("体检套餐")
+public class ExamPackage extends BaseEntity {
 
-    @TableId(type = IdType.AUTO)
-    private Long id;
+    @ApiModelProperty("套餐名称")
+    private String name;
 
-    private String packageName;
+    @ApiModelProperty("套餐编码")
+    private String code;
 
-    private String packageCode;
+    @ApiModelProperty("套餐价格（分）")
+    private Integer price;
 
-    private BigDecimal price;
+    @ApiModelProperty("原价（分）")
+    private Integer originalPrice;
 
-    private String description;
+    @ApiModelProperty("适用性别：0-不限，1-男，2-女")
+    private Integer gender;
 
+    @ApiModelProperty("排序")
+    private Integer sort;
+
+    @ApiModelProperty("状态：0-禁用，1-启用")
     private Integer status;
 
-    private LocalDateTime createTime;
-
-    private LocalDateTime updateTime;
+    @ApiModelProperty("备注")
+    private String remark;
 }

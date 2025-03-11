@@ -1,68 +1,97 @@
 <template>
   <div class="app-wrapper">
-    <div class="sidebar-container">
+    <!-- 侧边栏 -->
+    <div class="sidebar-container" :class="{ 'is-collapse': !sidebar.opened }">
+      <div class="logo">
+        <img src="@/assets/logo.png" alt="logo">
+        <span v-show="sidebar.opened">校医院体检系统</span>
+      </div>
       <el-menu
-        :default-active="$route.path"
-        class="el-menu-vertical"
+        :default-active="activeMenu"
+        :collapse="!sidebar.opened"
+        :unique-opened="true"
+        :collapse-transition="false"
+        mode="vertical"
         background-color="#304156"
         text-color="#bfcbd9"
-        active-text-color="#409EFF"
-        router
-      >
-        <el-menu-item index="/dashboard">
-          <i class="el-icon-s-home"></i>
-          <span slot="title">首页</span>
-        </el-menu-item>
-        <el-menu-item index="/appointment">
-          <i class="el-icon-date"></i>
-          <span slot="title">体检预约</span>
-        </el-menu-item>
-        <el-menu-item index="/record">
-          <i class="el-icon-document"></i>
-          <span slot="title">体检记录</span>
-        </el-menu-item>
-        <el-menu-item index="/profile">
-          <i class="el-icon-user"></i>
-          <span slot="title">个人中心</span>
-        </el-menu-item>
+        active-text-color="#409EFF">
+        <sidebar-item v-for="route in permission_routes" :key="route.path" :item="route" :base-path="route.path"/>
       </el-menu>
     </div>
+    
+    <!-- 主容器 -->
     <div class="main-container">
+      <!-- 头部导航 -->
       <div class="navbar">
-        <div class="right-menu">
+        <div class="left">
+          <hamburger :is-active="sidebar.opened" @toggle-click="toggleSideBar"/>
+          <breadcrumb/>
+        </div>
+        <div class="right">
           <el-dropdown trigger="click">
-            <span class="el-dropdown-link">
-              {{ username }}
-              <i class="el-icon-arrow-down"></i>
-            </span>
+            <div class="avatar-wrapper">
+              <img :src="avatar" class="user-avatar">
+              <i class="el-icon-caret-bottom"/>
+            </div>
             <el-dropdown-menu slot="dropdown">
-              <el-dropdown-item @click.native="handleLogout">退出登录</el-dropdown-item>
+              <router-link to="/profile">
+                <el-dropdown-item>个人中心</el-dropdown-item>
+              </router-link>
+              <el-dropdown-item divided @click.native="logout">
+                <span style="display:block;">退出登录</span>
+              </el-dropdown-item>
             </el-dropdown-menu>
           </el-dropdown>
         </div>
       </div>
-      <div class="app-main">
-        <router-view />
-      </div>
+      
+      <!-- 主要内容区 -->
+      <app-main/>
     </div>
   </div>
 </template>
 
 <script>
 import { mapGetters } from 'vuex'
+import Hamburger from './components/Hamburger'
+import Breadcrumb from './components/Breadcrumb'
+import SidebarItem from './components/SidebarItem'
+import AppMain from './components/AppMain'
 
 export default {
   name: 'Layout',
+  components: {
+    Hamburger,
+    Breadcrumb,
+    SidebarItem,
+    AppMain
+  },
   computed: {
     ...mapGetters([
-      'username'
-    ])
+      'sidebar',
+      'avatar',
+      'permission_routes'
+    ]),
+    activeMenu() {
+      const route = this.$route
+      const { meta, path } = route
+      if (meta.activeMenu) {
+        return meta.activeMenu
+      }
+      return path
+    }
   },
   methods: {
-    handleLogout() {
-      this.$store.dispatch('user/logout').then(() => {
-        this.$router.push('/login')
-      })
+    toggleSideBar() {
+      this.$store.dispatch('app/toggleSideBar')
+    },
+    async logout() {
+      try {
+        await this.$store.dispatch('user/logout')
+        this.$router.push(`/login?redirect=${this.$route.fullPath}`)
+      } catch (error) {
+        console.error('退出失败:', error)
+      }
     }
   }
 }
@@ -70,48 +99,78 @@ export default {
 
 <style lang="scss" scoped>
 .app-wrapper {
-  height: 100vh;
   display: flex;
+  height: 100vh;
+  width: 100%;
+}
 
-  .sidebar-container {
-    width: 210px;
-    height: 100%;
-    background-color: #304156;
+.sidebar-container {
+  width: 210px;
+  height: 100%;
+  background: #304156;
+  transition: width 0.3s;
+  overflow: hidden;
 
-    .el-menu {
-      border: none;
-      height: 100%;
-      width: 100%;
-    }
+  &.is-collapse {
+    width: 54px;
   }
 
-  .main-container {
-    flex: 1;
+  .logo {
+    height: 50px;
     display: flex;
-    flex-direction: column;
-    overflow: hidden;
+    align-items: center;
+    padding: 10px;
+    background: #2b2f3a;
+    
+    img {
+      width: 32px;
+      height: 32px;
+      margin-right: 12px;
+    }
+    
+    span {
+      color: #fff;
+      font-size: 16px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+  }
+}
 
-    .navbar {
-      height: 50px;
-      border-bottom: 1px solid #dcdfe6;
+.main-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: #f0f2f5;
+}
+
+.navbar {
+  height: 50px;
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(0,21,41,.08);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 15px;
+
+  .left {
+    display: flex;
+    align-items: center;
+  }
+
+  .right {
+    .avatar-wrapper {
+      cursor: pointer;
       display: flex;
       align-items: center;
-      padding: 0 20px;
 
-      .right-menu {
-        margin-left: auto;
-
-        .el-dropdown-link {
-          cursor: pointer;
-          color: #409EFF;
-        }
+      .user-avatar {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        margin-right: 5px;
       }
-    }
-
-    .app-main {
-      flex: 1;
-      padding: 20px;
-      overflow-y: auto;
     }
   }
 }

@@ -1,4 +1,4 @@
-package com.shpes.security.jwt;
+package com.shpes.security.auth;
 
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.BadCredentialsException;

@@ -1,61 +1,67 @@
 package com.shpes.controller;
 
-import com.shpes.common.Result;
-import com.shpes.entity.LoginDTO;
-import com.shpes.entity.PasswordDTO;
-import com.shpes.entity.SysUser;
-import com.shpes.service.AuthService;
+import com.shpes.common.api.CommonResult;
 import com.shpes.utils.CaptchaUtils;
+import com.shpes.dto.LoginDTO;
+import com.shpes.dto.PasswordDTO;
+import com.shpes.service.AuthService;
+import com.shpes.vo.CaptchaVO;
+import com.shpes.vo.LoginVO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 
-@Api(tags = "认证接口")
+/**
+ * 认证控制器
+ */
+@Api(tags = "认证管理")
 @RestController
 @RequestMapping("/api/auth")
-@RequiredArgsConstructor
 public class AuthController {
 
-    private final AuthService authService;
-    private final CaptchaUtils captchaUtils;
+    @Autowired
+    private AuthService authService;
+
+    @Autowired
+    private CaptchaUtils captchaUtils;
 
     @ApiOperation("用户登录")
     @PostMapping("/login")
-    public Result<?> login(@RequestBody @Valid LoginDTO loginDTO) {
+    public CommonResult<LoginVO> login(@Valid @RequestBody LoginDTO loginDTO) {
         // 验证验证码
         if (!captchaUtils.verify(loginDTO.getCaptchaKey(), loginDTO.getCaptchaCode())) {
-            return Result.error("验证码错误");
+            return CommonResult.failed("验证码错误");
         }
-        return authService.login(loginDTO);
+        return CommonResult.success(authService.login(loginDTO));
     }
 
     @ApiOperation("用户登出")
     @PostMapping("/logout")
-    public Result<?> logout(HttpServletRequest request) {
-        String token = request.getHeader("Authorization");
-        return authService.logout(token);
+    public CommonResult<Void> logout() {
+        authService.logout();
+        return CommonResult.success(null);
     }
 
     @ApiOperation("重置密码")
     @PostMapping("/password/reset")
-    public Result<?> resetPassword(@RequestBody @Valid PasswordDTO passwordDTO) {
-        return authService.resetPassword(passwordDTO);
+    public CommonResult<Void> resetPassword(@RequestParam String username) {
+        authService.resetPassword(username);
+        return CommonResult.success(null);
     }
 
     @ApiOperation("修改密码")
     @PostMapping("/password/change")
-    public Result<?> changePassword(@RequestBody @Valid PasswordDTO passwordDTO, HttpServletRequest request) {
-        String token = request.getHeader("Authorization");
-        return authService.changePassword(passwordDTO, token);
+    public CommonResult<Void> changePassword(@Valid @RequestBody PasswordDTO passwordDTO) {
+        authService.changePassword(passwordDTO);
+        return CommonResult.success(null);
     }
 
     @ApiOperation("获取验证码")
     @GetMapping("/captcha")
-    public Result<?> getCaptcha() {
-        return Result.success(captchaUtils.generate());
+    public CommonResult<CaptchaVO> getCaptcha() {
+        return CommonResult.success(captchaUtils.generateCaptcha());
     }
-}
+} 

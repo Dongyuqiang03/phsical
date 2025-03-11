@@ -1,28 +1,32 @@
 package com.shpes.entity;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
-import java.time.LocalDateTime;
-
+/**
+ * 系统角色实体
+ */
 @Data
+@EqualsAndHashCode(callSuper = true)
 @TableName("sys_role")
-public class SysRole {
+@ApiModel("系统角色")
+public class SysRole extends BaseEntity {
 
-    @TableId(type = IdType.AUTO)
-    private Long id;
+    @ApiModelProperty("角色名称")
+    private String name;
 
-    private String roleName;
+    @ApiModelProperty("角色编码")
+    private String code;
 
-    private String roleCode;
-
+    @ApiModelProperty("角色描述")
     private String description;
 
+    @ApiModelProperty("状态：0-禁用，1-启用")
     private Integer status;
 
-    private LocalDateTime createTime;
-
-    private LocalDateTime updateTime;
+    @ApiModelProperty("排序")
+    private Integer sort;
 }

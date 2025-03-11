@@ -1,38 +1,53 @@
 package com.shpes.entity;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
-import java.time.LocalDateTime;
-
+/**
+ * 体检项目实体
+ */
 @Data
+@EqualsAndHashCode(callSuper = true)
 @TableName("exam_item")
-public class ExamItem {
+@ApiModel("体检项目")
+public class ExamItem extends BaseEntity {
 
-    @TableId(type = IdType.AUTO)
-    private Long id;
+    @ApiModelProperty("项目名称")
+    private String name;
 
-    private String itemName;
+    @ApiModelProperty("项目编码")
+    private String code;
 
-    private String itemCode;
+    @ApiModelProperty("项目分类")
+    private Integer category;
 
-    private Long categoryId;
+    @ApiModelProperty("执行科室ID")
+    private Long departmentId;
 
-    private Long deptId;
+    @ApiModelProperty("参考值上限")
+    private String upperLimit;
 
-    private String referenceLow;
+    @ApiModelProperty("参考值下限")
+    private String lowerLimit;
 
-    private String referenceHigh;
+    @ApiModelProperty("参考值描述")
+    private String referenceValue;
 
+    @ApiModelProperty("单位")
     private String unit;
 
-    private String description;
+    @ApiModelProperty("价格（分）")
+    private Integer price;
 
+    @ApiModelProperty("排序")
+    private Integer sort;
+
+    @ApiModelProperty("状态：0-禁用，1-启用")
     private Integer status;
 
-    private LocalDateTime createTime;
-
-    private LocalDateTime updateTime;
+    @ApiModelProperty("备注")
+    private String remark;
 }
