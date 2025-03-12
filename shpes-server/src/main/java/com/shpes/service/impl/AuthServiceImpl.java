@@ -15,9 +15,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
-
 @Service
 public class AuthServiceImpl implements AuthService {
 
@@ -44,26 +41,21 @@ public class AuthServiceImpl implements AuthService {
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
         String token = jwtUtils.generateToken(userDetails);
 
-        // 构建登录返回信息
-        LoginVO loginVO = new LoginVO();
-        loginVO.setToken(token);
-        loginVO.setUsername(userDetails.getUsername());
-        
-        // 设置角色和权限
-        List<String> roles = new ArrayList<>();
-        List<String> permissions = new ArrayList<>();
-        userDetails.getAuthorities().forEach(authority -> {
-            String auth = authority.getAuthority();
-            if (auth.startsWith("ROLE_")) {
-                roles.add(auth.substring(5));
-            } else {
-                permissions.add(auth);
-            }
-        });
-        loginVO.setRoles(roles);
-        loginVO.setPermissions(permissions);
+        // 获取用户角色
+        String role = userDetails.getAuthorities().stream()
+                .filter(auth -> auth.getAuthority().startsWith("ROLE_"))
+                .map(auth -> auth.getAuthority().substring(5))
+                .findFirst()
+                .orElse("");
 
-        return loginVO;
+        // 获取部门名称（假设UserDetails是我们自定义的实现，包含了部门信息）
+        String departmentName = "";
+        if (userDetails instanceof SysUser) {
+            departmentName = ((SysUser) userDetails).getDepartmentName();
+        }
+
+        // 返回登录信息
+        return LoginVO.of(token, userDetails.getUsername(), role, departmentName);
     }
 
     @Override

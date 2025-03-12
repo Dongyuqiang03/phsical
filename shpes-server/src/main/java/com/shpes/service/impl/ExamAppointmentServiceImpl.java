@@ -7,12 +7,11 @@ import com.shpes.common.api.CommonPage;
 import com.shpes.common.api.ResultCode;
 import com.shpes.common.exception.ApiException;
 import com.shpes.entity.ExamAppointment;
-import com.shpes.entity.ExamPackage;
-import com.shpes.entity.SysUser;
+import com.shpes.entity.ExamTimeSlot;
 import com.shpes.mapper.ExamAppointmentMapper;
-import com.shpes.mapper.ExamPackageMapper;
-import com.shpes.mapper.SysUserMapper;
 import com.shpes.service.ExamAppointmentService;
+import com.shpes.service.ExamTimeSlotService;
+import com.shpes.service.SysUserService;
 import com.shpes.vo.AppointmentVO;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,139 +22,156 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
-/**
- * 体检预约服务实现类
- */
 @Service
 public class ExamAppointmentServiceImpl extends ServiceImpl<ExamAppointmentMapper, ExamAppointment> implements ExamAppointmentService {
 
     @Autowired
-    private SysUserMapper userMapper;
-
+    private ExamTimeSlotService timeSlotService;
+    
     @Autowired
-    private ExamPackageMapper packageMapper;
-
-    @Override
-    public CommonPage<AppointmentVO> getAppointmentPage(Integer pageNum, Integer pageSize, Long userId,
-            LocalDate startDate, LocalDate endDate, Integer status) {
-        // 构建查询条件
-        LambdaQueryWrapper<ExamAppointment> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(userId != null, ExamAppointment::getUserId, userId)
-                .ge(startDate != null, ExamAppointment::getAppointmentTime, startDate)
-                .le(endDate != null, ExamAppointment::getAppointmentTime, endDate)
-                .eq(status != null, ExamAppointment::getStatus, status)
-                .orderByDesc(ExamAppointment::getCreateTime);
-
-        // 执行分页查询
-        Page<ExamAppointment> page = new Page<>(pageNum, pageSize);
-        page = baseMapper.selectPage(page, wrapper);
-
-        // 转换记录列表
-        List<AppointmentVO> records = page.getRecords().stream()
-                .map(this::convertToVO)
-                .collect(Collectors.toList());
-
-        // 返回通用分页对象
-        return CommonPage.restPage(records, page.getTotal(), pageNum, pageSize);
-    }
+    private SysUserService userService;
 
     @Override
     public AppointmentVO getAppointment(Long id) {
-        ExamAppointment appointment = baseMapper.selectById(id);
+        ExamAppointment appointment = getById(id);
         if (appointment == null) {
-            throw new ApiException(ResultCode.APPOINTMENT_NOT_FOUND);
+            throw new ApiException(ResultCode.APPOINTMENT_NOT_EXIST);
         }
         return convertToVO(appointment);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void createAppointment(ExamAppointment appointment) {
-        // 检查用户是否存在
-        SysUser user = userMapper.selectById(appointment.getUserId());
-        if (user == null) {
-            throw new ApiException(ResultCode.USER_NOT_FOUND);
+    public AppointmentVO completeAppointment(Long id) {
+        ExamAppointment appointment = getById(id);
+        if (appointment == null) {
+            throw new ApiException(ResultCode.APPOINTMENT_NOT_EXIST);
         }
-
-        // 检查套餐是否存在
-        ExamPackage examPackage = packageMapper.selectById(appointment.getPackageId());
-        if (examPackage == null) {
-            throw new ApiException(ResultCode.PACKAGE_NOT_FOUND);
-        }
-
-        // 设置初始状态
-        appointment.setStatus(0); // 待体检
-        baseMapper.insert(appointment);
+        appointment.setStatus(2); // 设置状态为进行中
+        updateById(appointment);
+        return convertToVO(appointment);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void cancelAppointment(Long id, String reason) {
-        ExamAppointment appointment = baseMapper.selectById(id);
+    public AppointmentVO cancelAppointment(Long id, String reason) {
+        ExamAppointment appointment = getById(id);
         if (appointment == null) {
-            throw new ApiException(ResultCode.APPOINTMENT_NOT_FOUND);
+            throw new ApiException(ResultCode.APPOINTMENT_NOT_EXIST);
         }
-
-        if (appointment.getStatus() != 0) {
-            throw new ApiException(ResultCode.APPOINTMENT_CANNOT_CANCEL);
-        }
-
-        appointment.setStatus(2); // 已取消
+        
+        // 减少时间段的预约数
+        timeSlotService.decrementBookedCount(appointment.getTimeSlotId());
+        
+        appointment.setStatus(3); // 设置状态为已取消
         appointment.setCancelReason(reason);
-        baseMapper.updateById(appointment);
+        updateById(appointment);
+        
+        return convertToVO(appointment);
+    }
+
+    @Override
+    public CommonPage<AppointmentVO> getAppointmentPage(Integer pageNum, Integer pageSize, Long userId, 
+            LocalDate startDate, LocalDate endDate, Integer status) {
+        LambdaQueryWrapper<ExamAppointment> wrapper = new LambdaQueryWrapper<>();
+        if (userId != null) {
+            wrapper.eq(ExamAppointment::getUserId, userId);
+        }
+        if (startDate != null) {
+            wrapper.ge(ExamAppointment::getAppointmentDate, startDate);
+        }
+        if (endDate != null) {
+            wrapper.le(ExamAppointment::getAppointmentDate, endDate);
+        }
+        if (status != null) {
+            wrapper.eq(ExamAppointment::getStatus, status);
+        }
+        wrapper.orderByDesc(ExamAppointment::getCreateTime);
+
+        Page<ExamAppointment> page = page(new Page<>(pageNum, pageSize), wrapper);
+        List<AppointmentVO> records = page.getRecords().stream()
+                .map(this::convertToVO)
+                .collect(Collectors.toList());
+        
+        return CommonPage.restPage(records, page.getTotal(), page.getCurrent(), page.getSize());
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void updateAppointmentTime(Long id, Long timeSlotId) {
-        ExamAppointment appointment = baseMapper.selectById(id);
+    public AppointmentVO createAppointment(ExamAppointment appointment) {
+        // 检查时间段是否存在且可用
+        ExamTimeSlot timeSlot = timeSlotService.getById(appointment.getTimeSlotId());
+        if (timeSlot == null) {
+            throw new ApiException(ResultCode.TIME_SLOT_NOT_EXIST);
+        }
+        
+        appointment.setStatus(1); // 设置状态为待体检
+        appointment.setAppointmentDate(timeSlot.getDate());
+        save(appointment);
+        
+        // 增加时间段的预约数
+        timeSlotService.incrementBookedCount(appointment.getTimeSlotId());
+        
+        return convertToVO(appointment);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public AppointmentVO updateAppointmentTime(Long id, Long timeSlotId) {
+        ExamAppointment appointment = getById(id);
         if (appointment == null) {
-            throw new ApiException(ResultCode.APPOINTMENT_NOT_FOUND);
+            throw new ApiException(ResultCode.APPOINTMENT_NOT_EXIST);
         }
 
-        if (appointment.getStatus() != 0) {
-            throw new ApiException(ResultCode.APPOINTMENT_CANNOT_UPDATE);
+        // 检查新时间段是否存在且可用
+        ExamTimeSlot newTimeSlot = timeSlotService.getById(timeSlotId);
+        if (newTimeSlot == null) {
+            throw new ApiException(ResultCode.TIME_SLOT_NOT_EXIST);
         }
 
+        // 减少原时间段的预约数
+        timeSlotService.decrementBookedCount(appointment.getTimeSlotId());
+        
+        // 更新预约信息
         appointment.setTimeSlotId(timeSlotId);
-        baseMapper.updateById(appointment);
+        appointment.setAppointmentDate(newTimeSlot.getDate());
+        updateById(appointment);
+        
+        // 增加新时间段的预约数
+        timeSlotService.incrementBookedCount(timeSlotId);
+        
+        return convertToVO(appointment);
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
-    public void completeAppointment(Long id) {
-        ExamAppointment appointment = baseMapper.selectById(id);
-        if (appointment == null) {
-            throw new ApiException(ResultCode.APPOINTMENT_NOT_FOUND);
-        }
+    public CommonPage<AppointmentVO> getUserAppointments(Long userId, Integer pageNum, Integer pageSize) {
+        LambdaQueryWrapper<ExamAppointment> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(ExamAppointment::getUserId, userId)
+                .orderByDesc(ExamAppointment::getCreateTime);
 
-        if (appointment.getStatus() != 0) {
-            throw new ApiException(ResultCode.APPOINTMENT_CANNOT_COMPLETE);
-        }
-
-        appointment.setStatus(1); // 已完成
-        baseMapper.updateById(appointment);
+        Page<ExamAppointment> page = page(new Page<>(pageNum, pageSize), wrapper);
+        List<AppointmentVO> records = page.getRecords().stream()
+                .map(this::convertToVO)
+                .collect(Collectors.toList());
+        
+        return CommonPage.restPage(records, page.getTotal(), page.getCurrent(), page.getSize());
     }
 
     /**
-     * 将实体对象转换为VO对象
+     * 将实体转换为VO
      */
     private AppointmentVO convertToVO(ExamAppointment appointment) {
+        if (appointment == null) {
+            return null;
+        }
         AppointmentVO vo = new AppointmentVO();
         BeanUtils.copyProperties(appointment, vo);
-
-        // 获取用户信息
-        SysUser user = userMapper.selectById(appointment.getUserId());
-        if (user != null) {
-            vo.setUserName(user.getName());
+        
+        // 设置用户信息
+        if (appointment.getUserId() != null) {
+            vo.setUserName(userService.getUserNameById(appointment.getUserId()));
         }
-
-        // 获取套餐信息
-        ExamPackage examPackage = packageMapper.selectById(appointment.getPackageId());
-        if (examPackage != null) {
-            vo.setPackageName(examPackage.getName());
-        }
-
+        
         return vo;
     }
-} 
+}

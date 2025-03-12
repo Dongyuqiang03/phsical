@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.shpes.mapper.ExamRecordMapper">
+    
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.shpes.entity.ExamRecord">
+        <id column="id" property="id"/>
+        <result column="appointment_id" property="appointmentId"/>
+        <result column="user_id" property="userId"/>
+        <result column="package_id" property="packageId"/>
+        <result column="package_name" property="packageName"/>
+        <result column="department_id" property="departmentId"/>
+        <result column="department_name" property="departmentName"/>
+        <result column="doctor_id" property="doctorId"/>
+        <result column="doctor_name" property="doctorName"/>
+        <result column="exam_date" property="examDate"/>
+        <result column="status" property="status"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+
+    <!-- 获取体检记录详情 -->
+    <select id="getRecordDetail" resultMap="BaseResultMap">
+        SELECT er.*, sd.department_name, su.name as doctor_name, ep.package_name
+        FROM exam_record er
+        LEFT JOIN sys_department sd ON er.department_id = sd.id
+        LEFT JOIN sys_user su ON er.doctor_id = su.id
+        LEFT JOIN exam_package ep ON er.package_id = ep.id
+        WHERE er.id = #{id}
+    </select>
+
+    <!-- 获取用户的体检记录列表 -->
+    <select id="getUserRecords" resultMap="BaseResultMap">
+        SELECT er.*, sd.department_name, su.name as doctor_name, ep.package_name
+        FROM exam_record er
+        LEFT JOIN sys_department sd ON er.department_id = sd.id
+        LEFT JOIN sys_user su ON er.doctor_id = su.id
+        LEFT JOIN exam_package ep ON er.package_id = ep.id
+        WHERE er.user_id = #{userId}
+        ORDER BY er.exam_date DESC
+    </select>
+
+    <!-- 获取部门的体检记录列表 -->
+    <select id="getDepartmentRecords" resultMap="BaseResultMap">
+        SELECT er.*, sd.department_name, su.name as doctor_name, ep.package_name
+        FROM exam_record er
+        LEFT JOIN sys_department sd ON er.department_id = sd.id
+        LEFT JOIN sys_user su ON er.doctor_id = su.id
+        LEFT JOIN exam_package ep ON er.package_id = ep.id
+        WHERE er.department_id = #{departmentId}
+        <if test="status != null">
+            AND er.status = #{status}
+        </if>
+        ORDER BY er.exam_date DESC
+    </select>
+
+    <!-- 更新体检记录状态 -->
+    <update id="updateStatus">
+        UPDATE exam_record
+        SET status = #{status},
+            update_time = NOW()
+        WHERE id = #{id}
+    </update>
+</mapper> 

@@ -49,12 +49,12 @@ public interface SysDepartmentService {
     void updateStatus(Long id, Integer status);
 
     /**
-     * 获取部门下的用户列表
-     */
-    List<SysUser> getDepartmentUsers(Long departmentId);
-
-    /**
      * 获取部门人员列表
      */
     List<UserSimpleVO> getDepartmentUsers(Long id);
-} 
+
+    /**
+     * 根据部门ID获取部门名称
+     */
+    String getDepartmentNameById(Long departmentId);
+}

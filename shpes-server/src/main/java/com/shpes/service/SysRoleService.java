@@ -46,4 +46,9 @@ public interface SysRoleService {
      * 获取角色权限
      */
     List<Long> getRolePermissions(Long roleId);
-} 
+
+    /**
+     * 根据角色ID列表获取角色名称列表
+     */
+    List<String> getRoleNamesByIds(List<Long> roleIds);
+}

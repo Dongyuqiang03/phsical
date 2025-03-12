@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.shpes.mapper.SysRoleMapper">
+    
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.shpes.entity.SysRole">
+        <id column="id" property="id"/>
+        <result column="role_name" property="roleName"/>
+        <result column="role_code" property="roleCode"/>
+        <result column="description" property="description"/>
+        <result column="status" property="status"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+
+    <!-- 获取角色详情（包含权限列表） -->
+    <select id="getRoleDetail" resultMap="RoleDetailMap">
+        SELECT 
+            r.*,
+            p.id as permission_id,
+            p.permission_name,
+            p.permission_code,
+            p.type
+        FROM sys_role r
+        LEFT JOIN sys_role_permission rp ON r.id = rp.role_id
+        LEFT JOIN sys_permission p ON rp.permission_id = p.id
+        WHERE r.id = #{id}
+    </select>
+
+    <!-- 角色详情映射 -->
+    <resultMap id="RoleDetailMap" type="com.shpes.vo.RoleVO" extends="BaseResultMap">
+        <collection property="permissions" ofType="com.shpes.vo.PermissionVO">
+            <id column="permission_id" property="id"/>
+            <result column="permission_name" property="permissionName"/>
+            <result column="permission_code" property="permissionCode"/>
+            <result column="type" property="type"/>
+        </collection>
+    </resultMap>
+
+    <!-- 获取用户的角色列表 -->
+    <select id="getUserRoles" resultMap="BaseResultMap">
+        SELECT r.*
+        FROM sys_role r
+        INNER JOIN sys_user_role ur ON r.id = ur.role_id
+        WHERE ur.user_id = #{userId}
+        AND r.status = 1
+    </select>
+
+    <!-- 批量更新角色状态 -->
+    <update id="batchUpdateStatus">
+        UPDATE sys_role
+        SET status = #{status},
+            update_time = NOW()
+        WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </update>
+</mapper> 

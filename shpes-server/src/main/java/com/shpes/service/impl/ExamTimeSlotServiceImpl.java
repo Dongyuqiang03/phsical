@@ -3,26 +3,34 @@ package com.shpes.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.shpes.common.api.CommonPage;
+import com.shpes.common.api.ResultCode;
+import com.shpes.common.exception.ApiException;
 import com.shpes.entity.ExamTimeSlot;
 import com.shpes.mapper.ExamTimeSlotMapper;
 import com.shpes.service.ExamTimeSlotService;
+import com.shpes.service.SysDepartmentService;
+import com.shpes.vo.ExamTimeSlotVO;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * 体检时间段服务实现类
  */
 @Service
-public class ExamTimeSlotServiceImpl implements ExamTimeSlotService {
+public class ExamTimeSlotServiceImpl extends ServiceImpl<ExamTimeSlotMapper, ExamTimeSlot> implements ExamTimeSlotService {
 
     @Autowired
-    private ExamTimeSlotMapper timeSlotMapper;
+    private SysDepartmentService departmentService;
 
     @Override
-    public Page<ExamTimeSlot> getTimeSlotPage(Integer pageNum, Integer pageSize, Long departmentId, LocalDate date) {
+    public CommonPage<ExamTimeSlotVO> getTimeSlotPage(Integer pageNum, Integer pageSize, Long departmentId, LocalDate date) {
         LambdaQueryWrapper<ExamTimeSlot> wrapper = new LambdaQueryWrapper<>();
         if (departmentId != null) {
             wrapper.eq(ExamTimeSlot::getDepartmentId, departmentId);
@@ -32,56 +40,76 @@ public class ExamTimeSlotServiceImpl implements ExamTimeSlotService {
         }
         wrapper.orderByAsc(ExamTimeSlot::getDate)
                 .orderByAsc(ExamTimeSlot::getStartTime);
-        return timeSlotMapper.selectPage(new Page<>(pageNum, pageSize), wrapper);
+        
+        Page<ExamTimeSlot> page = page(new Page<>(pageNum, pageSize), wrapper);
+        List<ExamTimeSlotVO> records = page.getRecords().stream()
+                .map(this::convertToVO)
+                .collect(Collectors.toList());
+        
+        Page<ExamTimeSlotVO> voPage = new Page<>(page.getCurrent(), page.getSize(), page.getTotal());
+        voPage.setRecords(records);
+                
+        return CommonPage.restPage(voPage);
     }
 
     @Override
-    public List<ExamTimeSlot> getAvailableTimeSlots(Long departmentId, LocalDate date) {
+    public List<ExamTimeSlotVO> getAvailableTimeSlots(Long departmentId, LocalDate date) {
         LambdaQueryWrapper<ExamTimeSlot> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(ExamTimeSlot::getDepartmentId, departmentId)
                 .eq(ExamTimeSlot::getDate, date)
                 .eq(ExamTimeSlot::getStatus, 1)
-                .lt(ExamTimeSlot::getBookedCount, ExamTimeSlot::getCapacity)
+                .apply("booked_count < capacity")
                 .orderByAsc(ExamTimeSlot::getStartTime);
-        return timeSlotMapper.selectList(wrapper);
+        return list(wrapper).stream()
+                .map(this::convertToVO)
+                .collect(Collectors.toList());
     }
 
     @Override
-    public ExamTimeSlot getTimeSlot(Long id) {
-        return timeSlotMapper.selectById(id);
+    public ExamTimeSlotVO getTimeSlot(Long id) {
+        return convertToVO(getById(id));
     }
 
     @Override
-    public void createTimeSlot(ExamTimeSlot timeSlot) {
+    public ExamTimeSlotVO createTimeSlot(ExamTimeSlot timeSlot) {
         timeSlot.setBookedCount(0);
-        timeSlotMapper.insert(timeSlot);
+        save(timeSlot);
+        return convertToVO(timeSlot);
     }
 
     @Override
-    public void updateTimeSlot(ExamTimeSlot timeSlot) {
-        timeSlotMapper.updateById(timeSlot);
+    public ExamTimeSlotVO updateTimeSlot(ExamTimeSlot timeSlot) {
+        if (!updateById(timeSlot)) {
+            throw new ApiException(ResultCode.TIME_SLOT_NOT_EXIST);
+        }
+        return convertToVO(timeSlot);
     }
 
     @Override
     public void deleteTimeSlot(Long id) {
-        timeSlotMapper.deleteById(id);
+        if (!removeById(id)) {
+            throw new ApiException(ResultCode.TIME_SLOT_NOT_EXIST);
+        }
     }
 
     @Override
-    public void updateStatus(Long id, Integer status) {
-        ExamTimeSlot timeSlot = new ExamTimeSlot();
-        timeSlot.setId(id);
+    public ExamTimeSlotVO updateStatus(Long id, Integer status) {
+        ExamTimeSlot timeSlot = getById(id);
+        if (timeSlot == null) {
+            throw new ApiException(ResultCode.TIME_SLOT_NOT_EXIST);
+        }
         timeSlot.setStatus(status);
-        timeSlotMapper.updateById(timeSlot);
+        updateById(timeSlot);
+        return convertToVO(timeSlot);
     }
 
     @Override
     public void incrementBookedCount(Long id) {
         LambdaUpdateWrapper<ExamTimeSlot> wrapper = new LambdaUpdateWrapper<>();
         wrapper.eq(ExamTimeSlot::getId, id)
-                .lt(ExamTimeSlot::getBookedCount, ExamTimeSlot::getCapacity)
+                .apply("booked_count < capacity")
                 .setSql("booked_count = booked_count + 1");
-        timeSlotMapper.update(null, wrapper);
+        update(null, wrapper);
     }
 
     @Override
@@ -90,6 +118,24 @@ public class ExamTimeSlotServiceImpl implements ExamTimeSlotService {
         wrapper.eq(ExamTimeSlot::getId, id)
                 .gt(ExamTimeSlot::getBookedCount, 0)
                 .setSql("booked_count = booked_count - 1");
-        timeSlotMapper.update(null, wrapper);
+        update(null, wrapper);
     }
-} 
+
+    /**
+     * 将实体转换为VO
+     */
+    private ExamTimeSlotVO convertToVO(ExamTimeSlot timeSlot) {
+        if (timeSlot == null) {
+            return null;
+        }
+        ExamTimeSlotVO vo = new ExamTimeSlotVO();
+        BeanUtils.copyProperties(timeSlot, vo);
+        
+        // 设置部门名称
+        if (timeSlot.getDepartmentId() != null) {
+            vo.setDepartmentName(departmentService.getDepartmentNameById(timeSlot.getDepartmentId()));
+        }
+        
+        return vo;
+    }
+}

@@ -63,19 +63,6 @@ CREATE TABLE sys_department (
     KEY idx_parent_id (parent_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='部门表';
 
--- 字典表
-CREATE TABLE sys_dict (
-    id BIGINT NOT NULL AUTO_INCREMENT COMMENT '字典ID',
-    dict_type VARCHAR(50) NOT NULL COMMENT '字典类型',
-    dict_label VARCHAR(50) NOT NULL COMMENT '字典标签',
-    dict_value VARCHAR(50) NOT NULL COMMENT '字典值',
-    sort INT DEFAULT 0 COMMENT '排序',
-    status TINYINT NOT NULL DEFAULT 1 COMMENT '状态(0:禁用 1:启用)',
-    create_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    update_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-    PRIMARY KEY (id),
-    KEY idx_dict_type (dict_type)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='字典表';
 
 -- 操作日志表
 CREATE TABLE sys_log (

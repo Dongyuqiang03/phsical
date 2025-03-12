@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.shpes.mapper.SysDepartmentMapper">
+    
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.shpes.entity.SysDepartment">
+        <id column="id" property="id"/>
+        <result column="parent_id" property="parentId"/>
+        <result column="department_name" property="departmentName"/>
+        <result column="department_code" property="departmentCode"/>
+        <result column="leader" property="leader"/>
+        <result column="phone" property="phone"/>
+        <result column="email" property="email"/>
+        <result column="status" property="status"/>
+        <result column="sort" property="sort"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+
+    <!-- 获取部门树形结构 -->
+    <select id="getDepartmentTree" resultMap="DepartmentTreeMap">
+        WITH RECURSIVE dept_tree AS (
+            SELECT *
+            FROM sys_department
+            WHERE parent_id = 0 OR parent_id IS NULL
+            UNION ALL
+            SELECT d.*
+            FROM sys_department d
+            INNER JOIN dept_tree t ON d.parent_id = t.id
+        )
+        SELECT * FROM dept_tree ORDER BY sort
+    </select>
+
+    <!-- 部门树形结构映射 -->
+    <resultMap id="DepartmentTreeMap" type="com.shpes.vo.DepartmentTreeVO" extends="BaseResultMap">
+        <collection property="children" ofType="com.shpes.vo.DepartmentTreeVO" column="id" select="getChildDepartments"/>
+    </resultMap>
+
+    <!-- 获取子部门列表 -->
+    <select id="getChildDepartments" resultMap="DepartmentTreeMap">
+        SELECT *
+        FROM sys_department
+        WHERE parent_id = #{id}
+        ORDER BY sort
+    </select>
+
+    <!-- 批量更新部门状态 -->
+    <update id="batchUpdateStatus">
+        UPDATE sys_department
+        SET status = #{status},
+            update_time = NOW()
+        WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </update>
+</mapper> 

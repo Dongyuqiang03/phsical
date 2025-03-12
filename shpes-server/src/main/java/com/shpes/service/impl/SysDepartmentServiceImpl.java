@@ -68,12 +68,7 @@ public class SysDepartmentServiceImpl extends ServiceImpl<SysDepartmentMapper, S
     public void createDepartment(SysDepartment department) {
         // 检查部门编码是否已存在
         if (isDepartmentCodeExists(department.getCode())) {
-            throw new ApiException(ResultCode.DEPARTMENT_CODE_EXISTS);
-        }
-
-        // 检查部门主任是否存在
-        if (department.getLeaderId() != null && !isUserExists(department.getLeaderId())) {
-            throw new ApiException(ResultCode.USER_NOT_FOUND);
+            throw new ApiException("部门编码已存在");
         }
 
         baseMapper.insert(department);
@@ -85,17 +80,12 @@ public class SysDepartmentServiceImpl extends ServiceImpl<SysDepartmentMapper, S
         // 检查部门是否存在
         SysDepartment existingDepartment = baseMapper.selectById(department.getId());
         if (existingDepartment == null) {
-            throw new ApiException(ResultCode.DEPARTMENT_NOT_FOUND);
+            throw new ApiException(ResultCode.DEPARTMENT_NOT_EXIST);
         }
 
         // 如果修改了部门编码，检查新编码是否已存在
         if (!existingDepartment.getCode().equals(department.getCode()) && isDepartmentCodeExists(department.getCode())) {
-            throw new ApiException(ResultCode.DEPARTMENT_CODE_EXISTS);
-        }
-
-        // 检查部门主任是否存在
-        if (department.getLeaderId() != null && !isUserExists(department.getLeaderId())) {
-            throw new ApiException(ResultCode.USER_NOT_FOUND);
+            throw new ApiException("部门编码已存在");
         }
 
         baseMapper.updateById(department);
@@ -107,12 +97,12 @@ public class SysDepartmentServiceImpl extends ServiceImpl<SysDepartmentMapper, S
         // 检查部门是否存在
         SysDepartment department = baseMapper.selectById(id);
         if (department == null) {
-            throw new ApiException(ResultCode.DEPARTMENT_NOT_FOUND);
+            throw new ApiException(ResultCode.DEPARTMENT_NOT_EXIST);
         }
 
         // 检查部门下是否有人员
         if (hasDepartmentUsers(id)) {
-            throw new ApiException(ResultCode.DEPARTMENT_HAS_USERS);
+            throw new ApiException(ResultCode.DEPARTMENT_USED);
         }
 
         baseMapper.deleteById(id);
@@ -123,7 +113,7 @@ public class SysDepartmentServiceImpl extends ServiceImpl<SysDepartmentMapper, S
     public void updateStatus(Long id, Integer status) {
         SysDepartment department = baseMapper.selectById(id);
         if (department == null) {
-            throw new ApiException(ResultCode.DEPARTMENT_NOT_FOUND);
+            throw new ApiException(ResultCode.DEPARTMENT_NOT_EXIST);
         }
 
         department.setStatus(status);
@@ -135,13 +125,13 @@ public class SysDepartmentServiceImpl extends ServiceImpl<SysDepartmentMapper, S
         // 检查部门是否存在
         SysDepartment department = baseMapper.selectById(id);
         if (department == null) {
-            throw new ApiException(ResultCode.DEPARTMENT_NOT_FOUND);
+            throw new ApiException(ResultCode.DEPARTMENT_NOT_EXIST);
         }
 
         // 查询部门下的用户
         List<SysUser> users = userMapper.selectList(new LambdaQueryWrapper<SysUser>()
                 .eq(SysUser::getDepartmentId, id)
-                .orderByAsc(SysUser::getSort));
+                .orderByAsc(SysUser::getId));
 
         return users.stream()
                 .map(this::convertToUserSimpleVO)
@@ -178,14 +168,6 @@ public class SysDepartmentServiceImpl extends ServiceImpl<SysDepartmentMapper, S
         DepartmentVO vo = new DepartmentVO();
         BeanUtils.copyProperties(department, vo);
 
-        // 获取部门主任信息
-        if (department.getLeaderId() != null) {
-            SysUser leader = userMapper.selectById(department.getLeaderId());
-            if (leader != null) {
-                vo.setLeaderName(leader.getName());
-            }
-        }
-
         // 获取部门人员数量
         vo.setUserCount(userMapper.selectCount(new LambdaQueryWrapper<SysUser>()
                 .eq(SysUser::getDepartmentId, department.getId())).intValue());
@@ -201,4 +183,18 @@ public class SysDepartmentServiceImpl extends ServiceImpl<SysDepartmentMapper, S
         BeanUtils.copyProperties(user, vo);
         return vo;
     }
-} 
+
+    @Override
+    public String getDepartmentNameById(Long departmentId) {
+        if (departmentId == null) {
+            return null;
+        }
+        SysDepartment department = baseMapper.selectById(departmentId);
+        return department != null ? department.getName() : null;
+    }
+
+    @Override
+    public SysDepartment getDepartment(Long id) {
+        return baseMapper.selectById(id);
+    }
+}

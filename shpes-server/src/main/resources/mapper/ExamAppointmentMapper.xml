@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.shpes.mapper.ExamAppointmentMapper">
+    
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.shpes.entity.ExamAppointment">
+        <id column="id" property="id"/>
+        <result column="user_id" property="userId"/>
+        <result column="package_id" property="packageId"/>
+        <result column="time_slot_id" property="timeSlotId"/>
+        <result column="appointment_no" property="appointmentNo"/>
+        <result column="status" property="status"/>
+        <result column="cancel_reason" property="cancelReason"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+
+    <!-- 获取预约详情（包含用户、套餐、时间段信息） -->
+    <select id="getAppointmentDetail" resultType="com.shpes.vo.AppointmentVO">
+        SELECT 
+            a.*,
+            u.username,
+            u.name as user_name,
+            p.package_name,
+            t.date as appointment_date,
+            t.start_time,
+            t.end_time,
+            d.department_name
+        FROM exam_appointment a
+        LEFT JOIN sys_user u ON a.user_id = u.id
+        LEFT JOIN exam_package p ON a.package_id = p.id
+        LEFT JOIN exam_time_slot t ON a.time_slot_id = t.id
+        LEFT JOIN sys_department d ON t.department_id = d.id
+        WHERE a.id = #{id}
+    </select>
+
+    <!-- 获取用户的预约历史 -->
+    <select id="getUserAppointments" resultType="com.shpes.vo.AppointmentVO">
+        SELECT 
+            a.*,
+            p.package_name,
+            t.date as appointment_date,
+            t.start_time,
+            t.end_time,
+            d.department_name
+        FROM exam_appointment a
+        LEFT JOIN exam_package p ON a.package_id = p.id
+        LEFT JOIN exam_time_slot t ON a.time_slot_id = t.id
+        LEFT JOIN sys_department d ON t.department_id = d.id
+        WHERE a.user_id = #{userId}
+        ORDER BY a.create_time DESC
+    </select>
+
+    <!-- 获取部门某天的预约列表 -->
+    <select id="getDepartmentAppointments" resultType="com.shpes.vo.AppointmentVO">
+        SELECT 
+            a.*,
+            u.username,
+            u.name as user_name,
+            p.package_name,
+            t.start_time,
+            t.end_time
+        FROM exam_appointment a
+        LEFT JOIN sys_user u ON a.user_id = u.id
+        LEFT JOIN exam_package p ON a.package_id = p.id
+        LEFT JOIN exam_time_slot t ON a.time_slot_id = t.id
+        WHERE t.department_id = #{departmentId}
+        AND t.date = #{date}
+        AND a.status = 1
+        ORDER BY t.start_time
+    </select>
+</mapper> 

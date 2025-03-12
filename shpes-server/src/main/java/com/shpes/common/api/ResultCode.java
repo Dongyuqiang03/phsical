@@ -22,6 +22,9 @@ public enum ResultCode implements IErrorCode {
     ROLE_NOT_EXIST(2000, "角色不存在"),
     ROLE_USED(2001, "角色已被使用"),
     PERMISSION_NOT_EXIST(2002, "权限不存在"),
+    ROLE_NAME_EXISTS(2003, "角色名称已存在"),
+    ROLE_CODE_EXISTS(2004, "角色编码已存在"),
+    ROLE_NOT_FOUND(2005, "角色不存在"),
     
     // 部门相关：3000-3999
     DEPARTMENT_NOT_EXIST(3000, "部门不存在"),
@@ -39,6 +42,7 @@ public enum ResultCode implements IErrorCode {
     APPOINTMENT_CAPACITY_FULL(5002, "预约名额已满"),
     APPOINTMENT_TIME_INVALID(5003, "无效的预约时间"),
     APPOINTMENT_CANCEL_TIMEOUT(5004, "超出取消预约时限"),
+    TIME_SLOT_NOT_EXIST(5005, "体检时间段不存在"),  // 添加新的错误码
     
     // 体检结果相关：6000-6999
     EXAM_RECORD_NOT_EXIST(6000, "体检记录不存在"),
@@ -64,4 +68,4 @@ public enum ResultCode implements IErrorCode {
     public String getMessage() {
         return message;
     }
-} 
+}

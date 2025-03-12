@@ -7,25 +7,25 @@ import lombok.Data;
 import javax.validation.constraints.NotBlank;
 
 /**
- * 登录请求DTO
+ * 登录请求数据传输对象
  */
 @Data
-@ApiModel("登录请求")
+@ApiModel(description = "登录请求参数")
 public class LoginDTO {
 
+    @ApiModelProperty(value = "用户名", required = true)
     @NotBlank(message = "用户名不能为空")
-    @ApiModelProperty("用户名")
     private String username;
 
+    @ApiModelProperty(value = "密码", required = true)
     @NotBlank(message = "密码不能为空")
-    @ApiModelProperty("密码")
     private String password;
 
-    @NotBlank(message = "验证码不能为空")
     @ApiModelProperty("验证码")
+    @NotBlank(message = "验证码不能为空")
     private String captchaCode;
 
-    @NotBlank(message = "验证码key不能为空")
     @ApiModelProperty("验证码key")
+    @NotBlank(message = "验证码key不能为空")
     private String captchaKey;
 } 

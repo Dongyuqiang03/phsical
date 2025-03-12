@@ -1,11 +1,11 @@
 package com.shpes.controller;
 
+import com.shpes.common.api.CommonPage;
 import com.shpes.common.api.CommonResult;
 import com.shpes.entity.ExamTimeSlot;
 import com.shpes.security.annotation.HasPermission;
 import com.shpes.service.ExamTimeSlotService;
 import com.shpes.vo.ExamTimeSlotVO;
-import com.shpes.vo.ExamTimeSlotPageVO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,7 +30,7 @@ public class ExamTimeSlotController {
     @ApiOperation("获取时间段列表")
     @GetMapping
     @HasPermission("exam:timeslot:list")
-    public CommonResult<ExamTimeSlotPageVO> getTimeSlotPage(
+    public CommonResult<CommonPage<ExamTimeSlotVO>> getTimeSlotPage(
             @RequestParam(defaultValue = "1") Integer pageNum,
             @RequestParam(defaultValue = "10") Integer pageSize,
             @RequestParam(required = false) Long departmentId,

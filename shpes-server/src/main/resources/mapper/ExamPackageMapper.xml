@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.shpes.mapper.ExamPackageMapper">
+    
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.shpes.entity.ExamPackage">
+        <id column="id" property="id"/>
+        <result column="package_code" property="packageCode"/>
+        <result column="package_name" property="packageName"/>
+        <result column="description" property="description"/>
+        <result column="price" property="price"/>
+        <result column="status" property="status"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+
+    <!-- 获取套餐详情（包含项目列表） -->
+    <select id="getPackageDetail" resultMap="PackageDetailMap">
+        SELECT 
+            p.*,
+            i.id as item_id,
+            i.item_code,
+            i.item_name,
+            i.category,
+            i.department_id,
+            i.reference_value,
+            i.unit,
+            d.department_name,
+            pi.price as item_price
+        FROM exam_package p
+        LEFT JOIN exam_package_item pi ON p.id = pi.package_id
+        LEFT JOIN exam_item i ON pi.item_id = i.id
+        LEFT JOIN sys_department d ON i.department_id = d.id
+        WHERE p.id = #{id}
+    </select>
+
+    <!-- 套餐详情映射 -->
+    <resultMap id="PackageDetailMap" type="com.shpes.vo.ExamPackageVO" extends="BaseResultMap">
+        <collection property="items" ofType="com.shpes.vo.ExamItemVO">
+            <id column="item_id" property="id"/>
+            <result column="item_code" property="itemCode"/>
+            <result column="item_name" property="itemName"/>
+            <result column="category" property="category"/>
+            <result column="department_id" property="departmentId"/>
+            <result column="department_name" property="departmentName"/>
+            <result column="reference_value" property="referenceValue"/>
+            <result column="unit" property="unit"/>
+            <result column="item_price" property="price"/>
+        </collection>
+    </resultMap>
+
+    <!-- 批量更新套餐状态 -->
+    <update id="batchUpdateStatus">
+        UPDATE exam_package
+        SET status = #{status},
+            update_time = NOW()
+        WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </update>
+</mapper> 

@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.shpes.mapper.ExamResultMapper">
+    
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.shpes.entity.ExamResult">
+        <id column="id" property="id"/>
+        <result column="record_id" property="recordId"/>
+        <result column="item_id" property="itemId"/>
+        <result column="item_name" property="itemName"/>
+        <result column="result_value" property="resultValue"/>
+        <result column="reference_value" property="referenceValue"/>
+        <result column="unit" property="unit"/>
+        <result column="is_abnormal" property="isAbnormal"/>
+        <result column="doctor_advice" property="doctorAdvice"/>
+        <result column="doctor_id" property="doctorId"/>
+        <result column="doctor_name" property="doctorName"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+
+    <!-- 获取体检记录的结果列表 -->
+    <select id="getRecordResults" resultMap="BaseResultMap">
+        SELECT er.*, su.name as doctor_name, ei.item_name, ei.reference_value, ei.unit
+        FROM exam_result er
+        LEFT JOIN sys_user su ON er.doctor_id = su.id
+        LEFT JOIN exam_item ei ON er.item_id = ei.id
+        WHERE er.record_id = #{recordId}
+        ORDER BY er.create_time
+    </select>
+
+    <!-- 批量插入体检结果 -->
+    <insert id="batchInsert">
+        INSERT INTO exam_result 
+        (record_id, item_id, item_name, result_value, reference_value, unit, 
+         is_abnormal, doctor_advice, doctor_id, doctor_name)
+        VALUES
+        <foreach collection="list" item="item" separator=",">
+            (#{item.recordId}, #{item.itemId}, #{item.itemName}, #{item.resultValue},
+             #{item.referenceValue}, #{item.unit}, #{item.isAbnormal}, #{item.doctorAdvice},
+             #{item.doctorId}, #{item.doctorName})
+        </foreach>
+    </insert>
+
+    <!-- 更新体检结果 -->
+    <update id="updateResult">
+        UPDATE exam_result
+        SET result_value = #{resultValue},
+            is_abnormal = #{isAbnormal},
+            doctor_advice = #{doctorAdvice},
+            doctor_id = #{doctorId},
+            doctor_name = #{doctorName},
+            update_time = NOW()
+        WHERE id = #{id}
+    </update>
+</mapper> 

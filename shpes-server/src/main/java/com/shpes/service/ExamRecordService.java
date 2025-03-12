@@ -11,7 +11,7 @@ import java.time.LocalDate;
 public interface ExamRecordService {
 
     /**
-     * 分页查询体检记录
+     * 分页获取体检记录列表
      */
     Page<ExamRecord> getRecordPage(Integer pageNum, Integer pageSize, Long userId, LocalDate startDate, LocalDate endDate, Integer status);
 
@@ -26,7 +26,7 @@ public interface ExamRecordService {
     void createRecord(Long appointmentId);
 
     /**
-     * 更新体检总结
+     * 更新体检结论和建议
      */
     void updateConclusion(Long id, String conclusion, String suggestion);
 
@@ -36,7 +36,7 @@ public interface ExamRecordService {
     void completeRecord(Long id, Long doctorId);
 
     /**
-     * 获取用户体检记录
+     * 获取用户的体检记录列表
      */
     Page<ExamRecord> getUserRecords(Long userId, Integer pageNum, Integer pageSize);
 } 

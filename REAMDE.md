@@ -259,11 +259,8 @@ phsical/
 - POST /{id}/review      # 结果复核
 - GET  /export/{recordId} # 导出体检报告
 
-### 7. 字典管理接口 (/api/dict)
-- GET  /types            # 获取字典类型列表
-- GET  /items/{type}     # 获取指定类型的字典项
 
-### 8. 通知管理接口 (/api/notices) [二期功能]
+### 7. 通知管理接口 (/api/notices) [二期功能]
 - GET  /                  # 获取通知列表，支持分页和筛选
 - POST /                  # 创建通知
 - PUT  /{id}             # 更新通知
@@ -272,20 +269,20 @@ phsical/
 - PUT  /{id}/read        # 标记通知为已读
 - GET  /unread/count     # 获取未读通知数量
 
-### 9. 统计分析接口 (/api/stats) [二期功能]
-#### 9.1 预约统计
+### 8. 统计分析接口 (/api/stats) [二期功能]
+#### 8.1 预约统计
 - GET  /appointments/summary           # 获取预约统计概况
 - GET  /appointments/trend            # 获取预约趋势数据
 - GET  /appointments/department       # 获取科室预约负载
 - GET  /appointments/cancel-rate      # 获取预约取消率
 
-#### 9.2 体检统计
+#### 8.2 体检统计
 - GET  /exams/completion-rate         # 获取体检完成率
 - GET  /exams/abnormal-rate          # 获取异常率统计
 - GET  /exams/department-workload    # 获取科室工作量
 - GET  /exams/daily-summary         # 获取每日体检汇总
 
-### 10. 日志管理接口 (/api/logs) [二期功能]
+### 9. 日志管理接口 (/api/logs) [二期功能]
 - GET  /                  # 获取操作日志列表
 - GET  /user/{userId}     # 获取用户操作日志
 - GET  /export            # 导出日志数据

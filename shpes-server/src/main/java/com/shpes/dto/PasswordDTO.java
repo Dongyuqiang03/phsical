@@ -5,23 +5,26 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.Pattern;
 
 /**
- * 修改密码请求DTO
+ * 密码修改数据传输对象
  */
 @Data
-@ApiModel("修改密码请求")
+@ApiModel(description = "密码修改参数")
 public class PasswordDTO {
 
+    @ApiModelProperty(value = "旧密码", required = true)
     @NotBlank(message = "旧密码不能为空")
-    @ApiModelProperty("旧密码")
     private String oldPassword;
 
+    @ApiModelProperty(value = "新密码", required = true)
     @NotBlank(message = "新密码不能为空")
-    @ApiModelProperty("新密码")
+    @Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)[a-zA-Z\\d]{8,20}$", 
+            message = "密码必须包含大小写字母和数字，长度在8-20之间")
     private String newPassword;
 
+    @ApiModelProperty(value = "确认新密码", required = true)
     @NotBlank(message = "确认密码不能为空")
-    @ApiModelProperty("确认密码")
     private String confirmPassword;
 } 

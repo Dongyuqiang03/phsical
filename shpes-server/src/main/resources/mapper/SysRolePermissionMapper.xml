@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.shpes.mapper.SysRolePermissionMapper">
+    
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.shpes.entity.SysRolePermission">
+        <id column="id" property="id"/>
+        <result column="role_id" property="roleId"/>
+        <result column="permission_id" property="permissionId"/>
+        <result column="create_time" property="createTime"/>
+    </resultMap>
+
+    <!-- 批量插入角色权限关联 -->
+    <insert id="batchInsert">
+        INSERT INTO sys_role_permission (role_id, permission_id) VALUES
+        <foreach collection="list" item="item" separator=",">
+            (#{item.roleId}, #{item.permissionId})
+        </foreach>
+    </insert>
+
+    <!-- 删除角色的所有权限关联 -->
+    <delete id="deleteByRoleId">
+        DELETE FROM sys_role_permission WHERE role_id = #{roleId}
+    </delete>
+
+    <!-- 获取角色的权限ID列表 -->
+    <select id="selectPermissionIdsByRoleId" resultType="java.lang.Long">
+        SELECT permission_id FROM sys_role_permission WHERE role_id = #{roleId}
+    </select>
+
+    <!-- 获取用户的所有权限代码 -->
+    <select id="selectUserPermissionCodes" resultType="java.lang.String">
+        SELECT DISTINCT p.permission_code
+        FROM sys_role_permission rp
+        INNER JOIN sys_user_role ur ON rp.role_id = ur.role_id
+        INNER JOIN sys_permission p ON rp.permission_id = p.id
+        WHERE ur.user_id = #{userId}
+        AND p.status = 1
+    </select>
+</mapper> 

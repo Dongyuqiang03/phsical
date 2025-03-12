@@ -12,33 +12,38 @@ import java.time.LocalDate;
 public interface ExamAppointmentService {
 
     /**
-     * 分页查询预约
-     */
-    CommonPage<AppointmentVO> getAppointmentPage(Integer pageNum, Integer pageSize, Long userId, 
-            LocalDate startDate, LocalDate endDate, Integer status);
-
-    /**
      * 获取预约详情
      */
     AppointmentVO getAppointment(Long id);
 
     /**
-     * 创建预约
+     * 完成预约（更新状态为进行中）
      */
-    void createAppointment(ExamAppointment appointment);
+    AppointmentVO completeAppointment(Long id);
 
     /**
      * 取消预约
      */
-    void cancelAppointment(Long id, String reason);
+    AppointmentVO cancelAppointment(Long id, String reason);
+
+    /**
+     * 分页获取预约列表
+     */
+    CommonPage<AppointmentVO> getAppointmentPage(Integer pageNum, Integer pageSize, Long userId, 
+            LocalDate startDate, LocalDate endDate, Integer status);
+
+    /**
+     * 创建预约
+     */
+    AppointmentVO createAppointment(ExamAppointment appointment);
 
     /**
      * 更新预约时间
      */
-    void updateAppointmentTime(Long id, Long timeSlotId);
+    AppointmentVO updateAppointmentTime(Long id, Long timeSlotId);
 
     /**
-     * 完成预约
+     * 获取用户的预约列表
      */
-    void completeAppointment(Long id);
-} 
+    CommonPage<AppointmentVO> getUserAppointments(Long userId, Integer pageNum, Integer pageSize);
+}

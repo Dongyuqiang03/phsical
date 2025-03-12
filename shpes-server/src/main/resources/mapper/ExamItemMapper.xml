@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.shpes.mapper.ExamItemMapper">
+    
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.shpes.entity.ExamItem">
+        <id column="id" property="id"/>
+        <result column="item_code" property="itemCode"/>
+        <result column="item_name" property="itemName"/>
+        <result column="category" property="category"/>
+        <result column="department_id" property="departmentId"/>
+        <result column="reference_value" property="referenceValue"/>
+        <result column="unit" property="unit"/>
+        <result column="status" property="status"/>
+        <result column="remark" property="remark"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+
+    <!-- 获取部门的体检项目列表 -->
+    <select id="getDepartmentItems" resultType="com.shpes.vo.ExamItemVO">
+        SELECT 
+            i.*,
+            d.department_name
+        FROM exam_item i
+        LEFT JOIN sys_department d ON i.department_id = d.id
+        WHERE i.department_id = #{departmentId}
+        AND i.status = 1
+        ORDER BY i.category, i.create_time DESC
+    </select>
+
+    <!-- 获取套餐包含的体检项目 -->
+    <select id="getPackageItems" resultType="com.shpes.vo.ExamItemVO">
+        SELECT 
+            i.*,
+            d.department_name,
+            pi.price as package_price
+        FROM exam_package_item pi
+        LEFT JOIN exam_item i ON pi.item_id = i.id
+        LEFT JOIN sys_department d ON i.department_id = d.id
+        WHERE pi.package_id = #{packageId}
+        AND i.status = 1
+        ORDER BY i.category, i.create_time DESC
+    </select>
+
+    <!-- 批量更新项目状态 -->
+    <update id="batchUpdateStatus">
+        UPDATE exam_item
+        SET status = #{status},
+            update_time = NOW()
+        WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </update>
+</mapper> 

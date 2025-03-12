@@ -2,8 +2,8 @@ package com.shpes.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.shpes.common.api.ApiException;
 import com.shpes.common.api.ResultCode;
+import com.shpes.common.exception.ApiException;
 import com.shpes.entity.ExamAppointment;
 import com.shpes.entity.ExamRecord;
 import com.shpes.mapper.ExamRecordMapper;
@@ -35,10 +35,10 @@ public class ExamRecordServiceImpl implements ExamRecordService {
             wrapper.eq(ExamRecord::getUserId, userId);
         }
         if (startDate != null) {
-            wrapper.ge(ExamRecord::getCreateTime, startDate.atStartOfDay());
+            wrapper.ge(ExamRecord::getExamDate, startDate.atStartOfDay());
         }
         if (endDate != null) {
-            wrapper.le(ExamRecord::getCreateTime, endDate.plusDays(1).atStartOfDay());
+            wrapper.le(ExamRecord::getExamDate, endDate.plusDays(1).atStartOfDay());
         }
         if (status != null) {
             wrapper.eq(ExamRecord::getStatus, status);
@@ -61,21 +61,30 @@ public class ExamRecordServiceImpl implements ExamRecordService {
     public void createRecord(Long appointmentId) {
         // 检查预约是否存在且状态为待体检
         ExamAppointment appointment = appointmentService.getAppointment(appointmentId);
+        if (appointment == null) {
+            throw new ApiException(ResultCode.APPOINTMENT_NOT_EXIST);
+        }
         if (appointment.getStatus() != 1) {
-            throw new ApiException(ResultCode.FAILED.getMessage("只能为待体检的预约创建记录"));
+            throw new ApiException(ResultCode.FAILED, "只能为待体检的预约创建记录");
         }
 
         // 检查是否已存在体检记录
         LambdaQueryWrapper<ExamRecord> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(ExamRecord::getAppointmentId, appointmentId);
         if (recordMapper.selectCount(wrapper) > 0) {
-            throw new ApiException(ResultCode.FAILED.getMessage("该预约已存在体检记录"));
+            throw new ApiException(ResultCode.FAILED, "该预约已存在体检记录");
         }
 
         // 创建体检记录
         ExamRecord record = new ExamRecord();
         record.setAppointmentId(appointmentId);
+        record.setUserId(appointment.getUserId());
+        record.setPackageId(appointment.getPackageId());
+        record.setPackageName(appointment.getPackageName());
+        record.setDepartmentId(appointment.getDepartmentId());
+        record.setDepartmentName(appointment.getDepartmentName());
         record.setExamNo(generateExamNo());
+        record.setExamDate(LocalDateTime.now());
         record.setStatus(1); // 进行中
         record.setCreateTime(LocalDateTime.now());
         record.setUpdateTime(LocalDateTime.now());
@@ -89,7 +98,7 @@ public class ExamRecordServiceImpl implements ExamRecordService {
     public void updateConclusion(Long id, String conclusion, String suggestion) {
         ExamRecord record = getRecord(id);
         if (record.getStatus() != 1) {
-            throw new ApiException(ResultCode.FAILED.getMessage("只能更新进行中的体检记录"));
+            throw new ApiException(ResultCode.FAILED, "只能更新进行中的体检记录");
         }
 
         record.setConclusion(conclusion);
@@ -103,7 +112,7 @@ public class ExamRecordServiceImpl implements ExamRecordService {
     public void completeRecord(Long id, Long doctorId) {
         ExamRecord record = getRecord(id);
         if (record.getStatus() != 1) {
-            throw new ApiException(ResultCode.FAILED.getMessage("只能完成进行中的体检记录"));
+            throw new ApiException(ResultCode.FAILED, "只能完成进行中的体检记录");
         }
 
         record.setStatus(2); // 已完成

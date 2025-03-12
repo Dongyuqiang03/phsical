@@ -1,5 +1,6 @@
 package com.shpes.service.impl;
 
+import cn.hutool.core.stream.CollectorUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -20,6 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.apache.commons.lang3.StringUtils;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -153,6 +155,24 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public List<String> getRoleNamesByIds(List<Long> roleIds) {
+        if (roleIds == null || roleIds.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        // 查询指定ID的角色列表
+        List<SysRole> roles = baseMapper.selectList(
+                new LambdaQueryWrapper<SysRole>()
+                        .in(SysRole::getId, roleIds)
+                        .orderByAsc(SysRole::getSort));
+
+        // 提取角色名称
+        return roles.stream()
+                .map(SysRole::getName)
+                .collect(Collectors.toList());
+    }
+
     /**
      * 检查角色名称是否已存在
      */
@@ -179,4 +199,4 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
         vo.setPermissionIds(getRolePermissions(role.getId()));
         return vo;
     }
-} 
+}
