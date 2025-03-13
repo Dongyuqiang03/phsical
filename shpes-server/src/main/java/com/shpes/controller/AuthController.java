@@ -4,7 +4,7 @@ import com.shpes.common.api.CommonResult;
 import com.shpes.utils.CaptchaUtils;
 import com.shpes.dto.LoginDTO;
 import com.shpes.dto.PasswordDTO;
-import com.shpes.service.AuthService;
+import com.shpes.security.service.AuthService;
 import com.shpes.vo.CaptchaVO;
 import com.shpes.vo.LoginVO;
 import io.swagger.annotations.Api;
@@ -64,4 +64,11 @@ public class AuthController {
     public CommonResult<CaptchaVO> getCaptcha() {
         return CommonResult.success(captchaUtils.generateCaptcha());
     }
-} 
+
+    @ApiOperation("刷新用户权限")
+    @PostMapping("/refresh/{userId}")
+    public CommonResult<Void> refreshUserAuthorities(@PathVariable Long userId) {
+        authService.refreshUserAuthorities(userId);
+        return CommonResult.success(null);
+    }
+}

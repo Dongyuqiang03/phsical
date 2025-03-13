@@ -2,34 +2,30 @@ package com.shpes.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.shpes.common.api.CommonPage;
 import com.shpes.common.api.ResultCode;
 import com.shpes.common.exception.ApiException;
-import com.shpes.entity.ExamAppointment;
 import com.shpes.entity.ExamRecord;
 import com.shpes.mapper.ExamRecordMapper;
-import com.shpes.service.ExamAppointmentService;
 import com.shpes.service.ExamRecordService;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.shpes.vo.ExamRecordVO;
+import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
-/**
- * 体检记录服务实现类
- */
 @Service
-public class ExamRecordServiceImpl implements ExamRecordService {
-
-    @Autowired
-    private ExamRecordMapper recordMapper;
-
-    @Autowired
-    private ExamAppointmentService appointmentService;
+public class ExamRecordServiceImpl extends ServiceImpl<ExamRecordMapper, ExamRecord> implements ExamRecordService {
 
     @Override
-    public Page<ExamRecord> getRecordPage(Integer pageNum, Integer pageSize, Long userId, LocalDate startDate, LocalDate endDate, Integer status) {
+    public CommonPage<ExamRecordVO> getRecordPage(Integer pageNum, Integer pageSize, Long userId, 
+            Integer status, LocalDate startDate, LocalDate endDate) {
         LambdaQueryWrapper<ExamRecord> wrapper = new LambdaQueryWrapper<>();
         if (userId != null) {
             wrapper.eq(ExamRecord::getUserId, userId);
@@ -44,90 +40,99 @@ public class ExamRecordServiceImpl implements ExamRecordService {
             wrapper.eq(ExamRecord::getStatus, status);
         }
         wrapper.orderByDesc(ExamRecord::getCreateTime);
-        return recordMapper.selectPage(new Page<>(pageNum, pageSize), wrapper);
+
+        Page<ExamRecord> page = page(new Page<>(pageNum, pageSize), wrapper);
+        List<ExamRecordVO> records = page.getRecords().stream()
+                .map(this::convertToVO)
+                .collect(Collectors.toList());
+        
+        return CommonPage.restPage(records, page.getTotal(), page.getCurrent(), page.getSize());
     }
 
     @Override
-    public ExamRecord getRecord(Long id) {
-        ExamRecord record = recordMapper.selectById(id);
+    public ExamRecordVO getRecordById(Long id) {
+        ExamRecord record = getById(id);
         if (record == null) {
             throw new ApiException(ResultCode.EXAM_RECORD_NOT_EXIST);
         }
-        return record;
+        return convertToVO(record);
     }
 
     @Override
-    @Transactional
-    public void createRecord(Long appointmentId) {
-        // 检查预约是否存在且状态为待体检
-        ExamAppointment appointment = appointmentService.getAppointment(appointmentId);
-        if (appointment == null) {
-            throw new ApiException(ResultCode.APPOINTMENT_NOT_EXIST);
-        }
-        if (appointment.getStatus() != 1) {
-            throw new ApiException(ResultCode.FAILED, "只能为待体检的预约创建记录");
-        }
-
-        // 检查是否已存在体检记录
-        LambdaQueryWrapper<ExamRecord> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(ExamRecord::getAppointmentId, appointmentId);
-        if (recordMapper.selectCount(wrapper) > 0) {
-            throw new ApiException(ResultCode.FAILED, "该预约已存在体检记录");
-        }
-
-        // 创建体检记录
-        ExamRecord record = new ExamRecord();
-        record.setAppointmentId(appointmentId);
-        record.setUserId(appointment.getUserId());
-        record.setPackageId(appointment.getPackageId());
-        record.setPackageName(appointment.getPackageName());
-        record.setDepartmentId(appointment.getDepartmentId());
-        record.setDepartmentName(appointment.getDepartmentName());
-        record.setExamNo(generateExamNo());
-        record.setExamDate(LocalDateTime.now());
-        record.setStatus(1); // 进行中
-        record.setCreateTime(LocalDateTime.now());
-        record.setUpdateTime(LocalDateTime.now());
-        recordMapper.insert(record);
-
-        // 更新预约状态为进行中
-        appointmentService.completeAppointment(appointmentId);
-    }
-
-    @Override
-    public void updateConclusion(Long id, String conclusion, String suggestion) {
-        ExamRecord record = getRecord(id);
-        if (record.getStatus() != 1) {
-            throw new ApiException(ResultCode.FAILED, "只能更新进行中的体检记录");
-        }
-
-        record.setConclusion(conclusion);
-        record.setSuggestion(suggestion);
-        record.setUpdateTime(LocalDateTime.now());
-        recordMapper.updateById(record);
-    }
-
-    @Override
-    @Transactional
-    public void completeRecord(Long id, Long doctorId) {
-        ExamRecord record = getRecord(id);
-        if (record.getStatus() != 1) {
-            throw new ApiException(ResultCode.FAILED, "只能完成进行中的体检记录");
-        }
-
-        record.setStatus(2); // 已完成
-        record.setDoctorId(doctorId);
-        record.setCompleteTime(LocalDateTime.now());
-        record.setUpdateTime(LocalDateTime.now());
-        recordMapper.updateById(record);
-    }
-
-    @Override
-    public Page<ExamRecord> getUserRecords(Long userId, Integer pageNum, Integer pageSize) {
+    public List<ExamRecordVO> getUserRecords(Long userId) {
         LambdaQueryWrapper<ExamRecord> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(ExamRecord::getUserId, userId)
                 .orderByDesc(ExamRecord::getCreateTime);
-        return recordMapper.selectPage(new Page<>(pageNum, pageSize), wrapper);
+        return list(wrapper).stream()
+                .map(this::convertToVO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public ExamRecordVO createRecord(ExamRecord record) {
+        record.setStatus(0); // 设置初始状态为未开始
+        record.setExamNo(generateExamNo());
+        record.setCreateTime(LocalDateTime.now());
+        record.setUpdateTime(LocalDateTime.now());
+        save(record);
+        return convertToVO(record);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public ExamRecordVO updateRecord(ExamRecord record) {
+        if (!updateById(record)) {
+            throw new ApiException(ResultCode.EXAM_RECORD_NOT_EXIST);
+        }
+        return convertToVO(record);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void deleteRecord(Long id) {
+        if (!removeById(id)) {
+            throw new ApiException(ResultCode.EXAM_RECORD_NOT_EXIST);
+        }
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public ExamRecordVO updateStatus(Long id, Integer status) {
+        ExamRecord record = getById(id);
+        if (record == null) {
+            throw new ApiException(ResultCode.EXAM_RECORD_NOT_EXIST);
+        }
+        record.setStatus(status);
+        record.setUpdateTime(LocalDateTime.now());
+        updateById(record);
+        return convertToVO(record);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public ExamRecordVO completeRecord(Long id, String conclusion, String suggestion) {
+        ExamRecord record = getById(id);
+        if (record == null) {
+            throw new ApiException(ResultCode.EXAM_RECORD_NOT_EXIST);
+        }
+        record.setStatus(2); // 设置状态为已完成
+        record.setConclusion(conclusion); // 使用 conclusion 字段替代 summary
+        record.setSuggestion(suggestion);
+        record.setCompleteTime(LocalDateTime.now());
+        record.setUpdateTime(LocalDateTime.now());
+        updateById(record);
+        return convertToVO(record);
+    }
+
+    @Override
+    public Object getTodayStats() {
+        return baseMapper.selectTodayStats();
+    }
+
+    @Override
+    public List<Map<String, Object>> getCompletionStats(LocalDate startDate, LocalDate endDate) {
+        return baseMapper.selectCompletionStats(startDate, endDate);
     }
 
     /**
@@ -136,4 +141,16 @@ public class ExamRecordServiceImpl implements ExamRecordService {
     private String generateExamNo() {
         return "EX" + System.currentTimeMillis();
     }
-} 
+
+    /**
+     * 将实体转换为VO
+     */
+    private ExamRecordVO convertToVO(ExamRecord record) {
+        if (record == null) {
+            return null;
+        }
+        ExamRecordVO vo = new ExamRecordVO();
+        BeanUtils.copyProperties(record, vo);
+        return vo;
+    }
+}

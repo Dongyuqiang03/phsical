@@ -1,47 +1,55 @@
 package com.shpes.service;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.shpes.common.api.CommonPage;
 import com.shpes.entity.ExamResult;
+import com.shpes.vo.ExamResultVO;
 
 import java.util.List;
 
-/**
- * 体检结果服务接口
- */
 public interface ExamResultService {
+    /**
+     * 获取体检记录的结果列表
+     */
+    List<ExamResultVO> getResultsByRecordId(Long recordId);
 
     /**
-     * 获取体检记录的所有结果
+     * 分页查询体检结果
      */
-    List<ExamResult> getRecordResults(Long recordId);
+    CommonPage<ExamResultVO> getResultPage(Integer pageNum, Integer pageSize, Long recordId, 
+            Long itemId, Integer resultType, Integer reviewStatus);
 
     /**
-     * 获取体检结果详情
+     * 创建体检结果
      */
-    ExamResult getResult(Long id);
+    ExamResultVO createResult(ExamResult result);
 
     /**
      * 批量创建体检结果
      */
-    void createResults(List<ExamResult> results);
+    List<ExamResultVO> createResults(List<ExamResult> results);
 
     /**
      * 更新体检结果
      */
-    void updateResult(ExamResult result);
+    ExamResultVO updateResult(ExamResult result);
+
+    /**
+     * 删除体检结果
+     */
+    void deleteResult(Long id);
 
     /**
      * 复核体检结果
      */
-    void reviewResult(Long id, Long reviewerId);
+    ExamResultVO reviewResult(Long id, String suggestion);
 
     /**
-     * 获取待复核的结果列表
+     * 批量复核体检结果
      */
-    Page<ExamResult> getPendingReviewResults(Integer pageNum, Integer pageSize, Long departmentId);
+    List<ExamResultVO> reviewResults(List<Long> ids);
 
     /**
-     * 获取异常结果列表
+     * 导出体检报告
      */
-    Page<ExamResult> getAbnormalResults(Integer pageNum, Integer pageSize, Long recordId);
-} 
+    String exportReport(Long recordId);
+}

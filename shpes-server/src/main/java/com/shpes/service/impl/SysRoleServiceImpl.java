@@ -1,6 +1,5 @@
 package com.shpes.service.impl;
 
-import cn.hutool.core.stream.CollectorUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -15,22 +14,18 @@ import com.shpes.mapper.SysRolePermissionMapper;
 import com.shpes.mapper.SysUserRoleMapper;
 import com.shpes.service.SysRoleService;
 import com.shpes.vo.RoleVO;
-import org.springframework.beans.BeanUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-/**
- * 系统角色服务实现类
- */
 @Service
 public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> implements SysRoleService {
-
+    
     @Autowired
     private SysRolePermissionMapper rolePermissionMapper;
 
@@ -173,6 +168,35 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public List<SysRole> getUserRoles(Long userId) {
+        return baseMapper.selectUserRoles(userId);
+    }
+
+    @Override
+    public List<Long> getRolePermissionIds(Long roleId) {
+        return baseMapper.selectRolePermissionIds(roleId);
+    }
+
+    /**
+     * 将角色实体转换为VO对象
+     */
+    private RoleVO convertToVO(SysRole role) {
+        if (role == null) {
+            return null;
+        }
+        RoleVO vo = new RoleVO();
+        vo.setId(role.getId());
+        vo.setName(role.getName());
+        vo.setCode(role.getCode());
+        vo.setDescription(role.getDescription());
+        vo.setStatus(role.getStatus());
+        vo.setSort(role.getSort());
+        vo.setCreateTime(role.getCreateTime());
+        vo.setUpdateTime(role.getUpdateTime());
+        return vo;
+    }
+
     /**
      * 检查角色名称是否已存在
      */
@@ -187,16 +211,5 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
     private boolean isRoleCodeExists(String code) {
         return baseMapper.selectCount(new LambdaQueryWrapper<SysRole>()
                 .eq(SysRole::getCode, code)) > 0;
-    }
-
-    /**
-     * 将实体对象转换为VO对象
-     */
-    private RoleVO convertToVO(SysRole role) {
-        RoleVO vo = new RoleVO();
-        BeanUtils.copyProperties(role, vo);
-        // 获取角色权限
-        vo.setPermissionIds(getRolePermissions(role.getId()));
-        return vo;
     }
 }

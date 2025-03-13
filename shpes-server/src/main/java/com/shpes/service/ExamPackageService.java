@@ -1,8 +1,9 @@
 package com.shpes.service;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.shpes.entity.ExamItem;
+import com.shpes.common.api.CommonPage;
 import com.shpes.entity.ExamPackage;
+import com.shpes.vo.ExamItemVO;
+import com.shpes.vo.ExamPackageVO;
 
 import java.util.List;
 
@@ -14,27 +15,28 @@ public interface ExamPackageService {
     /**
      * 分页查询体检套餐
      */
-    Page<ExamPackage> getPackagePage(Integer pageNum, Integer pageSize, String keyword);
-
-    /**
-     * 获取所有体检套餐
-     */
-    List<ExamPackage> getAllPackages();
+    CommonPage<ExamPackageVO> getPackagePage(Integer pageNum, Integer pageSize, String name, 
+            Integer gender, Integer status);
 
     /**
      * 根据ID获取体检套餐
      */
-    ExamPackage getPackage(Long id);
+    ExamPackageVO getPackageById(Long id);
+
+    /**
+     * 获取所有可用套餐
+     */
+    List<ExamPackageVO> getAvailablePackages(Integer gender);
 
     /**
      * 创建体检套餐
      */
-    void createPackage(ExamPackage examPackage);
+    ExamPackageVO createPackage(ExamPackage examPackage);
 
     /**
      * 更新体检套餐
      */
-    void updatePackage(ExamPackage examPackage);
+    ExamPackageVO updatePackage(ExamPackage examPackage);
 
     /**
      * 删除体检套餐
@@ -44,15 +46,20 @@ public interface ExamPackageService {
     /**
      * 更新体检套餐状态
      */
-    void updateStatus(Long id, Integer status);
+    ExamPackageVO updateStatus(Long id, Integer status);
 
     /**
      * 配置套餐项目
      */
-    void configureItems(Long packageId, List<Long> itemIds);
+    ExamPackageVO configureItems(Long packageId, List<Long> itemIds);
 
     /**
      * 获取套餐项目列表
      */
-    List<ExamItem> getPackageItems(Long packageId);
-} 
+    List<ExamItemVO> getPackageItems(Long packageId);
+
+    /**
+     * 获取套餐统计信息
+     */
+    Object getPackageStats();
+}

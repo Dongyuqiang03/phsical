@@ -4,7 +4,7 @@ import com.shpes.common.api.CommonPage;
 import com.shpes.common.api.CommonResult;
 import com.shpes.dto.UserDTO;
 import com.shpes.security.annotation.HasPermission;
-import com.shpes.service.UserService;
+import com.shpes.service.SysUserService;
 import com.shpes.vo.UserVO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -22,10 +22,10 @@ import javax.validation.groups.Default;
 @Api(tags = "用户管理")
 @RestController
 @RequestMapping("/api/users")
-public class UserController {
+public class SysUserController {
 
     @Autowired
-    private UserService userService;
+    private SysUserService userService;
 
     @ApiOperation("分页查询用户")
     @GetMapping

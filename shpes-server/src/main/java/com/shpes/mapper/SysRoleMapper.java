@@ -2,11 +2,18 @@ package com.shpes.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.shpes.entity.SysRole;
-import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
+import java.util.List;
 
-/**
- * 角色Mapper接口
- */
-@Mapper
 public interface SysRoleMapper extends BaseMapper<SysRole> {
-} 
+    
+    /**
+     * 查询用户角色列表
+     */
+    List<SysRole> selectUserRoles(@Param("userId") Long userId);
+
+    /**
+     * 查询角色权限ID列表
+     */
+    List<Long> selectRolePermissionIds(@Param("roleId") Long roleId);
+}

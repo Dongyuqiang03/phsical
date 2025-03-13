@@ -2,55 +2,36 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.shpes.mapper.ExamResultMapper">
     
-    <!-- 通用查询映射结果 -->
-    <resultMap id="BaseResultMap" type="com.shpes.entity.ExamResult">
-        <id column="id" property="id"/>
-        <result column="record_id" property="recordId"/>
-        <result column="item_id" property="itemId"/>
-        <result column="item_name" property="itemName"/>
-        <result column="result_value" property="resultValue"/>
-        <result column="reference_value" property="referenceValue"/>
-        <result column="unit" property="unit"/>
-        <result column="is_abnormal" property="isAbnormal"/>
-        <result column="doctor_advice" property="doctorAdvice"/>
-        <result column="doctor_id" property="doctorId"/>
-        <result column="doctor_name" property="doctorName"/>
-        <result column="create_time" property="createTime"/>
-        <result column="update_time" property="updateTime"/>
-    </resultMap>
-
-    <!-- 获取体检记录的结果列表 -->
-    <select id="getRecordResults" resultMap="BaseResultMap">
-        SELECT er.*, su.name as doctor_name, ei.item_name, ei.reference_value, ei.unit
-        FROM exam_result er
-        LEFT JOIN sys_user su ON er.doctor_id = su.id
-        LEFT JOIN exam_item ei ON er.item_id = ei.id
-        WHERE er.record_id = #{recordId}
-        ORDER BY er.create_time
+    <select id="selectResultsByRecordId" resultType="com.shpes.vo.ExamResultVO">
+        SELECT r.*, i.item_name, i.item_code, i.unit, i.reference_low, i.reference_high,
+               u1.real_name as doctor_name, u2.real_name as reviewer_name
+        FROM exam_result r
+        LEFT JOIN exam_item i ON r.item_id = i.id
+        LEFT JOIN sys_user u1 ON r.doctor_id = u1.id
+        LEFT JOIN sys_user u2 ON r.reviewer_id = u2.id
+        WHERE r.record_id = #{recordId}
+        ORDER BY i.sort
     </select>
-
-    <!-- 批量插入体检结果 -->
-    <insert id="batchInsert">
-        INSERT INTO exam_result 
-        (record_id, item_id, item_name, result_value, reference_value, unit, 
-         is_abnormal, doctor_advice, doctor_id, doctor_name)
-        VALUES
-        <foreach collection="list" item="item" separator=",">
-            (#{item.recordId}, #{item.itemId}, #{item.itemName}, #{item.resultValue},
-             #{item.referenceValue}, #{item.unit}, #{item.isAbnormal}, #{item.doctorAdvice},
-             #{item.doctorId}, #{item.doctorName})
-        </foreach>
-    </insert>
-
-    <!-- 更新体检结果 -->
-    <update id="updateResult">
-        UPDATE exam_result
-        SET result_value = #{resultValue},
-            is_abnormal = #{isAbnormal},
-            doctor_advice = #{doctorAdvice},
-            doctor_id = #{doctorId},
-            doctor_name = #{doctorName},
-            update_time = NOW()
-        WHERE id = #{id}
-    </update>
-</mapper> 
+    
+    <select id="selectResultPage" resultType="com.shpes.entity.ExamResult">
+        SELECT r.*, i.item_name, i.item_code
+        FROM exam_result r
+        LEFT JOIN exam_item i ON r.item_id = i.id
+        <where>
+            <if test="recordId != null">
+                AND r.record_id = #{recordId}
+            </if>
+            <if test="itemId != null">
+                AND r.item_id = #{itemId}
+            </if>
+            <if test="resultType != null">
+                AND r.is_abnormal = #{resultType}
+            </if>
+            <if test="reviewStatus != null">
+                AND r.review_status = #{reviewStatus}
+            </if>
+        </where>
+        ORDER BY r.create_time DESC
+    </select>
+    
+</mapper>

@@ -6,7 +6,6 @@ import com.shpes.security.annotation.HasPermission;
 import com.shpes.entity.SysRole;
 import com.shpes.service.SysRoleService;
 import com.shpes.vo.RoleVO;
-import com.shpes.vo.RolePageVO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;

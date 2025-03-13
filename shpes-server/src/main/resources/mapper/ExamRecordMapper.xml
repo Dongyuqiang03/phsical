@@ -61,4 +61,17 @@
             update_time = NOW()
         WHERE id = #{id}
     </update>
-</mapper> 
+
+    <!-- 获取体检完成率统计 -->
+    <select id="selectCompletionStats" resultType="java.util.Map">
+        SELECT 
+            DATE(exam_date) as date,
+            COUNT(*) as total,
+            SUM(CASE WHEN status = 2 THEN 1 ELSE 0 END) as completed,
+            ROUND(SUM(CASE WHEN status = 2 THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 2) as completion_rate
+        FROM exam_record
+        WHERE exam_date BETWEEN #{startDate} AND #{endDate}
+        GROUP BY DATE(exam_date)
+        ORDER BY date
+    </select>
+</mapper>

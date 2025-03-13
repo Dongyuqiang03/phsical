@@ -5,6 +5,7 @@ import com.shpes.common.api.CommonResult;
 import com.shpes.entity.ExamPackage;
 import com.shpes.security.annotation.HasPermission;
 import com.shpes.service.ExamPackageService;
+import com.shpes.vo.ExamItemVO;
 import com.shpes.vo.ExamPackageVO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -33,10 +34,9 @@ public class ExamPackageController {
             @ApiParam("页码") @RequestParam(defaultValue = "1") Integer pageNum,
             @ApiParam("每页记录数") @RequestParam(defaultValue = "10") Integer pageSize,
             @ApiParam("套餐名称") @RequestParam(required = false) String name,
-            @ApiParam("套餐类型") @RequestParam(required = false) String type,
             @ApiParam("适用性别：0-不限，1-男，2-女") @RequestParam(required = false) Integer gender,
             @ApiParam("状态：0-禁用，1-启用") @RequestParam(required = false) Integer status) {
-        return CommonResult.success(packageService.getPackagePage(pageNum, pageSize, name, type, gender, status));
+        return CommonResult.success(packageService.getPackagePage(pageNum, pageSize, name, gender, status));
     }
 
     @ApiOperation("获取体检套餐详情")
@@ -107,4 +107,4 @@ public class ExamPackageController {
     public CommonResult<Object> getPackageStats() {
         return CommonResult.success(packageService.getPackageStats());
     }
-} 
+}
