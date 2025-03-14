@@ -196,6 +196,8 @@ phsical/
 - POST /password/reset     # 密码重置
 - POST /password/change    # 修改密码
 - GET  /captcha           # 获取验证码
+- POST /token/refresh     # 刷新Token
+- GET  /current           # 获取当前用户信息
 
 ### 2. 系统管理接口
 #### 2.1 用户管理 (/api/users)

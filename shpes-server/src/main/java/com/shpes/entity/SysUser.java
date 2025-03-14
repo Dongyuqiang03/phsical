@@ -61,4 +61,8 @@ public class SysUser extends BaseEntity {
     private LocalDateTime createTime;
 
     private LocalDateTime updateTime;
+
+    public boolean isEnabled() {
+        return status != null && status == 1;
+    }
 }

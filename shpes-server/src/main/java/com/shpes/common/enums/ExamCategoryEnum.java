@@ -29,4 +29,16 @@ public enum ExamCategoryEnum {
         this.value = value;
         this.label = label;
     }
-} 
+
+    public static ExamCategoryEnum getByValue(Integer value) {
+        if (value == null) {
+            return null;
+        }
+        for (ExamCategoryEnum category : values()) {
+            if (category.getValue().equals(value)) {
+                return category;
+            }
+        }
+        return null;
+    }
+}

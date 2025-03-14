@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.shpes.common.api.CommonPage;
-import com.shpes.common.api.ResultCode;
+import com.shpes.common.enums.ResultCode;
 import com.shpes.common.exception.ApiException;
 import com.shpes.entity.ExamRecord;
 import com.shpes.mapper.ExamRecordMapper;

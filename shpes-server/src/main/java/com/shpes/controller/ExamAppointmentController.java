@@ -2,8 +2,9 @@ package com.shpes.controller;
 
 import com.shpes.common.api.CommonPage;
 import com.shpes.common.api.CommonResult;
+import com.shpes.common.constant.RoleConstants;
 import com.shpes.entity.ExamAppointment;
-import com.shpes.security.annotation.HasPermission;
+import com.shpes.annotation.RequiresPermission;
 import com.shpes.service.ExamAppointmentService;
 import com.shpes.vo.AppointmentVO;
 import io.swagger.annotations.Api;
@@ -28,7 +29,7 @@ public class ExamAppointmentController {
 
     @ApiOperation("获取预约列表")
     @GetMapping
-    @HasPermission("exam:appointment:list")
+    @RequiresPermission(RoleConstants.ADMIN)
     public CommonResult<CommonPage<AppointmentVO>> getAppointmentPage(
             @RequestParam(defaultValue = "1") Integer pageNum,
             @RequestParam(defaultValue = "10") Integer pageSize,
@@ -41,14 +42,14 @@ public class ExamAppointmentController {
 
     @ApiOperation("获取预约详情")
     @GetMapping("/{id}")
-    @HasPermission("exam:appointment:detail")
+    @RequiresPermission(RoleConstants.ADMIN)
     public CommonResult<AppointmentVO> getAppointment(@PathVariable Long id) {
         return CommonResult.success(appointmentService.getAppointment(id));
     }
 
     @ApiOperation("创建预约")
     @PostMapping
-    @HasPermission("exam:appointment:create")
+    @RequiresPermission(RoleConstants.USER)
     public CommonResult<Void> createAppointment(@Valid @RequestBody ExamAppointment appointment) {
         appointmentService.createAppointment(appointment);
         return CommonResult.success(null);
@@ -56,7 +57,7 @@ public class ExamAppointmentController {
 
     @ApiOperation("取消预约")
     @PutMapping("/{id}/cancel")
-    @HasPermission("exam:appointment:cancel")
+    @RequiresPermission(RoleConstants.USER)
     public CommonResult<Void> cancelAppointment(
             @PathVariable Long id,
             @RequestParam String reason) {
@@ -66,7 +67,7 @@ public class ExamAppointmentController {
 
     @ApiOperation("更新预约时间")
     @PutMapping("/{id}/time")
-    @HasPermission("exam:appointment:update")
+    @RequiresPermission(RoleConstants.ADMIN)
     public CommonResult<Void> updateAppointmentTime(
             @PathVariable Long id,
             @RequestParam Long timeSlotId) {
@@ -76,7 +77,7 @@ public class ExamAppointmentController {
 
     @ApiOperation("完成预约")
     @PutMapping("/{id}/complete")
-    @HasPermission("exam:appointment:complete")
+    @RequiresPermission(RoleConstants.ADMIN)
     public CommonResult<Void> completeAppointment(@PathVariable Long id) {
         appointmentService.completeAppointment(id);
         return CommonResult.success(null);

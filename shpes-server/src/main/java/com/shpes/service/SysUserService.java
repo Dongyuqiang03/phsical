@@ -1,9 +1,11 @@
 package com.shpes.service;
 
 import com.shpes.common.api.CommonPage;
+import com.shpes.dto.RegisterDTO;
 import com.shpes.dto.UserDTO;
 import com.shpes.entity.SysUser;
 import com.shpes.vo.UserVO;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 import java.util.List;
 
@@ -49,6 +51,11 @@ public interface SysUserService extends IBaseService<SysUser> {
     void resetPassword(Long id);
 
     /**
+     * 更新用户密码
+     */
+    void updatePassword(Long id, String newPassword);
+
+    /**
      * 获取当前用户信息
      */
     UserVO getCurrentUser();
@@ -74,6 +81,11 @@ public interface SysUserService extends IBaseService<SysUser> {
     SysUser getByUsername(String username);
 
     /**
+     * 根据用户名获取用户信息
+     */
+    UserVO getUserByUsername(String username);
+
+    /**
      * 检查用户名是否存在
      */
     boolean checkUsernameExists(String username);
@@ -97,4 +109,32 @@ public interface SysUserService extends IBaseService<SysUser> {
      * 根据用户ID获取用户名
      */
     String getUserNameById(Long userId);
+
+    /**
+     * 获取用户权限列表
+     */
+    List<SimpleGrantedAuthority> getUserAuthorities(Long userId);
+
+    /**
+     * 获取用户角色ID列表
+     */
+    List<Long> getUserRoleIds(Long userId);
+
+    /**
+     * 获取用户角色编码列表
+     * 用于前端角色判断
+     */
+    List<String> getUserRoleCodes(Long userId);
+
+    /**
+     * 获取用户权限编码列表
+     * 用于权限判断
+     */
+    List<String> getUserPermissionCodes(Long userId);
+
+    /**
+     * 获取用户权限ID列表
+     * 用于权限管理
+     */
+    List<Long> getUserPermissionIds(Long userId);
 }

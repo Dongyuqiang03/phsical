@@ -24,11 +24,6 @@ public interface SysDepartmentService {
     List<DepartmentVO> getAllDepartments();
 
     /**
-     * 根据ID获取部门
-     */
-    SysDepartment getDepartment(Long id);
-
-    /**
      * 创建部门
      */
     void createDepartment(SysDepartment department);

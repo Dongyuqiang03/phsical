@@ -2,8 +2,9 @@ package com.shpes.controller;
 
 import com.shpes.common.api.CommonPage;
 import com.shpes.common.api.CommonResult;
+import com.shpes.common.constant.RoleConstants;
 import com.shpes.entity.ExamTimeSlot;
-import com.shpes.security.annotation.HasPermission;
+import com.shpes.annotation.RequiresPermission;
 import com.shpes.service.ExamTimeSlotService;
 import com.shpes.vo.ExamTimeSlotVO;
 import io.swagger.annotations.Api;
@@ -29,7 +30,7 @@ public class ExamTimeSlotController {
 
     @ApiOperation("获取时间段列表")
     @GetMapping
-    @HasPermission("exam:timeslot:list")
+    @RequiresPermission(RoleConstants.ADMIN)
     public CommonResult<CommonPage<ExamTimeSlotVO>> getTimeSlotPage(
             @RequestParam(defaultValue = "1") Integer pageNum,
             @RequestParam(defaultValue = "10") Integer pageSize,
@@ -38,8 +39,16 @@ public class ExamTimeSlotController {
         return CommonResult.success(timeSlotService.getTimeSlotPage(pageNum, pageSize, departmentId, date));
     }
 
+    @ApiOperation("获取时间段详情")
+    @GetMapping("/{id}")
+    @RequiresPermission(RoleConstants.ADMIN)
+    public CommonResult<ExamTimeSlotVO> getTimeSlot(@PathVariable Long id) {
+        return CommonResult.success(timeSlotService.getTimeSlot(id));
+    }
+
     @ApiOperation("获取可预约时间段")
     @GetMapping("/available")
+    @RequiresPermission(RoleConstants.USER)
     public CommonResult<List<ExamTimeSlotVO>> getAvailableTimeSlots(
             @RequestParam Long departmentId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
@@ -48,22 +57,24 @@ public class ExamTimeSlotController {
 
     @ApiOperation("创建时间段")
     @PostMapping
-    @HasPermission("exam:timeslot:create")
-    public CommonResult<ExamTimeSlotVO> createTimeSlot(@Valid @RequestBody ExamTimeSlot timeSlot) {
-        return CommonResult.success(timeSlotService.createTimeSlot(timeSlot));
+    @RequiresPermission(RoleConstants.ADMIN)
+    public CommonResult<Void> createTimeSlot(@Valid @RequestBody ExamTimeSlot timeSlot) {
+        timeSlotService.createTimeSlot(timeSlot);
+        return CommonResult.success(null);
     }
 
     @ApiOperation("更新时间段")
     @PutMapping("/{id}")
-    @HasPermission("exam:timeslot:update")
-    public CommonResult<ExamTimeSlotVO> updateTimeSlot(@PathVariable Long id, @Valid @RequestBody ExamTimeSlot timeSlot) {
+    @RequiresPermission(RoleConstants.ADMIN)
+    public CommonResult<Void> updateTimeSlot(@PathVariable Long id, @Valid @RequestBody ExamTimeSlot timeSlot) {
         timeSlot.setId(id);
-        return CommonResult.success(timeSlotService.updateTimeSlot(timeSlot));
+        timeSlotService.updateTimeSlot(timeSlot);
+        return CommonResult.success(null);
     }
 
     @ApiOperation("删除时间段")
     @DeleteMapping("/{id}")
-    @HasPermission("exam:timeslot:delete")
+    @RequiresPermission(RoleConstants.ADMIN)
     public CommonResult<Void> deleteTimeSlot(@PathVariable Long id) {
         timeSlotService.deleteTimeSlot(id);
         return CommonResult.success(null);
@@ -71,10 +82,11 @@ public class ExamTimeSlotController {
 
     @ApiOperation("更新时间段状态")
     @PutMapping("/{id}/status")
-    @HasPermission("exam:timeslot:update")
-    public CommonResult<ExamTimeSlotVO> updateTimeSlotStatus(
+    @RequiresPermission(RoleConstants.ADMIN)
+    public CommonResult<Void> updateTimeSlotStatus(
             @PathVariable Long id,
             @RequestParam Integer status) {
-        return CommonResult.success(timeSlotService.updateStatus(id, status));
+        timeSlotService.updateStatus(id, status);
+        return CommonResult.success(null);
     }
 } 

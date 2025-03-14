@@ -2,8 +2,9 @@ package com.shpes.controller;
 
 import com.shpes.common.api.CommonPage;
 import com.shpes.common.api.CommonResult;
+import com.shpes.common.constant.RoleConstants;
 import com.shpes.dto.UserDTO;
-import com.shpes.security.annotation.HasPermission;
+import com.shpes.annotation.RequiresPermission;
 import com.shpes.service.SysUserService;
 import com.shpes.vo.UserVO;
 import io.swagger.annotations.Api;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import javax.validation.groups.Default;
+import java.util.List;
 
 /**
  * 用户管理控制器
@@ -29,7 +31,7 @@ public class SysUserController {
 
     @ApiOperation("分页查询用户")
     @GetMapping
-    @HasPermission("sys:user:list")
+    @RequiresPermission(RoleConstants.ADMIN)
     public CommonResult<CommonPage<UserVO>> getUserPage(
             @ApiParam("页码") @RequestParam(defaultValue = "1") Integer pageNum,
             @ApiParam("每页记录数") @RequestParam(defaultValue = "10") Integer pageSize,
@@ -44,28 +46,28 @@ public class SysUserController {
 
     @ApiOperation("获取用户详情")
     @GetMapping("/{id}")
-    @HasPermission("sys:user:list")
+    @RequiresPermission(RoleConstants.ADMIN)
     public CommonResult<UserVO> getUserById(@PathVariable Long id) {
         return CommonResult.success(userService.getUserById(id));
     }
 
     @ApiOperation("创建用户")
     @PostMapping
-    @HasPermission("sys:user:create")
+    @RequiresPermission(RoleConstants.ADMIN)
     public CommonResult<UserVO> createUser(@Validated({UserDTO.Create.class, Default.class}) @RequestBody UserDTO userDTO) {
         return CommonResult.success(userService.createUser(userDTO));
     }
 
     @ApiOperation("更新用户")
     @PutMapping("/{id}")
-    @HasPermission("sys:user:update")
+    @RequiresPermission(RoleConstants.ADMIN)
     public CommonResult<UserVO> updateUser(@PathVariable Long id, @Valid @RequestBody UserDTO userDTO) {
         return CommonResult.success(userService.updateUser(id, userDTO));
     }
 
     @ApiOperation("更新用户状态")
     @PostMapping("/{id}/status")
-    @HasPermission("sys:user:update")
+    @RequiresPermission(RoleConstants.ADMIN)
     public CommonResult<UserVO> updateUserStatus(
             @PathVariable Long id,
             @ApiParam("状态：0-禁用，1-启用") @RequestParam Integer status) {
@@ -74,7 +76,7 @@ public class SysUserController {
 
     @ApiOperation("删除用户")
     @DeleteMapping("/{id}")
-    @HasPermission("sys:user:delete")
+    @RequiresPermission(RoleConstants.ADMIN)
     public CommonResult<Void> deleteUser(@PathVariable Long id) {
         userService.deleteUser(id);
         return CommonResult.success(null);
@@ -82,9 +84,19 @@ public class SysUserController {
 
     @ApiOperation("重置用户密码")
     @PostMapping("/{id}/password/reset")
-    @HasPermission("sys:user:update")
+    @RequiresPermission(RoleConstants.ADMIN)
     public CommonResult<Void> resetUserPassword(@PathVariable Long id) {
         userService.resetPassword(id);
+        return CommonResult.success(null);
+    }
+
+    @ApiOperation("更新用户密码")
+    @PostMapping("/{id}/password")
+    @RequiresPermission(RoleConstants.ADMIN)
+    public CommonResult<Void> updateUserPassword(
+            @PathVariable Long id,
+            @ApiParam("新密码") @RequestParam String newPassword) {
+        userService.updatePassword(id, newPassword);
         return CommonResult.success(null);
     }
 
@@ -98,5 +110,68 @@ public class SysUserController {
     @PutMapping("/current")
     public CommonResult<UserVO> updateCurrentUser(@Valid @RequestBody UserDTO userDTO) {
         return CommonResult.success(userService.updateCurrentUser(userDTO));
+    }
+
+    @ApiOperation("根据部门ID获取用户列表")
+    @GetMapping("/department/{departmentId}")
+    @RequiresPermission(RoleConstants.ADMIN)
+    public CommonResult<List<UserVO>> getUsersByDepartmentId(@PathVariable Long departmentId) {
+        return CommonResult.success(userService.getUsersByDepartmentId(departmentId));
+    }
+
+    @ApiOperation("根据角色ID获取用户列表")
+    @GetMapping("/role/{roleId}")
+    @RequiresPermission(RoleConstants.ADMIN)
+    public CommonResult<List<UserVO>> getUsersByRoleId(@PathVariable Long roleId) {
+        return CommonResult.success(userService.getUsersByRoleId(roleId));
+    }
+
+    @ApiOperation("根据用户名获取用户信息")
+    @GetMapping("/username/{username}")
+    @RequiresPermission(RoleConstants.ADMIN)
+    public CommonResult<UserVO> getUserByUsername(@PathVariable String username) {
+        return CommonResult.success(userService.getUserByUsername(username));
+    }
+
+    @ApiOperation("检查用户名是否存在")
+    @GetMapping("/check/username")
+    public CommonResult<Boolean> checkUsernameExists(@RequestParam String username) {
+        return CommonResult.success(userService.checkUsernameExists(username));
+    }
+
+    @ApiOperation("检查手机号是否存在")
+    @GetMapping("/check/phone")
+    public CommonResult<Boolean> checkPhoneExists(@RequestParam String phone) {
+        return CommonResult.success(userService.checkPhoneExists(phone));
+    }
+
+    @ApiOperation("检查邮箱是否存在")
+    @GetMapping("/check/email")
+    public CommonResult<Boolean> checkEmailExists(@RequestParam String email) {
+        return CommonResult.success(userService.checkEmailExists(email));
+    }
+
+    @ApiOperation("检查身份证号是否存在")
+    @GetMapping("/check/idcard")
+    public CommonResult<Boolean> checkIdCardExists(@RequestParam String idCard) {
+        return CommonResult.success(userService.checkIdCardExists(idCard));
+    }
+
+    @ApiOperation("根据用户ID获取用户名")
+    @GetMapping("/{id}/username")
+    public CommonResult<String> getUserNameById(@PathVariable Long id) {
+        return CommonResult.success(userService.getUserNameById(id));
+    }
+
+    @ApiOperation("获取用户角色编码列表")
+    @GetMapping("/{id}/role-codes")
+    public CommonResult<List<String>> getUserRoleCodes(@PathVariable Long id) {
+        return CommonResult.success(userService.getUserRoleCodes(id));
+    }
+
+    @ApiOperation("获取用户权限编码列表")
+    @GetMapping("/{id}/permission-codes")
+    public CommonResult<List<String>> getUserPermissionCodes(@PathVariable Long id) {
+        return CommonResult.success(userService.getUserPermissionCodes(id));
     }
 } 

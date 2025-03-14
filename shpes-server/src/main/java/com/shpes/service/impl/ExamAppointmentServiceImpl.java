@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.shpes.common.api.CommonPage;
-import com.shpes.common.api.ResultCode;
+import com.shpes.common.enums.ResultCode;
 import com.shpes.common.exception.ApiException;
 import com.shpes.entity.ExamAppointment;
 import com.shpes.entity.ExamTimeSlot;
@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@Transactional(rollbackFor = Exception.class)
 public class ExamAppointmentServiceImpl extends ServiceImpl<ExamAppointmentMapper, ExamAppointment> implements ExamAppointmentService {
 
     @Autowired
@@ -41,20 +42,17 @@ public class ExamAppointmentServiceImpl extends ServiceImpl<ExamAppointmentMappe
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
-    public AppointmentVO completeAppointment(Long id) {
+    public void completeAppointment(Long id) {
         ExamAppointment appointment = getById(id);
         if (appointment == null) {
             throw new ApiException(ResultCode.APPOINTMENT_NOT_EXIST);
         }
         appointment.setStatus(2); // 设置状态为进行中
         updateById(appointment);
-        return convertToVO(appointment);
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
-    public AppointmentVO cancelAppointment(Long id, String reason) {
+    public void cancelAppointment(Long id, String reason) {
         ExamAppointment appointment = getById(id);
         if (appointment == null) {
             throw new ApiException(ResultCode.APPOINTMENT_NOT_EXIST);
@@ -66,8 +64,6 @@ public class ExamAppointmentServiceImpl extends ServiceImpl<ExamAppointmentMappe
         appointment.setStatus(3); // 设置状态为已取消
         appointment.setCancelReason(reason);
         updateById(appointment);
-        
-        return convertToVO(appointment);
     }
 
     @Override
@@ -97,8 +93,7 @@ public class ExamAppointmentServiceImpl extends ServiceImpl<ExamAppointmentMappe
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
-    public AppointmentVO createAppointment(ExamAppointment appointment) {
+    public void createAppointment(ExamAppointment appointment) {
         // 检查时间段是否存在且可用
         ExamTimeSlot timeSlot = timeSlotService.getById(appointment.getTimeSlotId());
         if (timeSlot == null) {
@@ -111,13 +106,10 @@ public class ExamAppointmentServiceImpl extends ServiceImpl<ExamAppointmentMappe
         
         // 增加时间段的预约数
         timeSlotService.incrementBookedCount(appointment.getTimeSlotId());
-        
-        return convertToVO(appointment);
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
-    public AppointmentVO updateAppointmentTime(Long id, Long timeSlotId) {
+    public void updateAppointmentTime(Long id, Long timeSlotId) {
         ExamAppointment appointment = getById(id);
         if (appointment == null) {
             throw new ApiException(ResultCode.APPOINTMENT_NOT_EXIST);
@@ -139,8 +131,6 @@ public class ExamAppointmentServiceImpl extends ServiceImpl<ExamAppointmentMappe
         
         // 增加新时间段的预约数
         timeSlotService.incrementBookedCount(timeSlotId);
-        
-        return convertToVO(appointment);
     }
 
     @Override
@@ -157,9 +147,6 @@ public class ExamAppointmentServiceImpl extends ServiceImpl<ExamAppointmentMappe
         return CommonPage.restPage(records, page.getTotal(), page.getCurrent(), page.getSize());
     }
 
-    /**
-     * 将实体转换为VO
-     */
     private AppointmentVO convertToVO(ExamAppointment appointment) {
         if (appointment == null) {
             return null;

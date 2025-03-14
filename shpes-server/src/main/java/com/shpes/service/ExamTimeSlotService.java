@@ -14,7 +14,7 @@ import java.util.List;
 public interface ExamTimeSlotService extends IService<ExamTimeSlot> {
 
     /**
-     * 分页查询时间段
+     * 获取时间段列表
      */
     CommonPage<ExamTimeSlotVO> getTimeSlotPage(Integer pageNum, Integer pageSize, Long departmentId, LocalDate date);
 
@@ -31,12 +31,12 @@ public interface ExamTimeSlotService extends IService<ExamTimeSlot> {
     /**
      * 创建时间段
      */
-    ExamTimeSlotVO createTimeSlot(ExamTimeSlot timeSlot);
+    void createTimeSlot(ExamTimeSlot timeSlot);
 
     /**
      * 更新时间段
      */
-    ExamTimeSlotVO updateTimeSlot(ExamTimeSlot timeSlot);
+    void updateTimeSlot(ExamTimeSlot timeSlot);
 
     /**
      * 删除时间段
@@ -46,15 +46,15 @@ public interface ExamTimeSlotService extends IService<ExamTimeSlot> {
     /**
      * 更新时间段状态
      */
-    ExamTimeSlotVO updateStatus(Long id, Integer status);
+    void updateStatus(Long id, Integer status);
 
     /**
-     * 增加已预约数量
+     * 增加时间段预约数
      */
     void incrementBookedCount(Long id);
 
     /**
-     * 减少已预约数量
+     * 减少时间段预约数
      */
     void decrementBookedCount(Long id);
 }

@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.shpes.common.api.CommonPage;
-import com.shpes.common.api.ResultCode;
+import com.shpes.common.enums.ResultCode;
 import com.shpes.common.exception.ApiException;
 import com.shpes.entity.SysDepartment;
 import com.shpes.entity.SysUser;
@@ -68,7 +68,7 @@ public class SysDepartmentServiceImpl extends ServiceImpl<SysDepartmentMapper, S
     public void createDepartment(SysDepartment department) {
         // 检查部门编码是否已存在
         if (isDepartmentCodeExists(department.getCode())) {
-            throw new ApiException("部门编码已存在");
+            throw new ApiException(ResultCode.DEPARTMENT_USED);
         }
 
         baseMapper.insert(department);
@@ -85,7 +85,7 @@ public class SysDepartmentServiceImpl extends ServiceImpl<SysDepartmentMapper, S
 
         // 如果修改了部门编码，检查新编码是否已存在
         if (!existingDepartment.getCode().equals(department.getCode()) && isDepartmentCodeExists(department.getCode())) {
-            throw new ApiException("部门编码已存在");
+            throw new ApiException(ResultCode.DEPARTMENT_USED);
         }
 
         baseMapper.updateById(department);
@@ -191,10 +191,5 @@ public class SysDepartmentServiceImpl extends ServiceImpl<SysDepartmentMapper, S
         }
         SysDepartment department = baseMapper.selectById(departmentId);
         return department != null ? department.getName() : null;
-    }
-
-    @Override
-    public SysDepartment getDepartment(Long id) {
-        return baseMapper.selectById(id);
     }
 }

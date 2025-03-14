@@ -1,18 +1,22 @@
 package com.shpes.service.impl;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.shpes.common.api.ApiException;
-import com.shpes.common.api.ResultCode;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.shpes.common.api.CommonPage;
+import com.shpes.common.enums.ResultCode;
+import com.shpes.common.exception.ApiException;
 import com.shpes.entity.ExamResult;
 import com.shpes.mapper.ExamResultMapper;
 import com.shpes.service.ExamResultService;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.shpes.utils.SecurityUtils;
+import com.shpes.vo.ExamResultVO;
+import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * 体检结果服务实现类
@@ -20,14 +24,15 @@ import java.util.List;
 @Service
 public class ExamResultServiceImpl extends ServiceImpl<ExamResultMapper, ExamResult> implements ExamResultService {
 
+
     @Override
     public List<ExamResultVO> getResultsByRecordId(Long recordId) {
         return baseMapper.selectResultsByRecordId(recordId);
     }
 
     @Override
-    public CommonPage<ExamResultVO> getResultPage(Integer pageNum, Integer pageSize, Long recordId, 
-            Long itemId, Integer resultType, Integer reviewStatus) {
+    public CommonPage<ExamResultVO> getResultPage(Integer pageNum, Integer pageSize, Long recordId,
+                                                  Long itemId, Integer resultType, Integer reviewStatus) {
         Page<ExamResult> page = baseMapper.selectResultPage(new Page<>(pageNum, pageSize), 
                 recordId, itemId, resultType, reviewStatus);
         return CommonPage.restPage(convertToVOList(page.getRecords()), 
@@ -73,6 +78,8 @@ public class ExamResultServiceImpl extends ServiceImpl<ExamResultMapper, ExamRes
         }
     }
 
+
+
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ExamResultVO reviewResult(Long id, String suggestion) {
@@ -80,11 +87,14 @@ public class ExamResultServiceImpl extends ServiceImpl<ExamResultMapper, ExamRes
         if (result == null) {
             throw new ApiException(ResultCode.EXAM_RESULT_NOT_EXIST);
         }
-        result.setReviewStatus(1);
-        result.setReviewSuggestion(suggestion);
-        result.setReviewTime(LocalDateTime.now());
+        
+        // 设置复核信息
+        result.setReviewerId(SecurityUtils.getCurrentUserId());
+        result.setSuggestion(suggestion);
+        result.setStatus(2);  // 设置为已复核状态
         result.setUpdateTime(LocalDateTime.now());
         updateById(result);
+        
         return convertToVO(result);
     }
 
@@ -92,13 +102,16 @@ public class ExamResultServiceImpl extends ServiceImpl<ExamResultMapper, ExamRes
     @Transactional(rollbackFor = Exception.class)
     public List<ExamResultVO> reviewResults(List<Long> ids) {
         List<ExamResult> results = listByIds(ids);
+        Long currentUserId = SecurityUtils.getCurrentUserId();
         LocalDateTime now = LocalDateTime.now();
+        
         results.forEach(result -> {
-            result.setReviewStatus(1);
-            result.setReviewTime(now);
+            result.setReviewerId(currentUserId);
+            result.setStatus(2);  // 设置为已复核状态
             result.setUpdateTime(now);
             updateById(result);
         });
+        
         return convertToVOList(results);
     }
 

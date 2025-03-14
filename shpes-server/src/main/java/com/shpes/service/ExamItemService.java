@@ -17,11 +17,6 @@ public interface ExamItemService {
     CommonPage<ExamItemVO> getItemPage(Integer pageNum, Integer pageSize, String keyword);
 
     /**
-     * 获取所有体检项目
-     */
-    List<ExamItem> getAllItems();
-
-    /**
      * 根据ID获取体检项目
      */
     ExamItem getItem(Long id);

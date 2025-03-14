@@ -2,7 +2,8 @@ package com.shpes.controller;
 
 import com.shpes.common.api.CommonPage;
 import com.shpes.common.api.CommonResult;
-import com.shpes.security.annotation.HasPermission;
+import com.shpes.common.constant.RoleConstants;
+import com.shpes.annotation.RequiresPermission;
 import com.shpes.entity.SysRole;
 import com.shpes.service.SysRoleService;
 import com.shpes.vo.RoleVO;
@@ -27,7 +28,7 @@ public class SysRoleController {
 
     @ApiOperation("获取角色列表")
     @GetMapping
-    @HasPermission("system:role:list")
+    @RequiresPermission(RoleConstants.ADMIN)
     public CommonResult<CommonPage<RoleVO>> getRolePage(
             @RequestParam(defaultValue = "1") Integer pageNum,
             @RequestParam(defaultValue = "10") Integer pageSize,
@@ -37,7 +38,7 @@ public class SysRoleController {
 
     @ApiOperation("创建角色")
     @PostMapping
-    @HasPermission("system:role:create")
+    @RequiresPermission(RoleConstants.ADMIN)
     public CommonResult<Void> createRole(@Valid @RequestBody SysRole role) {
         roleService.createRole(role);
         return CommonResult.success(null);
@@ -45,7 +46,7 @@ public class SysRoleController {
 
     @ApiOperation("更新角色")
     @PutMapping("/{id}")
-    @HasPermission("system:role:update")
+    @RequiresPermission(RoleConstants.ADMIN)
     public CommonResult<Void> updateRole(@PathVariable Long id, @Valid @RequestBody SysRole role) {
         role.setId(id);
         roleService.updateRole(role);
@@ -54,7 +55,7 @@ public class SysRoleController {
 
     @ApiOperation("删除角色")
     @DeleteMapping("/{id}")
-    @HasPermission("system:role:delete")
+    @RequiresPermission(RoleConstants.ADMIN)
     public CommonResult<Void> deleteRole(@PathVariable Long id) {
         roleService.deleteRole(id);
         return CommonResult.success(null);
@@ -62,14 +63,14 @@ public class SysRoleController {
 
     @ApiOperation("获取所有角色")
     @GetMapping("/all")
-    @HasPermission("system:role:list")
+    @RequiresPermission(RoleConstants.ADMIN)
     public CommonResult<List<RoleVO>> getAllRoles() {
         return CommonResult.success(roleService.getAllRoles());
     }
 
     @ApiOperation("分配角色权限")
     @PostMapping("/{roleId}/permissions")
-    @HasPermission("system:role:permission")
+    @RequiresPermission(RoleConstants.ADMIN)
     public CommonResult<Void> assignPermissions(
             @PathVariable Long roleId,
             @RequestBody List<Long> permissionIds) {
@@ -79,8 +80,29 @@ public class SysRoleController {
 
     @ApiOperation("获取角色权限")
     @GetMapping("/{roleId}/permissions")
-    @HasPermission("system:role:permission")
+    @RequiresPermission(RoleConstants.ADMIN)
     public CommonResult<List<Long>> getRolePermissions(@PathVariable Long roleId) {
         return CommonResult.success(roleService.getRolePermissions(roleId));
+    }
+
+    @ApiOperation("获取用户角色列表")
+    @GetMapping("/user/{userId}")
+    @RequiresPermission(RoleConstants.ADMIN)
+    public CommonResult<List<SysRole>> getUserRoles(@PathVariable Long userId) {
+        return CommonResult.success(roleService.getUserRoles(userId));
+    }
+
+    @ApiOperation("获取角色权限编码列表")
+    @GetMapping("/{roleId}/permission-codes")
+    @RequiresPermission(RoleConstants.ADMIN)
+    public CommonResult<List<String>> getRolePermissionCodes(@PathVariable Long roleId) {
+        return CommonResult.success(roleService.getRolePermissionCodes(roleId));
+    }
+
+    @ApiOperation("获取角色编码列表")
+    @PostMapping("/codes")
+    @RequiresPermission(RoleConstants.ADMIN)
+    public CommonResult<List<String>> getRoleCodes(@RequestBody List<Long> roleIds) {
+        return CommonResult.success(roleService.getRoleCodes(roleIds));
     }
 } 

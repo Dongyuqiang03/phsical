@@ -8,50 +8,58 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 /**
- * 用户返回值对象
+ * 用户信息返回对象
  */
 @Data
-@ApiModel(description = "用户返回值对象")
+@ApiModel(description = "用户信息")
 public class UserVO {
-    
     @ApiModelProperty("用户ID")
     private Long id;
-    
+
     @ApiModelProperty("用户名")
     private String username;
-    
+
     @ApiModelProperty("姓名")
     private String name;
-    
-    @ApiModelProperty("性别：0-未知，1-男，2-女")
-    private Integer gender;
-    
+
     @ApiModelProperty("手机号")
     private String phone;
-    
+
     @ApiModelProperty("邮箱")
     private String email;
+
+    @ApiModelProperty("部门ID")
+    private Long departmentId;
+
+    @ApiModelProperty("部门名称")
+    private String departmentName;
+
+    @ApiModelProperty("用户类型")
+    private Integer userType;
+
+    @ApiModelProperty("状态")
+    private Integer status;
+
+    @ApiModelProperty("角色列表")
+    private List<String> roles;
+
+    @ApiModelProperty("权限列表")
+    private List<String> permissions;
+
+    @ApiModelProperty("密码")
+    private String password;
+    
+    @ApiModelProperty("性别（0-未知 1-男 2-女）")
+    private Integer gender;
     
     @ApiModelProperty("身份证号")
     private String idCard;
     
-    @ApiModelProperty("出生日期")
+    @ApiModelProperty("生日")
     private String birthday;
     
     @ApiModelProperty("头像")
     private String avatar;
-    
-    @ApiModelProperty("部门ID")
-    private Long departmentId;
-    
-    @ApiModelProperty("部门名称")
-    private String departmentName;
-    
-    @ApiModelProperty("用户类型：1-管理员，2-医生，3-护士，4-教职工，5-学生")
-    private Integer userType;
-    
-    @ApiModelProperty("状态：0-禁用，1-启用")
-    private Integer status;
     
     @ApiModelProperty("角色ID列表")
     private List<Long> roleIds;
@@ -70,4 +78,8 @@ public class UserVO {
     
     @ApiModelProperty("更新时间")
     private LocalDateTime updateTime;
+
+    public boolean isEnabled() {
+        return status != null && status == 1;
+    }
 } 

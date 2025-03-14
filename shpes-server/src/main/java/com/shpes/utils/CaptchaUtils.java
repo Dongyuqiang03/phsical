@@ -1,16 +1,20 @@
 package com.shpes.utils;
 
 import com.google.code.kaptcha.Producer;
+import com.google.code.kaptcha.impl.DefaultKaptcha;
 import com.shpes.vo.CaptchaVO;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Base64Utils;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
+import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -20,13 +24,16 @@ import java.util.concurrent.TimeUnit;
 public class CaptchaUtils {
 
     @Autowired
-    private Producer captchaProducer;
+    private DefaultKaptcha captchaProducer;
 
-    @Autowired
-    private StringRedisTemplate redisTemplate;
-
-    private static final String CAPTCHA_PREFIX = "captcha:";
+    private static final Map<String, CaptchaData> CAPTCHA_CACHE = new ConcurrentHashMap<>();
     private static final long CAPTCHA_EXPIRATION = 5; // 验证码有效期（分钟）
+    private static final ScheduledExecutorService CLEANER = Executors.newSingleThreadScheduledExecutor();
+
+    // 初始化定时清理任务
+    {
+        CLEANER.scheduleAtFixedRate(this::cleanExpiredCaptcha, 1, 1, TimeUnit.MINUTES);
+    }
 
     /**
      * 生成验证码
@@ -44,13 +51,8 @@ public class CaptchaUtils {
         // 生成验证码key
         String key = UUID.randomUUID().toString();
         
-        // 将验证码存入Redis
-        redisTemplate.opsForValue().set(
-            CAPTCHA_PREFIX + key,
-            captchaText,
-            CAPTCHA_EXPIRATION,
-            TimeUnit.MINUTES
-        );
+        // 保存验证码
+        CAPTCHA_CACHE.put(key, new CaptchaData(captchaText, System.currentTimeMillis()));
         
         return CaptchaVO.of(key, "data:image/png;base64," + base64Image);
     }
@@ -63,11 +65,10 @@ public class CaptchaUtils {
             return false;
         }
         
-        String cacheKey = CAPTCHA_PREFIX + key;
-        String cacheCode = redisTemplate.opsForValue().get(cacheKey);
-        
-        if (cacheCode != null && cacheCode.equalsIgnoreCase(code)) {
-            redisTemplate.delete(cacheKey);
+        CaptchaData captchaData = CAPTCHA_CACHE.get(key);
+        if (captchaData != null && !isExpired(captchaData.getTimestamp()) 
+                && captchaData.getCode().equalsIgnoreCase(code)) {
+            CAPTCHA_CACHE.remove(key);
             return true;
         }
         
@@ -86,4 +87,40 @@ public class CaptchaUtils {
             throw new RuntimeException("验证码图片转换失败", e);
         }
     }
-} 
+
+    /**
+     * 清理过期的验证码
+     */
+    private void cleanExpiredCaptcha() {
+        long now = System.currentTimeMillis();
+        CAPTCHA_CACHE.entrySet().removeIf(entry -> isExpired(entry.getValue().getTimestamp()));
+    }
+
+    /**
+     * 检查验证码是否过期
+     */
+    private boolean isExpired(long timestamp) {
+        return System.currentTimeMillis() - timestamp > TimeUnit.MINUTES.toMillis(CAPTCHA_EXPIRATION);
+    }
+
+    /**
+     * 验证码数据类
+     */
+    private static class CaptchaData {
+        private final String code;
+        private final long timestamp;
+
+        public CaptchaData(String code, long timestamp) {
+            this.code = code;
+            this.timestamp = timestamp;
+        }
+
+        public String getCode() {
+            return code;
+        }
+
+        public long getTimestamp() {
+            return timestamp;
+        }
+    }
+}

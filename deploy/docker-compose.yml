@@ -1,0 +1,25 @@
+version: '3'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: shpes-mysql
+    command: --default-authentication-plugin=mysql_native_password
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: 123456
+      MYSQL_DATABASE: shpes
+      TZ: Asia/Shanghai
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./mysql/data:/var/lib/mysql
+      - ./mysql/conf:/etc/mysql/conf.d
+      - ./mysql/init:/docker-entrypoint-initdb.d
+      - ../sql/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - shpes-network
+
+networks:
+  shpes-network:
+    driver: bridge

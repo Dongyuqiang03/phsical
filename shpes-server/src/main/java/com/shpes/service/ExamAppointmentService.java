@@ -19,12 +19,12 @@ public interface ExamAppointmentService {
     /**
      * 完成预约（更新状态为进行中）
      */
-    AppointmentVO completeAppointment(Long id);
+    void completeAppointment(Long id);
 
     /**
      * 取消预约
      */
-    AppointmentVO cancelAppointment(Long id, String reason);
+    void cancelAppointment(Long id, String reason);
 
     /**
      * 分页获取预约列表
@@ -35,12 +35,12 @@ public interface ExamAppointmentService {
     /**
      * 创建预约
      */
-    AppointmentVO createAppointment(ExamAppointment appointment);
+    void createAppointment(ExamAppointment appointment);
 
     /**
      * 更新预约时间
      */
-    AppointmentVO updateAppointmentTime(Long id, Long timeSlotId);
+    void updateAppointmentTime(Long id, Long timeSlotId);
 
     /**
      * 获取用户的预约列表

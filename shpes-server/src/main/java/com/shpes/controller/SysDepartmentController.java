@@ -2,9 +2,9 @@ package com.shpes.controller;
 
 import com.shpes.common.api.CommonPage;
 import com.shpes.common.api.CommonResult;
+import com.shpes.common.constant.RoleConstants;
 import com.shpes.entity.SysDepartment;
-import com.shpes.entity.SysUser;
-import com.shpes.security.annotation.HasPermission;
+import com.shpes.annotation.RequiresPermission;
 import com.shpes.service.SysDepartmentService;
 import com.shpes.vo.DepartmentVO;
 import com.shpes.vo.UserSimpleVO;
@@ -29,7 +29,7 @@ public class SysDepartmentController {
 
     @ApiOperation("获取部门列表")
     @GetMapping
-    @HasPermission("system:department:list")
+    @RequiresPermission(RoleConstants.ADMIN)
     public CommonResult<CommonPage<DepartmentVO>> getDepartmentPage(
             @RequestParam(defaultValue = "1") Integer pageNum,
             @RequestParam(defaultValue = "10") Integer pageSize,
@@ -39,14 +39,24 @@ public class SysDepartmentController {
 
     @ApiOperation("获取所有部门")
     @GetMapping("/all")
-    @HasPermission("system:department:list")
+    @RequiresPermission(RoleConstants.USER)
     public CommonResult<List<DepartmentVO>> getAllDepartments() {
         return CommonResult.success(departmentService.getAllDepartments());
     }
 
+    @ApiOperation("获取部门详情")
+    @GetMapping("/{id}")
+    @RequiresPermission(RoleConstants.ADMIN)
+    public CommonResult<DepartmentVO> getDepartment(@PathVariable Long id) {
+        return CommonResult.success(departmentService.getDepartmentPage(1, 1, null).getRecords().stream()
+                .filter(dept -> dept.getId().equals(id))
+                .findFirst()
+                .orElse(null));
+    }
+
     @ApiOperation("创建部门")
     @PostMapping
-    @HasPermission("system:department:create")
+    @RequiresPermission(RoleConstants.ADMIN)
     public CommonResult<Void> createDepartment(@Valid @RequestBody SysDepartment department) {
         departmentService.createDepartment(department);
         return CommonResult.success(null);
@@ -54,7 +64,7 @@ public class SysDepartmentController {
 
     @ApiOperation("更新部门")
     @PutMapping("/{id}")
-    @HasPermission("system:department:update")
+    @RequiresPermission(RoleConstants.ADMIN)
     public CommonResult<Void> updateDepartment(@PathVariable Long id, @Valid @RequestBody SysDepartment department) {
         department.setId(id);
         departmentService.updateDepartment(department);
@@ -63,7 +73,7 @@ public class SysDepartmentController {
 
     @ApiOperation("删除部门")
     @DeleteMapping("/{id}")
-    @HasPermission("system:department:delete")
+    @RequiresPermission(RoleConstants.ADMIN)
     public CommonResult<Void> deleteDepartment(@PathVariable Long id) {
         departmentService.deleteDepartment(id);
         return CommonResult.success(null);
@@ -71,7 +81,7 @@ public class SysDepartmentController {
 
     @ApiOperation("更新部门状态")
     @PutMapping("/{id}/status")
-    @HasPermission("system:department:update")
+    @RequiresPermission(RoleConstants.ADMIN)
     public CommonResult<Void> updateDepartmentStatus(
             @PathVariable Long id,
             @RequestParam Integer status) {
@@ -81,7 +91,7 @@ public class SysDepartmentController {
 
     @ApiOperation("获取部门人员列表")
     @GetMapping("/{id}/users")
-    @HasPermission("system:department:list")
+    @RequiresPermission(RoleConstants.ADMIN)
     public CommonResult<List<UserSimpleVO>> getDepartmentUsers(@PathVariable Long id) {
         return CommonResult.success(departmentService.getDepartmentUsers(id));
     }

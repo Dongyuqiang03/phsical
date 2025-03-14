@@ -1,6 +1,8 @@
 package com.shpes.security.config;
 
-import com.shpes.security.filter.JwtAuthenticationFilter;
+import com.shpes.security.core.JwtAuthenticationFilter;
+import com.shpes.security.handler.AuthenticationEntryPointImpl;
+import com.shpes.security.handler.AccessDeniedHandlerImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -26,18 +28,34 @@ public class SecurityConfig {
     @Autowired
     private JwtAuthenticationFilter jwtAuthenticationFilter;
 
+    @Autowired
+    private AuthenticationEntryPointImpl authenticationEntryPoint;
+
+    @Autowired
+    private AccessDeniedHandlerImpl accessDeniedHandler;
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http.csrf().disable()
-                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                .and()
-                .authorizeRequests()
-                .antMatchers("/api/auth/**").permitAll()
-                .antMatchers("/api/captcha").permitAll()
-                .antMatchers("/doc.html", "/swagger-resources/**", "/webjars/**", "/v2/**", "/swagger-ui.html/**").permitAll()
-                .anyRequest().authenticated();
-
-        http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+        http
+            // 关闭CSRF
+            .csrf().disable()
+            // 关闭Session
+            .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+            .and()
+            // 配置路径权限
+            .authorizeRequests()
+            .antMatchers("/api/auth/**").permitAll()
+            .antMatchers("/api/captcha").permitAll()
+            .antMatchers("/doc.html", "/swagger-resources/**", "/webjars/**", "/v2/**", "/swagger-ui.html/**").permitAll()
+            .anyRequest().authenticated()
+            .and()
+            // 配置异常处理
+            .exceptionHandling()
+            .authenticationEntryPoint(authenticationEntryPoint)
+            .accessDeniedHandler(accessDeniedHandler)
+            .and()
+            // 配置JWT过滤器
+            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

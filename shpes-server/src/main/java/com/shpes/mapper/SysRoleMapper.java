@@ -16,4 +16,9 @@ public interface SysRoleMapper extends BaseMapper<SysRole> {
      * 查询角色权限ID列表
      */
     List<Long> selectRolePermissionIds(@Param("roleId") Long roleId);
+
+    /**
+     * 根据角色ID列表查询权限编码列表
+     */
+    List<String> selectPermissionCodesByIds(@Param("roleIds") List<Long> roleIds);
 }

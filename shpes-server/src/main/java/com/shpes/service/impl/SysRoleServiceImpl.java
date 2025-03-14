@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.shpes.common.api.CommonPage;
-import com.shpes.common.api.ResultCode;
+import com.shpes.common.enums.ResultCode;
 import com.shpes.common.exception.ApiException;
 import com.shpes.entity.SysRole;
 import com.shpes.entity.SysRolePermission;
@@ -176,6 +176,36 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
     @Override
     public List<Long> getRolePermissionIds(Long roleId) {
         return baseMapper.selectRolePermissionIds(roleId);
+    }
+
+    @Override
+    public List<String> getRolePermissionCodes(Long roleId) {
+        // 获取权限ID列表
+        List<Long> permissionIds = getRolePermissionIds(roleId);
+        if (permissionIds.isEmpty()) {
+            return new ArrayList<>();
+        }
+        
+        // 查询权限编码
+        return baseMapper.selectPermissionCodesByIds(permissionIds);
+    }
+
+    @Override
+    public List<String> getRoleCodes(List<Long> roleIds) {
+        if (roleIds == null || roleIds.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        // 查询指定ID的角色列表
+        List<SysRole> roles = baseMapper.selectList(
+                new LambdaQueryWrapper<SysRole>()
+                        .in(SysRole::getId, roleIds)
+                        .orderByAsc(SysRole::getSort));
+
+        // 提取角色编码
+        return roles.stream()
+                .map(SysRole::getCode)
+                .collect(Collectors.toList());
     }
 
     /**

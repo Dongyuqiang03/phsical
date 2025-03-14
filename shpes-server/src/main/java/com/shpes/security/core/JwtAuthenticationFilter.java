@@ -1,6 +1,8 @@
-package com.shpes.security.filter;
+package com.shpes.security.core;
 
-import com.shpes.utils.JwtUtils;
+import com.shpes.security.core.JwtTokenManager;
+import com.shpes.vo.UserVO;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -20,11 +22,12 @@ import java.io.IOException;
 /**
  * JWT认证过滤器
  */
+@Slf4j
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     @Autowired
-    private JwtUtils jwtUtils;
+    private JwtTokenManager jwtTokenManager;
 
     @Autowired
     private UserDetailsService userDetailsService;
@@ -33,32 +36,38 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
         try {
-            String jwt = parseJwt(request);
-            if (jwt != null) {
-                String username = jwtUtils.getUsernameFromToken(jwt);
-                UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-                
-                if (jwtUtils.validateToken(jwt, userDetails)) {
+            String jwt = jwtTokenManager.getTokenFromHeader(request.getHeader("Authorization"));
+            if (StringUtils.hasText(jwt)) {
+                if (jwtTokenManager.validateToken(jwt)) {
+                    String username = jwtTokenManager.getUsernameFromToken(jwt);
+                    UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+                    
                     UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
                             userDetails, null, userDetails.getAuthorities());
                     authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    
                     SecurityContextHolder.getContext().setAuthentication(authentication);
+                    log.debug("Set authentication for user: {}", username);
+                } else {
+                    log.warn("Invalid JWT token");
                 }
             }
         } catch (Exception e) {
-            logger.error("Cannot set user authentication: {}", e);
+            log.error("Cannot set user authentication: {}", e.getMessage());
         }
 
         filterChain.doFilter(request, response);
     }
 
-    private String parseJwt(HttpServletRequest request) {
-        String headerAuth = request.getHeader("Authorization");
-
-        if (StringUtils.hasText(headerAuth) && headerAuth.startsWith("Bearer ")) {
-            return headerAuth.substring(7);
-        }
-
-        return null;
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        String path = request.getServletPath();
+        return path.startsWith("/api/auth/") || 
+               path.startsWith("/api/captcha") ||
+               path.startsWith("/doc.html") ||
+               path.startsWith("/swagger-resources") ||
+               path.startsWith("/webjars") ||
+               path.startsWith("/v2") ||
+               path.startsWith("/swagger-ui.html");
     }
 } 

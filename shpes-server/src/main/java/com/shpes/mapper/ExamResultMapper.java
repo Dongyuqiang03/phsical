@@ -7,6 +7,8 @@ import com.shpes.vo.ExamResultVO;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Mapper;
 
+import java.util.List;
+
 /**
  * 体检结果Mapper接口
  */

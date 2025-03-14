@@ -2,8 +2,9 @@ package com.shpes.controller;
 
 import com.shpes.common.api.CommonPage;
 import com.shpes.common.api.CommonResult;
+import com.shpes.common.constant.RoleConstants;
 import com.shpes.entity.ExamResult;
-import com.shpes.security.annotation.HasPermission;
+import com.shpes.annotation.RequiresPermission;
 import com.shpes.service.ExamResultService;
 import com.shpes.vo.ExamResultVO;
 import io.swagger.annotations.Api;
@@ -28,14 +29,14 @@ public class ExamResultController {
 
     @ApiOperation("获取体检结果列表")
     @GetMapping("/record/{recordId}")
-    @HasPermission("exam:result:list")
+    @RequiresPermission(RoleConstants.ADMIN)
     public CommonResult<List<ExamResultVO>> getResultsByRecordId(@PathVariable Long recordId) {
         return CommonResult.success(resultService.getResultsByRecordId(recordId));
     }
 
     @ApiOperation("分页查询体检结果")
     @GetMapping
-    @HasPermission("exam:result:list")
+    @RequiresPermission(RoleConstants.ADMIN)
     public CommonResult<CommonPage<ExamResultVO>> getResultPage(
             @ApiParam("页码") @RequestParam(defaultValue = "1") Integer pageNum,
             @ApiParam("每页记录数") @RequestParam(defaultValue = "10") Integer pageSize,
@@ -46,23 +47,30 @@ public class ExamResultController {
         return CommonResult.success(resultService.getResultPage(pageNum, pageSize, recordId, itemId, resultType, reviewStatus));
     }
 
+    @ApiOperation("获取体检结果详情")
+    @GetMapping("/{id}")
+    @RequiresPermission(RoleConstants.ADMIN)
+    public CommonResult<ExamResultVO> getResult(@PathVariable Long id) {
+        return CommonResult.success(resultService.getResultsByRecordId(id).get(0));
+    }
+
     @ApiOperation("录入体检结果")
     @PostMapping
-    @HasPermission("exam:result:create")
+    @RequiresPermission(RoleConstants.DOCTOR)
     public CommonResult<ExamResultVO> createResult(@Valid @RequestBody ExamResult result) {
         return CommonResult.success(resultService.createResult(result));
     }
 
     @ApiOperation("批量录入体检结果")
     @PostMapping("/batch")
-    @HasPermission("exam:result:create")
+    @RequiresPermission(RoleConstants.DOCTOR)
     public CommonResult<List<ExamResultVO>> createResults(@Valid @RequestBody List<ExamResult> results) {
         return CommonResult.success(resultService.createResults(results));
     }
 
     @ApiOperation("更新体检结果")
     @PutMapping("/{id}")
-    @HasPermission("exam:result:update")
+    @RequiresPermission(RoleConstants.DOCTOR)
     public CommonResult<ExamResultVO> updateResult(@PathVariable Long id, @Valid @RequestBody ExamResult result) {
         result.setId(id);
         return CommonResult.success(resultService.updateResult(result));
@@ -70,32 +78,41 @@ public class ExamResultController {
 
     @ApiOperation("删除体检结果")
     @DeleteMapping("/{id}")
-    @HasPermission("exam:result:delete")
+    @RequiresPermission(RoleConstants.ADMIN)
     public CommonResult<Void> deleteResult(@PathVariable Long id) {
         resultService.deleteResult(id);
         return CommonResult.success(null);
     }
 
     @ApiOperation("复核体检结果")
-    @PostMapping("/{id}/review")
-    @HasPermission("exam:result:review")
+    @PutMapping("/{id}/review")
+    @RequiresPermission(RoleConstants.DOCTOR)
     public CommonResult<ExamResultVO> reviewResult(
             @PathVariable Long id,
-            @RequestParam(required = false) String suggestion) {
+            @RequestParam String suggestion) {
         return CommonResult.success(resultService.reviewResult(id, suggestion));
     }
 
     @ApiOperation("批量复核体检结果")
     @PostMapping("/batch/review")
-    @HasPermission("exam:result:review")
+    @RequiresPermission(RoleConstants.DOCTOR)
     public CommonResult<List<ExamResultVO>> reviewResults(@RequestBody List<Long> ids) {
         return CommonResult.success(resultService.reviewResults(ids));
     }
 
     @ApiOperation("导出体检报告")
     @GetMapping("/export/{recordId}")
-    @HasPermission("exam:result:export")
+    @RequiresPermission(RoleConstants.ADMIN)
     public CommonResult<String> exportReport(@PathVariable Long recordId) {
         return CommonResult.success(resultService.exportReport(recordId));
+    }
+
+    @ApiOperation("获取异常结果列表")
+    @GetMapping("/abnormal")
+    @RequiresPermission(RoleConstants.DOCTOR)
+    public CommonResult<List<ExamResultVO>> getAbnormalResults(
+            @RequestParam(required = false) Long userId,
+            @RequestParam(required = false) Long recordId) {
+        return CommonResult.success(resultService.getResultPage(1, 100, recordId, null, 1, null).getRecords());
     }
 } 

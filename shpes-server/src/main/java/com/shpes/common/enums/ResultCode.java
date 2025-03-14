@@ -1,4 +1,6 @@
-package com.shpes.common.api;
+package com.shpes.common.enums;
+
+import com.shpes.common.api.IErrorCode;
 
 /**
  * 常用API返回对象
@@ -42,7 +44,11 @@ public enum ResultCode implements IErrorCode {
     APPOINTMENT_CAPACITY_FULL(5002, "预约名额已满"),
     APPOINTMENT_TIME_INVALID(5003, "无效的预约时间"),
     APPOINTMENT_CANCEL_TIMEOUT(5004, "超出取消预约时限"),
-    TIME_SLOT_NOT_EXIST(5005, "体检时间段不存在"),  // 添加新的错误码
+    TIME_SLOT_NOT_EXIST(5005, "体检时间段不存在"),
+    TIME_SLOT_EXIST(5006, "体检时间段已存在"),
+    TIME_SLOT_BOOKED(5007, "体检时间段已被预约"),
+    TIME_SLOT_FULL(5008, "体检时间段已满"),
+    TIME_SLOT_EMPTY(5009, "体检时间段无预约"),
     
     // 体检结果相关：6000-6999
     EXAM_RECORD_NOT_EXIST(6000, "体检记录不存在"),

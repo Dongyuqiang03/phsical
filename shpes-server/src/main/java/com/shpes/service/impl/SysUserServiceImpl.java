@@ -4,9 +4,8 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.shpes.common.api.CommonPage;
-import com.shpes.common.api.ResultCode;
+import com.shpes.common.enums.ResultCode;
 import com.shpes.common.exception.ApiException;
-import com.shpes.common.utils.SecurityUtils;
 import com.shpes.dto.UserDTO;
 import com.shpes.entity.SysUser;
 import com.shpes.entity.SysUserRole;
@@ -15,10 +14,12 @@ import com.shpes.mapper.SysUserRoleMapper;
 import com.shpes.service.SysDepartmentService;
 import com.shpes.service.SysRoleService;
 import com.shpes.service.SysUserService;
+import com.shpes.utils.SecurityUtils;
 import com.shpes.vo.UserVO;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -27,7 +28,9 @@ import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -76,7 +79,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     public UserVO getUserById(Long id) {
         SysUser user = getById(id);
         if (user == null) {
-            throw new ApiException("用户不存在");
+            throw new ApiException(ResultCode.USER_NOT_EXIST);
         }
         return convertToVO(user);
     }
@@ -112,7 +115,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         // 检查用户是否存在
         SysUser user = getById(id);
         if (user == null) {
-            throw new ApiException("用户不存在");
+            throw new ApiException(ResultCode.USER_NOT_EXIST);
         }
 
         // 检查唯一性
@@ -134,7 +137,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         // 检查用户是否存在
         SysUser user = getById(id);
         if (user == null) {
-            throw new ApiException("用户不存在");
+            throw new ApiException(ResultCode.USER_NOT_EXIST);
         }
 
         // 更新状态
@@ -150,7 +153,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     public void deleteUser(Long id) {
         // 检查用户是否存在
         if (!removeById(id)) {
-            throw new ApiException("用户不存在");
+            throw new ApiException(ResultCode.USER_NOT_EXIST);
         }
 
         // 删除用户角色关系
@@ -164,7 +167,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         // 检查用户是否存在
         SysUser user = getById(id);
         if (user == null) {
-            throw new ApiException("用户不存在");
+            throw new ApiException(ResultCode.USER_NOT_EXIST);
         }
 
         // 重置密码为123456
@@ -177,12 +180,12 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     public UserVO getCurrentUser() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
-            throw new ApiException("用户未登录");
+            throw new ApiException(ResultCode.UNAUTHORIZED);
         }
         String username = authentication.getName();
         SysUser user = getByUsername(username);
         if (user == null) {
-            throw new ApiException("用户不存在");
+            throw new ApiException(ResultCode.USER_NOT_EXIST);
         }
         return convertToVO(user);
     }
@@ -264,6 +267,91 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         SysUser user = getById(userId);
         return user != null ? user.getUsername() : null;
     }
+
+    @Override
+    public UserVO getUserByUsername(String username) {
+        return convertToVO(getByUsername(username));
+    }
+
+    @Override
+    public void updatePassword(Long id, String newPassword) {
+        // 检查用户是否存在
+        SysUser user = getById(id);
+        if (user == null) {
+            throw new ApiException(ResultCode.USER_NOT_EXIST);
+        }
+
+        // 更新密码
+        user.setPassword(passwordEncoder.encode(newPassword));
+        user.setUpdateTime(LocalDateTime.now());
+        updateById(user);
+    }
+
+    @Override
+    public List<Long> getUserRoleIds(Long userId) {
+        LambdaQueryWrapper<SysUserRole> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(SysUserRole::getUserId, userId);
+        return userRoleMapper.selectList(wrapper).stream()
+                .map(SysUserRole::getRoleId)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<String> getUserRoleCodes(Long userId) {
+        List<Long> roleIds = getUserRoleIds(userId);
+        if (roleIds.isEmpty()) {
+            return new ArrayList<>();
+        }
+        return roleService.getRoleCodes(roleIds);
+    }
+
+    @Override
+    public List<String> getUserPermissionCodes(Long userId) {
+        List<Long> roleIds = getUserRoleIds(userId);
+        if (roleIds.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        Set<String> permissionCodes = new HashSet<>();
+        roleIds.forEach(roleId -> {
+            List<String> roleCodes = roleService.getRolePermissionCodes(roleId);
+            if (roleCodes != null) {
+                permissionCodes.addAll(roleCodes);
+            }
+        });
+
+        return new ArrayList<>(permissionCodes);
+    }
+
+    @Override
+    public List<Long> getUserPermissionIds(Long userId) {
+        List<Long> roleIds = getUserRoleIds(userId);
+        if (roleIds.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        Set<Long> permissionIds = new HashSet<>();
+        roleIds.forEach(roleId -> {
+            List<Long> rolePermissions = roleService.getRolePermissionIds(roleId);
+            if (rolePermissions != null) {
+                permissionIds.addAll(rolePermissions);
+            }
+        });
+
+        return new ArrayList<>(permissionIds);
+    }
+
+    @Override
+    public List<SimpleGrantedAuthority> getUserAuthorities(Long userId) {
+        // 获取用户的所有权限编码
+        List<String> permissionCodes = getUserPermissionCodes(userId);
+        
+        // 转换为Spring Security的权限对象
+        return permissionCodes.stream()
+                .map(SimpleGrantedAuthority::new)
+                .collect(Collectors.toList());
+    }
+
     /**
      * 检查用户信息唯一性
      */
@@ -273,7 +361,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         wrapper.eq(SysUser::getUsername, userDTO.getUsername())
                 .ne(userId != null, SysUser::getId, userId);
         if (count(wrapper) > 0) {
-            throw new ApiException("用户名已存在");
+            throw new ApiException(ResultCode.DUPLICATE_USERNAME);
         }
 
         // 检查手机号
@@ -281,7 +369,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         wrapper.eq(SysUser::getPhone, userDTO.getPhone())
                 .ne(userId != null, SysUser::getId, userId);
         if (count(wrapper) > 0) {
-            throw new ApiException("手机号已存在");
+            throw new ApiException(ResultCode.DUPLICATE_USERNAME);
         }
 
         // 检查邮箱
@@ -289,7 +377,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         wrapper.eq(SysUser::getEmail, userDTO.getEmail())
                 .ne(userId != null, SysUser::getId, userId);
         if (count(wrapper) > 0) {
-            throw new ApiException("邮箱已存在");
+            throw new ApiException(ResultCode.DUPLICATE_USERNAME);
         }
 
         // 检查身份证号
@@ -297,7 +385,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         wrapper.eq(SysUser::getIdCard, userDTO.getIdCard())
                 .ne(userId != null, SysUser::getId, userId);
         if (count(wrapper) > 0) {
-            throw new ApiException("身份证号已存在");
+            throw new ApiException(ResultCode.DUPLICATE_USERNAME);
         }
     }
 

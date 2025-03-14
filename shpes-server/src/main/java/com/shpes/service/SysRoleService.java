@@ -58,7 +58,17 @@ public interface SysRoleService extends IService<SysRole> {
     List<SysRole> getUserRoles(Long userId);
 
     /**
-     * 获取角色的权限ID列表
+     * 获取角色权限ID列表
      */
     List<Long> getRolePermissionIds(Long roleId);
+
+    /**
+     * 获取角色权限编码列表
+     */
+    List<String> getRolePermissionCodes(Long roleId);
+
+    /**
+     * 获取角色编码列表
+     */
+    List<String> getRoleCodes(List<Long> roleIds);
 }
