@@ -206,24 +206,41 @@ phsical/
 - POST /                  # 创建用户
 - PUT  /{id}             # 更新用户信息
 - POST /status           # 启用/禁用用户
+- DELETE /{id}           # 删除用户
+- PUT  /{id}/password    # 重置用户密码
+- GET  /{id}/roles       # 获取用户角色列表
+- GET  /{id}/permissions # 获取用户权限列表
+- GET  /department/{deptId} # 获取部门下的用户列表
 
 #### 2.2 角色管理 (/api/roles)
 - GET  /                  # 获取角色列表
 - POST /                  # 创建角色
 - PUT  /{id}             # 更新角色
 - POST /{roleId}/users    # 分配用户到角色
+- GET  /{id}             # 获取角色详情
+- DELETE /{id}           # 删除角色
+- PUT  /{id}/status      # 更新角色状态
+- GET  /{id}/permissions # 获取角色权限列表
+- PUT  /{id}/permissions # 更新角色权限
+- GET  /{id}/users       # 获取角色下的用户列表
 
 #### 2.3 部门管理 (/api/departments)
 - GET  /                  # 获取部门列表
 - POST /                  # 创建部门
 - PUT  /{id}             # 更新部门信息
 - GET  /{id}/users       # 获取部门人员列表
+- GET  /{id}             # 获取部门详情
+- DELETE /{id}           # 删除部门
+- PUT  /{id}/status      # 更新部门状态
+- GET  /tree             # 获取部门树形结构
 
 ### 3. 体检项目接口 (/api/items)
 - GET  /                  # 获取项目列表，支持分页和筛选
+- GET  /{id}             # 获取项目详情
 - POST /                  # 创建体检项目
 - PUT  /{id}             # 更新项目信息
-- GET  /categories       # 获取项目分类（字典）
+- DELETE /{id}           # 删除项目
+- PUT  /{id}/status      # 更新项目状态
 - GET  /{id}/reference   # 获取项目参考值
 
 ### 4. 体检套餐接口 (/api/packages)
@@ -232,6 +249,8 @@ phsical/
 - PUT  /{id}             # 更新套餐信息
 - POST /{id}/items       # 配置套餐项目
 - GET  /{id}/items       # 获取套餐项目列表
+- GET  /available        # 获取所有可用套餐
+- PUT  /{id}/status      # 更新套餐状态
 
 ### 5. 预约管理接口
 #### 5.1 时间段管理 (/api/timeslots)
@@ -239,13 +258,17 @@ phsical/
 - POST /                  # 创建时间段
 - PUT  /{id}             # 更新时间段信息
 - GET  /available        # 获取可预约时间段
+- GET  /{id}             # 获取时间段详情
+- DELETE /{id}           # 删除时间段
+- PUT  /{id}/status      # 更新时间段状态
 
 #### 5.2 预约管理 (/api/appointments)
 - GET  /                  # 获取预约列表，支持多条件筛选
+- GET  /{id}             # 获取预约详情
 - POST /                  # 创建预约
-- PUT  /{id}             # 修改预约
 - PUT  /{id}/cancel      # 取消预约
-- GET  /user/{userId}    # 获取用户预约记录
+- PUT  /{id}/time        # 更新预约时间
+- PUT  /{id}/complete    # 完成预约
 
 ### 6. 体检管理接口
 #### 6.1 体检记录 (/api/records)
@@ -260,7 +283,8 @@ phsical/
 - PUT  /{id}             # 更新结果
 - POST /{id}/review      # 结果复核
 - GET  /export/{recordId} # 导出体检报告
-
+- GET  /abnormal         # 获取异常结果列表
+- POST /batch/review     # 批量复核体检结果
 
 ### 7. 通知管理接口 (/api/notices) [二期功能]
 - GET  /                  # 获取通知列表，支持分页和筛选
