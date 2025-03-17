@@ -1,6 +1,6 @@
 <template>
   <div>
-    <i v-if="icon" class="el-icon-" :class="icon"></i>
+    <i v-if="icon" :class="icon"></i>
     <span v-if="title">{{ title }}</span>
   </div>
 </template>
@@ -19,4 +19,4 @@ export default {
     }
   }
 }
-</script> 
+</script>

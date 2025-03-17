@@ -5,12 +5,16 @@
     <!-- 通用查询映射结果 -->
     <resultMap id="BaseResultMap" type="com.shpes.entity.ExamItem">
         <id column="id" property="id"/>
-        <result column="item_code" property="itemCode"/>
-        <result column="item_name" property="itemName"/>
+        <result column="name" property="name"/>
+        <result column="code" property="code"/>
         <result column="category" property="category"/>
         <result column="department_id" property="departmentId"/>
+        <result column="upper_limit" property="upperLimit"/>
+        <result column="lower_limit" property="lowerLimit"/>
         <result column="reference_value" property="referenceValue"/>
         <result column="unit" property="unit"/>
+        <result column="price" property="price"/>
+        <result column="sort" property="sort"/>
         <result column="status" property="status"/>
         <result column="remark" property="remark"/>
         <result column="create_time" property="createTime"/>
@@ -53,4 +57,4 @@
             #{id}
         </foreach>
     </update>
-</mapper> 
+</mapper>

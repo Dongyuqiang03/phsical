@@ -6,7 +6,7 @@ import com.shpes.dto.LoginDTO;
 import com.shpes.dto.PasswordDTO;
 import com.shpes.dto.RegisterDTO;
 import com.shpes.entity.SysUser;
-import com.shpes.security.core.JwtTokenManager;
+import com.shpes.security.core.JwtUtils;
 import com.shpes.service.AuthService;
 import com.shpes.service.PermissionService;
 import com.shpes.service.SysUserService;
@@ -20,7 +20,6 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,6 +27,7 @@ import java.util.List;
 
 /**
  * 认证服务实现类
+ * 极简版本，直接使用SysUser对象
  */
 @Slf4j
 @Service
@@ -40,7 +40,7 @@ public class AuthServiceImpl implements AuthService {
     private PermissionService permissionService;
 
     @Autowired
-    private JwtTokenManager jwtTokenManager;
+    private JwtUtils jwtUtils;
 
     @Autowired
     private AuthenticationManager authenticationManager;
@@ -65,7 +65,7 @@ public class AuthServiceImpl implements AuthService {
         userVO.setRoles(roles);
 
         // 生成token
-        String token = jwtTokenManager.generateToken(authentication);
+        String token = jwtUtils.generateToken(user);
 
         // 返回登录结果
         LoginVO loginVO = new LoginVO();
@@ -119,12 +119,9 @@ public class AuthServiceImpl implements AuthService {
             throw new ApiException(ResultCode.USER_NOT_EXIST);
         }
 
-        // 生成随机密码
-        String newPassword = PasswordUtils.generateRandomPassword();
-        userService.updatePassword(user.getId(), PasswordUtils.encode(newPassword));
+        userService.updatePassword(user.getId(), PasswordUtils.encode("123456"));
 
         // TODO: 发送新密码到用户邮箱
-        log.info("Reset password for user: {}, new password: {}", username, newPassword);
     }
 
     @Override
@@ -152,7 +149,7 @@ public class AuthServiceImpl implements AuthService {
         userVO.setRoles(roles);
 
         // 生成新token
-        String token = jwtTokenManager.generateToken(new UserDetailsImpl(userVO));
+        String token = jwtUtils.generateToken(user);
 
         // 返回新token
         LoginVO loginVO = new LoginVO();
@@ -178,53 +175,5 @@ public class AuthServiceImpl implements AuthService {
         userVO.setRoles(roles);
 
         return userVO;
-    }
-
-    /**
-     * UserDetails实现类，用于JWT token生成
-     */
-    private static class UserDetailsImpl implements UserDetails {
-        private final UserVO userVO;
-
-        public UserDetailsImpl(UserVO userVO) {
-            this.userVO = userVO;
-        }
-
-        @Override
-        public String getUsername() {
-            return userVO.getUsername();
-        }
-
-        @Override
-        public String getPassword() {
-            return userVO.getPassword();
-        }
-
-        @Override
-        public boolean isAccountNonExpired() {
-            return true;
-        }
-
-        @Override
-        public boolean isAccountNonLocked() {
-            return true;
-        }
-
-        @Override
-        public boolean isCredentialsNonExpired() {
-            return true;
-        }
-
-        @Override
-        public boolean isEnabled() {
-            return userVO.isEnabled();
-        }
-
-        @Override
-        public java.util.Collection<? extends org.springframework.security.core.GrantedAuthority> getAuthorities() {
-            return userVO.getRoles().stream()
-                .map(role -> new org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_" + role))
-                .collect(java.util.stream.Collectors.toList());
-        }
     }
 }

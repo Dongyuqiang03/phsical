@@ -5,6 +5,7 @@
     <!-- 通用查询映射结果 -->
     <resultMap id="BaseResultMap" type="com.shpes.entity.ExamRecord">
         <id column="id" property="id"/>
+        <result column="exam_no" property="examNo"/>
         <result column="appointment_id" property="appointmentId"/>
         <result column="user_id" property="userId"/>
         <result column="package_id" property="packageId"/>
@@ -14,14 +15,17 @@
         <result column="doctor_id" property="doctorId"/>
         <result column="doctor_name" property="doctorName"/>
         <result column="exam_date" property="examDate"/>
+        <result column="conclusion" property="conclusion"/>
+        <result column="suggestion" property="suggestion"/>
         <result column="status" property="status"/>
+        <result column="complete_time" property="completeTime"/>
         <result column="create_time" property="createTime"/>
         <result column="update_time" property="updateTime"/>
     </resultMap>
 
     <!-- 获取体检记录详情 -->
     <select id="getRecordDetail" resultMap="BaseResultMap">
-        SELECT er.*, sd.department_name, su.name as doctor_name, ep.package_name
+        SELECT er.*, sd.dept_name as department_name, su.real_name as doctor_name, ep.name as package_name
         FROM exam_record er
         LEFT JOIN sys_department sd ON er.department_id = sd.id
         LEFT JOIN sys_user su ON er.doctor_id = su.id

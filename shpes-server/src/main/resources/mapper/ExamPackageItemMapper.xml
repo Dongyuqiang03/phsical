@@ -7,16 +7,14 @@
         <id column="id" property="id"/>
         <result column="package_id" property="packageId"/>
         <result column="item_id" property="itemId"/>
-        <result column="price" property="price"/>
         <result column="create_time" property="createTime"/>
-        <result column="update_time" property="updateTime"/>
     </resultMap>
 
     <!-- 批量插入套餐项目关联 -->
     <insert id="batchInsert">
-        INSERT INTO exam_package_item (package_id, item_id, price) VALUES
+        INSERT INTO exam_package_item (package_id, item_id) VALUES
         <foreach collection="list" item="item" separator=",">
-            (#{item.packageId}, #{item.itemId}, #{item.price})
+            (#{item.packageId}, #{item.itemId})
         </foreach>
     </insert>
 
@@ -29,4 +27,4 @@
     <select id="selectItemIdsByPackageId" resultType="java.lang.Long">
         SELECT item_id FROM exam_package_item WHERE package_id = #{packageId}
     </select>
-</mapper> 
+</mapper>

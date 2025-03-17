@@ -2,36 +2,54 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.shpes.mapper.ExamResultMapper">
     
-    <select id="selectResultsByRecordId" resultType="com.shpes.vo.ExamResultVO">
-        SELECT r.*, i.item_name, i.item_code, i.unit, i.reference_low, i.reference_high,
-               u1.real_name as doctor_name, u2.real_name as reviewer_name
-        FROM exam_result r
-        LEFT JOIN exam_item i ON r.item_id = i.id
-        LEFT JOIN sys_user u1 ON r.doctor_id = u1.id
-        LEFT JOIN sys_user u2 ON r.reviewer_id = u2.id
-        WHERE r.record_id = #{recordId}
-        ORDER BY i.sort
-    </select>
-    
-    <select id="selectResultPage" resultType="com.shpes.entity.ExamResult">
-        SELECT r.*, i.item_name, i.item_code
-        FROM exam_result r
-        LEFT JOIN exam_item i ON r.item_id = i.id
-        <where>
-            <if test="recordId != null">
-                AND r.record_id = #{recordId}
-            </if>
-            <if test="itemId != null">
-                AND r.item_id = #{itemId}
-            </if>
-            <if test="resultType != null">
-                AND r.is_abnormal = #{resultType}
-            </if>
-            <if test="reviewStatus != null">
-                AND r.review_status = #{reviewStatus}
-            </if>
-        </where>
-        ORDER BY r.create_time DESC
-    </select>
+   <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.shpes.entity.ExamResult">
+        <id column="id" property="id"/>
+        <result column="record_id" property="recordId"/>
+        <result column="item_id" property="itemId"/>
+        <result column="value" property="value"/>
+        <result column="unit" property="unit"/>
+        <result column="abnormal" property="abnormal"/>
+        <result column="suggestion" property="suggestion"/>
+        <result column="doctor_id" property="doctorId"/>
+        <result column="reviewer_id" property="reviewerId"/>
+        <result column="status" property="status"/>
+        <result column="remark" property="remark"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_time" property="updateTime"/>
+    </resultMap>
+
+  <select id="selectResultsByRecordId" resultType="com.shpes.vo.ExamResultVO">
+    SELECT r.*, i.name as item_name, i.code as item_code, i.unit,
+           i.lower_limit, i.upper_limit,
+           u1.real_name as doctor_name, u2.real_name as reviewer_name
+    FROM exam_result r
+    LEFT JOIN exam_item i ON r.item_id = i.id
+    LEFT JOIN sys_user u1 ON r.doctor_id = u1.id
+    LEFT JOIN sys_user u2 ON r.reviewer_id = u2.id
+    WHERE r.record_id = #{recordId}
+    ORDER BY i.sort
+</select>
+
+<select id="selectResultPage" resultType="com.shpes.entity.ExamResult">
+    SELECT r.*, i.name as item_name, i.code as item_code
+    FROM exam_result r
+    LEFT JOIN exam_item i ON r.item_id = i.id
+    <where>
+        <if test="recordId != null">
+            AND r.record_id = #{recordId}
+        </if>
+        <if test="itemId != null">
+            AND r.item_id = #{itemId}
+        </if>
+        <if test="resultType != null">
+            AND r.abnormal = #{resultType}
+        </if>
+        <if test="reviewStatus != null">
+            AND r.status = #{reviewStatus}
+        </if>
+    </where>
+    ORDER BY r.create_time DESC
+</select>
     
 </mapper>

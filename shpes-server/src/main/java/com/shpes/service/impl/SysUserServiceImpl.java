@@ -14,6 +14,7 @@ import com.shpes.mapper.SysUserRoleMapper;
 import com.shpes.service.SysDepartmentService;
 import com.shpes.service.SysRoleService;
 import com.shpes.service.SysUserService;
+import com.shpes.utils.PasswordUtils;
 import com.shpes.utils.SecurityUtils;
 import com.shpes.vo.UserVO;
 import org.springframework.beans.BeanUtils;
@@ -37,7 +38,7 @@ import java.util.stream.Collectors;
  * 系统用户服务实现类
  */
 @Service
-public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> implements SysUserService {
+public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser>implements SysUserService {
 
     @Autowired
     private SysUserRoleMapper userRoleMapper;
@@ -48,9 +49,6 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     @Autowired
     private SysDepartmentService departmentService;
 
-    @Autowired
-    private PasswordEncoder passwordEncoder;
-
     @Override
     public CommonPage<UserVO> getUserPage(Integer pageNum, Integer pageSize, String username, String name,
             String phone, Long departmentId, Integer userType, Integer status) {
@@ -59,7 +57,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         wrapper.like(StringUtils.hasText(username), SysUser::getUsername, username)
                 .like(StringUtils.hasText(name), SysUser::getUsername, name)
                 .like(StringUtils.hasText(phone), SysUser::getPhone, phone)
-                .eq(departmentId != null, SysUser::getDepartmentId, departmentId)
+                .eq(departmentId != null, SysUser::getDeptId, departmentId)
                 .eq(userType != null, SysUser::getUserType, userType)
                 .eq(status != null, SysUser::getStatus, status)
                 .orderByDesc(SysUser::getCreateTime);
@@ -95,8 +93,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         BeanUtils.copyProperties(userDTO, user);
         
         // 设置密码
-        user.setPassword(passwordEncoder.encode(userDTO.getPassword()));
-        user.setStatus(1);
+        user.setPassword(PasswordUtils.encode(userDTO.getPassword()));        user.setStatus(1);
         user.setCreateTime(LocalDateTime.now());
         user.setUpdateTime(LocalDateTime.now());
 
@@ -171,7 +168,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         }
 
         // 重置密码为123456
-        user.setPassword(passwordEncoder.encode("123456"));
+        user.setPassword(PasswordUtils.encode("123456"));
         user.setUpdateTime(LocalDateTime.now());
         updateById(user);
     }
@@ -198,7 +195,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     @Override
     public List<UserVO> getUsersByDepartmentId(Long departmentId) {
         LambdaQueryWrapper<SysUser> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(SysUser::getDepartmentId, departmentId)
+        wrapper.eq(SysUser::getDeptId, departmentId)
                 .eq(SysUser::getStatus, 1);
         return list(wrapper).stream()
                 .map(this::convertToVO)
@@ -282,7 +279,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         }
 
         // 更新密码
-        user.setPassword(passwordEncoder.encode(newPassword));
+        user.setPassword(PasswordUtils.encode(newPassword));
         user.setUpdateTime(LocalDateTime.now());
         updateById(user);
     }
@@ -424,8 +421,8 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         BeanUtils.copyProperties(user, userVO);
 
         // 设置部门名称
-        if (user.getDepartmentId() != null) {
-            userVO.setDepartmentName(departmentService.getDepartmentNameById(user.getDepartmentId()));
+        if (user.getDeptId() != null) {
+            userVO.setDepartmentName(departmentService.getDepartmentNameById(user.getDeptId()));
         }
 
         // 设置角色信息

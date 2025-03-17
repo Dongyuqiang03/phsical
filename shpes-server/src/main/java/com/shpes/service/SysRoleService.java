@@ -55,7 +55,7 @@ public interface SysRoleService extends IService<SysRole> {
     /**
      * 获取用户角色列表
      */
-    List<SysRole> getUserRoles(Long userId);
+    List<RoleVO> getUserRoles(Long userId);
 
     /**
      * 获取角色权限ID列表

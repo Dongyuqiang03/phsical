@@ -6,13 +6,14 @@
     <resultMap id="BaseResultMap" type="com.shpes.entity.SysDepartment">
         <id column="id" property="id"/>
         <result column="parent_id" property="parentId"/>
-        <result column="department_name" property="departmentName"/>
-        <result column="department_code" property="departmentCode"/>
+        <result column="dept_name" property="deptName"/>
+        <result column="dept_code" property="deptCode"/>
+        <result column="description" property="description"/>
         <result column="leader" property="leader"/>
         <result column="phone" property="phone"/>
-        <result column="email" property="email"/>
         <result column="status" property="status"/>
         <result column="sort" property="sort"/>
+        <result column="remark" property="remark"/>
         <result column="create_time" property="createTime"/>
         <result column="update_time" property="updateTime"/>
     </resultMap>
@@ -30,11 +31,6 @@
         )
         SELECT * FROM dept_tree ORDER BY sort
     </select>
-
-    <!-- 部门树形结构映射 -->
-    <resultMap id="DepartmentTreeMap" type="com.shpes.vo.DepartmentTreeVO" extends="BaseResultMap">
-        <collection property="children" ofType="com.shpes.vo.DepartmentTreeVO" column="id" select="getChildDepartments"/>
-    </resultMap>
 
     <!-- 获取子部门列表 -->
     <select id="getChildDepartments" resultMap="DepartmentTreeMap">
@@ -54,4 +50,4 @@
             #{id}
         </foreach>
     </update>
-</mapper> 
+</mapper>

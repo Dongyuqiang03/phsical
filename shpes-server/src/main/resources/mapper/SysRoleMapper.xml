@@ -20,7 +20,7 @@
             p.id as permission_id,
             p.permission_name,
             p.permission_code,
-            p.type
+            p.permission_type
         FROM sys_role r
         LEFT JOIN sys_role_permission rp ON r.id = rp.role_id
         LEFT JOIN sys_permission p ON rp.permission_id = p.id
@@ -33,7 +33,7 @@
             <id column="permission_id" property="id"/>
             <result column="permission_name" property="permissionName"/>
             <result column="permission_code" property="permissionCode"/>
-            <result column="type" property="type"/>
+            <result column="permission_type" property="permissionType"/>
         </collection>
     </resultMap>
 
@@ -75,7 +75,7 @@
 
     <!-- 根据角色ID列表查询权限编码列表 -->
     <select id="selectPermissionCodesByIds" resultType="java.lang.String">
-        SELECT DISTINCT p.code
+        SELECT DISTINCT p.permission_code
         FROM sys_permission p
         INNER JOIN sys_role_permission rp ON p.id = rp.permission_id
         WHERE rp.role_id IN

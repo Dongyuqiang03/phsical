@@ -35,9 +35,9 @@ public class SysDepartmentServiceImpl extends ServiceImpl<SysDepartmentMapper, S
     public CommonPage<DepartmentVO> getDepartmentPage(Integer pageNum, Integer pageSize, String keyword) {
         // 构建查询条件
         LambdaQueryWrapper<SysDepartment> wrapper = new LambdaQueryWrapper<>();
-        wrapper.like(StringUtils.isNotBlank(keyword), SysDepartment::getName, keyword)
+        wrapper.like(StringUtils.isNotBlank(keyword), SysDepartment::getDeptName, keyword)
                 .or()
-                .like(StringUtils.isNotBlank(keyword), SysDepartment::getCode, keyword)
+                .like(StringUtils.isNotBlank(keyword), SysDepartment::getDeptCode, keyword)
                 .orderByAsc(SysDepartment::getSort);
 
         // 执行分页查询
@@ -67,7 +67,7 @@ public class SysDepartmentServiceImpl extends ServiceImpl<SysDepartmentMapper, S
     @Transactional(rollbackFor = Exception.class)
     public void createDepartment(SysDepartment department) {
         // 检查部门编码是否已存在
-        if (isDepartmentCodeExists(department.getCode())) {
+        if (isDepartmentCodeExists(department.getDeptCode())) {
             throw new ApiException(ResultCode.DEPARTMENT_USED);
         }
 
@@ -84,7 +84,7 @@ public class SysDepartmentServiceImpl extends ServiceImpl<SysDepartmentMapper, S
         }
 
         // 如果修改了部门编码，检查新编码是否已存在
-        if (!existingDepartment.getCode().equals(department.getCode()) && isDepartmentCodeExists(department.getCode())) {
+        if (!existingDepartment.getDeptCode().equals(department.getDeptCode()) && isDepartmentCodeExists(department.getDeptCode())) {
             throw new ApiException(ResultCode.DEPARTMENT_USED);
         }
 
@@ -130,7 +130,7 @@ public class SysDepartmentServiceImpl extends ServiceImpl<SysDepartmentMapper, S
 
         // 查询部门下的用户
         List<SysUser> users = userMapper.selectList(new LambdaQueryWrapper<SysUser>()
-                .eq(SysUser::getDepartmentId, id)
+                .eq(SysUser::getDeptId, id)
                 .orderByAsc(SysUser::getId));
 
         return users.stream()
@@ -143,7 +143,7 @@ public class SysDepartmentServiceImpl extends ServiceImpl<SysDepartmentMapper, S
      */
     private boolean isDepartmentCodeExists(String code) {
         return baseMapper.selectCount(new LambdaQueryWrapper<SysDepartment>()
-                .eq(SysDepartment::getCode, code)) > 0;
+                .eq(SysDepartment::getDeptCode, code)) > 0;
     }
 
     /**
@@ -158,7 +158,7 @@ public class SysDepartmentServiceImpl extends ServiceImpl<SysDepartmentMapper, S
      */
     private boolean hasDepartmentUsers(Long departmentId) {
         return userMapper.selectCount(new LambdaQueryWrapper<SysUser>()
-                .eq(SysUser::getDepartmentId, departmentId)) > 0;
+                .eq(SysUser::getDeptId, departmentId)) > 0;
     }
 
     /**
@@ -170,7 +170,7 @@ public class SysDepartmentServiceImpl extends ServiceImpl<SysDepartmentMapper, S
 
         // 获取部门人员数量
         vo.setUserCount(userMapper.selectCount(new LambdaQueryWrapper<SysUser>()
-                .eq(SysUser::getDepartmentId, department.getId())).intValue());
+                .eq(SysUser::getDeptId, department.getId())).intValue());
 
         return vo;
     }
@@ -190,6 +190,6 @@ public class SysDepartmentServiceImpl extends ServiceImpl<SysDepartmentMapper, S
             return null;
         }
         SysDepartment department = baseMapper.selectById(departmentId);
-        return department != null ? department.getName() : null;
+        return department != null ? department.getDeptName() : null;
     }
 }

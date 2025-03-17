@@ -10,17 +10,23 @@
         <result column="start_time" property="startTime"/>
         <result column="end_time" property="endTime"/>
         <result column="capacity" property="capacity"/>
-        <result column="reserved" property="reserved"/>
+        <result column="booked_count" property="bookedCount"/>
         <result column="status" property="status"/>
+        <result column="remark" property="remark"/>
         <result column="create_time" property="createTime"/>
         <result column="update_time" property="updateTime"/>
     </resultMap>
 
+    <!-- TimeSlotVO的结果映射 -->
+    <resultMap id="TimeSlotVOMap" type="com.shpes.vo.ExamTimeSlotVO" extends="BaseResultMap">
+        <result column="department_name" property="departmentName"/>
+    </resultMap>
+
     <!-- 获取部门某天的时间段列表 -->
-    <select id="getDepartmentTimeSlots" resultType="com.shpes.vo.TimeSlotVO">
+    <select id="getDepartmentTimeSlots" resultMap="TimeSlotVOMap">
         SELECT 
             t.*,
-            d.department_name
+            d.dept_name as department_name
         FROM exam_time_slot t
         LEFT JOIN sys_department d ON t.department_id = d.id
         WHERE t.department_id = #{departmentId}
@@ -30,28 +36,43 @@
     </select>
 
     <!-- 获取可预约的时间段列表 -->
-    <select id="getAvailableTimeSlots" resultType="com.shpes.vo.TimeSlotVO">
+    <select id="getAvailableTimeSlots" resultMap="TimeSlotVOMap">
+        <![CDATA[
         SELECT 
-            t.*,
-            d.department_name
+            t.id,
+            t.department_id,
+            t.date,
+            t.start_time,
+            t.end_time,
+            t.capacity,
+            t.booked_count,
+            t.status,
+            t.remark,
+            t.create_time,
+            t.update_time,
+            d.dept_name AS department_name
         FROM exam_time_slot t
         LEFT JOIN sys_department d ON t.department_id = d.id
         WHERE t.department_id = #{departmentId}
-        AND t.date >= #{startDate}
-        AND t.date <= #{endDate}
-        AND t.status = 1
-        AND t.reserved < t.capacity
+            AND t.date >= #{startDate}
+            AND t.date <= #{endDate}
+            AND t.status = 1
+            AND t.booked_count < t.capacity
         ORDER BY t.date, t.start_time
+        ]]>
     </select>
 
     <!-- 更新预约数量 -->
     <update id="updateReserved">
+    <![CDATA[
         UPDATE exam_time_slot
-        SET reserved = reserved + #{delta},
+        SET booked_count = booked_count + #{delta},
             update_time = NOW()
         WHERE id = #{id}
-        AND reserved + #{delta} >= 0
-        AND (#{delta} > 0 AND reserved < capacity OR #{delta} < 0)
+        AND booked_count + #{delta} >= 0
+        AND (#{delta} > 0 AND booked_count < capacity OR #{delta} < 0)
+                AND status = 1
+    ]]>
     </update>
 
     <!-- 批量更新时间段状态 -->
@@ -64,4 +85,4 @@
             #{id}
         </foreach>
     </update>
-</mapper> 
+</mapper>

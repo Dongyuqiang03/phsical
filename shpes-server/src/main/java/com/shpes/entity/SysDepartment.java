@@ -15,11 +15,17 @@ import lombok.EqualsAndHashCode;
 @ApiModel("部门")
 public class SysDepartment extends BaseEntity {
 
+    @ApiModelProperty("父部门ID")
+    private Long parentId;
+
     @ApiModelProperty("部门名称")
-    private String name;
+    private String deptName;
 
     @ApiModelProperty("部门编码")
-    private String code;
+    private String deptCode;
+
+    @ApiModelProperty("部门描述")
+    private String description;
 
     @ApiModelProperty("负责人")
     private String leader;

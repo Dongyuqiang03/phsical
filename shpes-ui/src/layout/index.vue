@@ -53,10 +53,10 @@
 
 <script>
 import { mapGetters } from 'vuex'
-import Hamburger from './components/Hamburger'
-import Breadcrumb from './components/Breadcrumb'
-import SidebarItem from './components/SidebarItem'
-import AppMain from './components/AppMain'
+import Hamburger from './components/Hamburger/index.vue'
+import Breadcrumb from './components/Breadcrumb/index.vue'
+import SidebarItem from './components/SidebarItem/index.vue'
+import AppMain from './components/AppMain/index.vue'
 
 export default {
   name: 'Layout',

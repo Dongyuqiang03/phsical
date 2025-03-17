@@ -88,7 +88,7 @@ public class SysRoleController {
     @ApiOperation("获取用户角色列表")
     @GetMapping("/user/{userId}")
     @RequiresPermission(RoleConstants.ADMIN)
-    public CommonResult<List<SysRole>> getUserRoles(@PathVariable Long userId) {
+    public CommonResult<List<RoleVO>> getUserRoles(@PathVariable Long userId) {
         return CommonResult.success(roleService.getUserRoles(userId));
     }
 

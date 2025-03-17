@@ -20,10 +20,4 @@ public class ExamPackageItem extends BaseEntity {
 
     @ApiModelProperty("项目ID")
     private Long itemId;
-
-    @ApiModelProperty("排序")
-    private Integer sort;
-
-    @ApiModelProperty("备注")
-    private String remark;
 }

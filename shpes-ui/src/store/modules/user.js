@@ -1,4 +1,4 @@
-import { login, logout, getInfo } from '@/api/user'
+import { login, logout, getUserInfo } from '@/api/auth'
 import { getToken, setToken, removeToken } from '@/utils/auth'
 import { resetRouter } from '@/router'
 
@@ -38,9 +38,17 @@ const actions = {
     return new Promise((resolve, reject) => {
       login({ username: username.trim(), password: password })
         .then(response => {
-          const { data } = response
-          commit('SET_TOKEN', data.token)
-          setToken(data.token)
+          if (!response.data) {
+            reject(new Error('登录失败，请重试'))
+            return
+          }
+          const { token } = response.data
+          if (!token) {
+            reject(new Error('登录失败，未获取到token'))
+            return
+          }
+          commit('SET_TOKEN', token)
+          setToken(token)
           resolve()
         })
         .catch(error => {
@@ -52,7 +60,7 @@ const actions = {
   // 获取用户信息
   getInfo({ commit, state }) {
     return new Promise((resolve, reject) => {
-      getInfo(state.token)
+      getUserInfo()
         .then(response => {
           const { data } = response
           if (!data) {
@@ -78,7 +86,7 @@ const actions = {
   // 用户登出
   logout({ commit, state, dispatch }) {
     return new Promise((resolve, reject) => {
-      logout(state.token)
+      logout()
         .then(() => {
           commit('SET_TOKEN', '')
           commit('SET_ROLES', [])

@@ -239,7 +239,7 @@ public class ExamItemServiceImpl extends ServiceImpl<ExamItemMapper, ExamItem> i
         // 获取科室信息
         SysDepartment department = departmentMapper.selectById(item.getDepartmentId());
         if (department != null) {
-            vo.setDepartmentName(department.getName());
+            vo.setDepartmentName(department.getDeptName());
         }
 
         return vo;
