@@ -12,7 +12,9 @@ const state = {
 
 const getters = {
   permission_routes: state => {
-    return constantRoutes.concat(state.routes).filter(route => !route.hidden)
+    const routes = constantRoutes.concat(state.routes).filter(route => !route.hidden)
+    console.log('Permission routes getter:', routes)
+    return routes
   }
 }
 
@@ -41,6 +43,8 @@ const mutations = {
 // 根据权限过滤路由
 function filterAsyncRoutes(routes, permissions) {
   const res = []
+  console.log('Filtering routes:', routes)
+  console.log('With permissions:', permissions)
 
   routes.forEach(route => {
     const tmp = { ...route }
@@ -52,13 +56,15 @@ function filterAsyncRoutes(routes, permissions) {
     }
   })
 
+  console.log('Filtered result:', res)
   return res
 }
 
 // 检查是否有权限访问该路由
 function hasPermission(permissions, route) {
   if (route.meta && route.meta.permissions) {
-    return permissions.some(permission => route.meta.permissions.includes(permission))
+    // 如果路由需要的权限是数组中的任意一个，就允许访问
+    return route.meta.permissions.some(permission => permissions.includes(permission))
   } else {
     return true
   }
@@ -88,8 +94,10 @@ const actions = {
   generateRoutes({ commit, state }) {
     return new Promise(resolve => {
       const { permissions } = state
+      console.log('Generating routes with permissions:', permissions)
       // 过滤异步路由
       const accessedRoutes = filterAsyncRoutes(asyncRoutes, permissions)
+      console.log('Generated routes:', accessedRoutes)
       // 更新路由
       commit('SET_ROUTES', accessedRoutes)
       // 动态添加路由

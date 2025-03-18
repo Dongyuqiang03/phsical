@@ -81,6 +81,9 @@ export default {
       return path
     }
   },
+  created() {
+    console.log('Layout mounted, routes:', this.permission_routes)
+  },
   methods: {
     toggleSideBar() {
       this.$store.dispatch('app/toggleSideBar')
