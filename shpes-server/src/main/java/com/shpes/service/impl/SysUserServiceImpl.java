@@ -15,6 +15,7 @@ import com.shpes.service.SysDepartmentService;
 import com.shpes.service.SysRoleService;
 import com.shpes.service.SysUserService;
 import com.shpes.utils.PasswordUtils;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import com.shpes.utils.SecurityUtils;
 import com.shpes.vo.UserVO;
 import org.springframework.beans.BeanUtils;

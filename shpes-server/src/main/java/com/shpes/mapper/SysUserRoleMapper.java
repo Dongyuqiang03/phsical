@@ -1,9 +1,9 @@
 package com.shpes.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.shpes.entity.SysRole;
+import com.shpes.entity.SysUserDetail;
 import com.shpes.entity.SysUserRole;
-import com.shpes.vo.RoleVO;
-import com.shpes.vo.UserVO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
@@ -31,12 +31,12 @@ public interface SysUserRoleMapper extends BaseMapper<SysUserRole> {
     /**
      * 获取用户的角色详细信息
      */
-    List<RoleVO> selectRoleDetailsByUserId(@Param("userId") Long userId);
+    List<SysRole> selectRoleDetailsByUserId(@Param("userId") Long userId);
 
     /**
      * 获取角色的用户详细信息
      */
-    List<UserVO> selectUserDetailsByRoleId(@Param("roleId") Long roleId);
+    List<SysUserDetail> selectUserDetailsByRoleId(@Param("roleId") Long roleId);
 
     /**
      * 批量插入用户角色关系
@@ -47,4 +47,4 @@ public interface SysUserRoleMapper extends BaseMapper<SysUserRole> {
      * 根据条件删除用户角色关系
      */
     int deleteByCondition(@Param("userId") Long userId, @Param("roleId") Long roleId);
-} 
+}

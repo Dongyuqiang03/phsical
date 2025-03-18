@@ -20,6 +20,17 @@
         <result column="update_time" property="updateTime"/>
     </resultMap>
 
+    <!-- 用户详情映射 -->
+    <resultMap id="UserDetailMap" type="com.shpes.entity.SysUserDetail" extends="BaseResultMap">
+        <result column="dept_name" property="deptName"/>
+        <collection property="roleIds" ofType="java.lang.Long">
+            <result column="role_id"/>
+        </collection>
+        <collection property="roleNames" ofType="java.lang.String">
+            <result column="role_name"/>
+        </collection>
+    </resultMap>
+
     <!-- 获取用户详情（包含部门和角色信息） -->
     <select id="getUserDetail" resultMap="UserDetailMap">
         SELECT 
@@ -34,16 +45,7 @@
         WHERE u.id = #{id}
     </select>
 
-    <!-- 用户详情映射 -->
-    <resultMap id="UserDetailMap" type="com.shpes.vo.UserVO" extends="BaseResultMap">
-        <result column="dept_name" property="deptName"/>
-        <collection property="roleIds" ofType="java.lang.Long">
-            <result column="role_id"/>
-        </collection>
-        <collection property="roleNames" ofType="java.lang.String">
-            <result column="role_name"/>
-        </collection>
-    </resultMap>
+
 
     <!-- 根据用户名查询用户 -->
     <select id="selectByUsername" resultMap="BaseResultMap">

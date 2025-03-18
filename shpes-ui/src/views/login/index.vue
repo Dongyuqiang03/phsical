@@ -107,6 +107,8 @@ export default {
     }
   },
   created() {
+    // 确保清除旧的认证信息
+    localStorage.removeItem('token')
     this.getCaptcha()
   },
   watch: {
@@ -150,14 +152,17 @@ export default {
       this.$refs.loginForm.validate(valid => {
         if (valid) {
           this.loading = true
-          login(this.loginForm)
-            .then(response => {
-              this.loading = false
-              this.$router.push({ path: this.redirect || '/', query: this.otherQuery })
+          this.$store.dispatch('user/login', this.loginForm)
+            .then(() => {
+              this.$message.success('登录成功')
+              // 直接跳转到首页
+              window.location.href = '/dashboard'
             })
             .catch(() => {
+              this.getCaptcha()
+            })
+            .finally(() => {
               this.loading = false
-              this.getCaptcha() // 登录失败时刷新验证码
             })
         }
       })

@@ -21,7 +21,14 @@
     </resultMap>
 
     <!-- 获取预约详情（包含用户、套餐、时间段信息） -->
-    <select id="getAppointmentDetail" resultType="com.shpes.vo.AppointmentVO">
+    <resultMap id="DetailResultMap" type="com.shpes.entity.ExamAppointmentDetail" extends="BaseResultMap">
+        <result column="username" property="username"/>
+        <result column="user_name" property="userName"/>
+        <result column="start_time" property="startTime"/>
+        <result column="end_time" property="endTime"/>
+    </resultMap>
+
+    <select id="getAppointmentDetail" resultMap="DetailResultMap">
         SELECT 
             a.*,
             u.username,
@@ -35,7 +42,7 @@
     </select>
 
     <!-- 获取用户的预约历史 -->
-    <select id="getUserAppointments" resultType="com.shpes.vo.AppointmentVO">
+    <select id="getUserAppointments" resultMap="DetailResultMap">
         SELECT 
             a.*,
             t.start_time,
@@ -47,7 +54,7 @@
     </select>
 
     <!-- 获取部门某天的预约列表 -->
-    <select id="getDepartmentAppointments" resultType="com.shpes.vo.AppointmentVO">
+    <select id="getDepartmentAppointments" resultMap="DetailResultMap">
         SELECT 
             a.*,
             u.username,
@@ -62,4 +69,4 @@
         AND a.status = 1
         ORDER BY t.start_time
     </select>
-</mapper> 
+</mapper>

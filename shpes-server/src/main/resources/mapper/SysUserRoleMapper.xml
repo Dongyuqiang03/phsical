@@ -52,5 +52,21 @@
         ORDER BY u.create_time DESC
     </select>
 
-    <!-- 其他方法保持不变 -->
+    <!-- 批量插入用户角色关联 -->
+    <insert id="batchInsert">
+        INSERT INTO sys_user_role (user_id, role_id, create_time)
+        VALUES
+        <foreach collection="list" item="item" separator=",">
+            (#{item.userId}, #{item.roleId}, #{item.createTime})
+        </foreach>
+    </insert>
+
+    <!-- 批量删除用户角色关联 -->
+    <delete id="batchDelete">
+        DELETE FROM sys_user_role
+        WHERE (user_id, role_id) IN
+        <foreach collection="list" item="item" open="(" separator="," close=")">
+            (#{item.userId}, #{item.roleId})
+        </foreach>
+    </delete>
 </mapper>

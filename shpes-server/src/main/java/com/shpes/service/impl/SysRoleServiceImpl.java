@@ -36,9 +36,9 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
     public CommonPage<RoleVO> getRolePage(Integer pageNum, Integer pageSize, String keyword) {
         // 构建查询条件
         LambdaQueryWrapper<SysRole> wrapper = new LambdaQueryWrapper<>();
-        wrapper.like(StringUtils.isNotBlank(keyword), SysRole::getName, keyword)
+        wrapper.like(StringUtils.isNotBlank(keyword), SysRole::getRoleName, keyword)
                 .or()
-                .like(StringUtils.isNotBlank(keyword), SysRole::getCode, keyword)
+                .like(StringUtils.isNotBlank(keyword), SysRole::getRoleCode, keyword)
                 .orderByDesc(SysRole::getCreateTime);
 
         // 执行分页查询
@@ -47,7 +47,7 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
 
         // 转换记录列表
         List<RoleVO> records = page.getRecords().stream()
-                .map(this::convertToVO)
+                .map(RoleVO::convertToVO)
                 .collect(Collectors.toList());
 
         // 使用通用分页对象，使用一致的命名
@@ -58,12 +58,12 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
     @Transactional(rollbackFor = Exception.class)
     public void createRole(SysRole role) {
         // 检查角色名称是否已存在
-        if (isRoleNameExists(role.getName())) {
+        if (isRoleNameExists(role.getRoleName())) {
             throw new ApiException(ResultCode.ROLE_NAME_EXISTS);
         }
         
         // 检查角色编码是否已存在
-        if (isRoleCodeExists(role.getCode())) {
+        if (isRoleCodeExists(role.getRoleCode())) {
             throw new ApiException(ResultCode.ROLE_CODE_EXISTS);
         }
         
@@ -80,12 +80,12 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
         }
         
         // 如果修改了角色名称，检查新名称是否已存在
-        if (!existingRole.getName().equals(role.getName()) && isRoleNameExists(role.getName())) {
+        if (!existingRole.getRoleName().equals(role.getRoleName()) && isRoleNameExists(role.getRoleName())) {
             throw new ApiException(ResultCode.ROLE_NAME_EXISTS);
         }
         
         // 如果修改了角色编码，检查新编码是否已存在
-        if (!existingRole.getCode().equals(role.getCode()) && isRoleCodeExists(role.getCode())) {
+        if (!existingRole.getRoleCode().equals(role.getRoleCode()) && isRoleCodeExists(role.getRoleCode())) {
             throw new ApiException(ResultCode.ROLE_CODE_EXISTS);
         }
         
@@ -110,10 +110,10 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
     @Override
     public List<RoleVO> getAllRoles() {
         List<SysRole> roles = baseMapper.selectList(new LambdaQueryWrapper<SysRole>()
-                .orderByAsc(SysRole::getSort));
+                .orderByAsc(SysRole::getId));
         
         return roles.stream()
-                .map(this::convertToVO)
+                .map(RoleVO::convertToVO)
                 .collect(Collectors.toList());
     }
 
@@ -160,17 +160,20 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
         List<SysRole> roles = baseMapper.selectList(
                 new LambdaQueryWrapper<SysRole>()
                         .in(SysRole::getId, roleIds)
-                        .orderByAsc(SysRole::getSort));
+                        .orderByAsc(SysRole::getId));
 
         // 提取角色名称
         return roles.stream()
-                .map(SysRole::getName)
+                .map(SysRole::getRoleName)
                 .collect(Collectors.toList());
     }
 
     @Override
     public List<RoleVO> getUserRoles(Long userId) {
-        return userRoleMapper.selectRoleDetailsByUserId(userId);
+        List<SysRole> roles = userRoleMapper.selectRoleDetailsByUserId(userId);
+        return roles.stream()
+                .map(RoleVO::convertToVO)
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -200,39 +203,21 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
         List<SysRole> roles = baseMapper.selectList(
                 new LambdaQueryWrapper<SysRole>()
                         .in(SysRole::getId, roleIds)
-                        .orderByAsc(SysRole::getSort));
+                        .orderByAsc(SysRole::getId));
 
         // 提取角色编码
         return roles.stream()
-                .map(SysRole::getCode)
+                .map(SysRole::getRoleCode)
                 .collect(Collectors.toList());
     }
 
-    /**
-     * 将角色实体转换为VO对象
-     */
-    private RoleVO convertToVO(SysRole role) {
-        if (role == null) {
-            return null;
-        }
-        RoleVO vo = new RoleVO();
-        vo.setId(role.getId());
-        vo.setName(role.getName());
-        vo.setCode(role.getCode());
-        vo.setDescription(role.getDescription());
-        vo.setStatus(role.getStatus());
-        vo.setSort(role.getSort());
-        vo.setCreateTime(role.getCreateTime());
-        vo.setUpdateTime(role.getUpdateTime());
-        return vo;
-    }
 
     /**
      * 检查角色名称是否已存在
      */
     private boolean isRoleNameExists(String name) {
         return baseMapper.selectCount(new LambdaQueryWrapper<SysRole>()
-                .eq(SysRole::getName, name)) > 0;
+                .eq(SysRole::getRoleName, name)) > 0;
     }
 
     /**
@@ -240,6 +225,6 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
      */
     private boolean isRoleCodeExists(String code) {
         return baseMapper.selectCount(new LambdaQueryWrapper<SysRole>()
-                .eq(SysRole::getCode, code)) > 0;
+                .eq(SysRole::getRoleCode, code)) > 0;
     }
 }

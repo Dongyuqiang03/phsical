@@ -1,24 +1,41 @@
 import axios from 'axios'
 import { Message } from 'element-ui'
 import router from '@/router'
-import { removeToken } from '@/utils/auth'
+import { setToken, removeToken } from '@/utils/auth'
 
 // Create axios instance with base configuration
 const service = axios.create({
-  baseURL: '/api',
+  baseURL: '/api',  // 添加 baseURL
   timeout: 5000,
   headers: {
     'Content-Type': 'application/json'
   }
 })
 
+// 不需要token的白名单
+const whiteList = [
+  '/api/auth/login',
+  '/api/auth/captcha',
+  '/api/auth/register'
+]
+
 // Request interceptor for API calls
 service.interceptors.request.use(
   config => {
-    const token = localStorage.getItem('token')
-    // 如果有 token，则所有请求都带上 token
-    if (token) {
-      config.headers['Authorization'] = `Bearer ${token}`
+    // 检查请求路径是否在白名单中
+    const isWhitelisted = whiteList.some(path => config.url === path)
+    
+    console.log('Request path check:', {
+      url: config.url,
+      isWhitelisted: isWhitelisted
+    })
+    
+    // 只有不在白名单中的请求才添加token
+    if (!isWhitelisted) {
+      const token = localStorage.getItem('token')
+      if (token) {
+        config.headers['Authorization'] = `Bearer ${token}`
+      }
     }
     
     // 打印请求信息，用于调试
@@ -57,7 +74,8 @@ service.interceptors.response.use(
     // 处理特定的业务状态码
     if (res.code === 401) {
       // 如果不是登录请求，则清除 token 并跳转到登录页
-      if (!response.config.url.endsWith('/auth/login')) {
+      const isWhitelisted = whiteList.some(path => response.config.url === path)
+      if (!isWhitelisted) {
         removeToken()
         router.push('/login')
       }
@@ -90,8 +108,9 @@ service.interceptors.response.use(
       switch (response.status) {
         case 401:
           message = response.data?.message || '未授权，请重新登录'
-          // 如果不是登录请求，则清除 token 并跳转到登录页
-          if (!response.config.url.endsWith('/auth/login')) {
+          // 如果不是白名单中的请求，则清除 token 并跳转到登录页
+          const isWhitelisted = whiteList.some(path => response.config.url === path)
+          if (!isWhitelisted) {
             removeToken()
             router.push('/login')
           }
@@ -137,7 +156,7 @@ export const logout = () => {
 }
 
 export const getUserInfo = () => {
-  return service.get('/users/info')
+  return service.get('/api/users/info')
 }
 
 export const getCaptcha = () => {

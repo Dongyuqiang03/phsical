@@ -3,7 +3,6 @@ package com.shpes.security.core;
 import com.shpes.entity.SysUser;
 import com.shpes.service.SysUserService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -38,10 +37,11 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
+        
         // 从请求头获取JWT
         String authHeader = request.getHeader("Authorization");
         
-        // 如果没有token，直接放行，让后续的过滤器处理
+        // 如果没有token，直接放行，让 SecurityConfig 处理
         if (!StringUtils.hasText(authHeader) || !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;
