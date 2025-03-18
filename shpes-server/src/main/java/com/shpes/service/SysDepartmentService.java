@@ -1,55 +1,72 @@
 package com.shpes.service;
 
-import com.shpes.common.api.CommonPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.baomidou.mybatisplus.extension.service.IService;
 import com.shpes.entity.SysDepartment;
-import com.shpes.entity.SysUser;
 import com.shpes.vo.DepartmentVO;
-import com.shpes.vo.UserSimpleVO;
 
 import java.util.List;
 
 /**
  * 部门服务接口
  */
-public interface SysDepartmentService {
+public interface SysDepartmentService extends IService<SysDepartment> {
 
     /**
-     * 分页查询部门
+     * 分页查询部门列表
+     *
+     * @param page     分页参数
+     * @param deptName 部门名称
+     * @param status   状态
+     * @return 分页结果
      */
-    CommonPage<DepartmentVO> getDepartmentPage(Integer pageNum, Integer pageSize, String keyword);
+    Page<DepartmentVO> getDepartmentPage(Page<SysDepartment> page, String deptName, Integer status);
 
     /**
-     * 获取所有部门
+     * 获取部门列表
+     *
+     * @return 部门列表
      */
-    List<DepartmentVO> getAllDepartments();
+    List<DepartmentVO> getDepartmentList();
 
     /**
      * 创建部门
+     *
+     * @param department 部门信息
+     * @return 是否成功
      */
-    void createDepartment(SysDepartment department);
+    boolean createDepartment(SysDepartment department);
 
     /**
      * 更新部门
+     *
+     * @param department 部门信息
+     * @return 是否成功
      */
-    void updateDepartment(SysDepartment department);
+    boolean updateDepartment(SysDepartment department);
 
     /**
      * 删除部门
+     *
+     * @param id 部门ID
+     * @return 是否成功
      */
-    void deleteDepartment(Long id);
+    boolean deleteDepartment(Long id);
 
     /**
-     * 更新部门状态
+     * 批量更新部门状态
+     *
+     * @param ids    部门ID列表
+     * @param status 状态
+     * @return 是否成功
      */
-    void updateStatus(Long id, Integer status);
-
-    /**
-     * 获取部门人员列表
-     */
-    List<UserSimpleVO> getDepartmentUsers(Long id);
+    boolean batchUpdateStatus(List<Long> ids, Integer status);
 
     /**
      * 根据部门ID获取部门名称
+     *
+     * @param departmentId 部门ID
+     * @return 部门名称
      */
     String getDepartmentNameById(Long departmentId);
 }

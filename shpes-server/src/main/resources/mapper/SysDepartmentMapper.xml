@@ -18,26 +18,9 @@
         <result column="update_time" property="updateTime"/>
     </resultMap>
 
-    <!-- 获取部门树形结构 -->
-    <select id="getDepartmentTree" resultMap="DepartmentTreeMap">
-        WITH RECURSIVE dept_tree AS (
-            SELECT *
-            FROM sys_department
-            WHERE parent_id = 0 OR parent_id IS NULL
-            UNION ALL
-            SELECT d.*
-            FROM sys_department d
-            INNER JOIN dept_tree t ON d.parent_id = t.id
-        )
-        SELECT * FROM dept_tree ORDER BY sort
-    </select>
-
-    <!-- 获取子部门列表 -->
-    <select id="getChildDepartments" resultMap="DepartmentTreeMap">
-        SELECT *
-        FROM sys_department
-        WHERE parent_id = #{id}
-        ORDER BY sort
+    <!-- 获取部门列表 -->
+    <select id="getDepartmentList" resultMap="BaseResultMap">
+        SELECT * FROM sys_department ORDER BY sort
     </select>
 
     <!-- 批量更新部门状态 -->

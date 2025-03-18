@@ -38,8 +38,8 @@ const actions = {
     return new Promise((resolve, reject) => {
       login({ username: username.trim(), password: password })
         .then(response => {
-          if (!response.data) {
-            reject(new Error('登录失败，请重试'))
+          if (!response || !response.data) {
+            reject(new Error(response?.message || '登录失败，请重试'))
             return
           }
           const { token } = response.data
@@ -52,6 +52,7 @@ const actions = {
           resolve()
         })
         .catch(error => {
+          console.error('Login error:', error)
           reject(error)
         })
     })

@@ -7,6 +7,7 @@ import com.shpes.entity.SysUser;
 import com.shpes.security.core.JwtAuthFilter;
 import com.shpes.service.SysUserService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -38,6 +39,7 @@ import java.io.IOException;
  * Spring Security配置
  * 极简版本，集成所有安全相关功能
  */
+@Slf4j
 @Configuration
 @EnableWebSecurity
 @EnableGlobalMethodSecurity(prePostEnabled = true)
@@ -58,29 +60,46 @@ public class SecurityConfig {
             .and()
             // 配置路径权限
             .authorizeRequests()
-            .antMatchers("/api/auth/**").permitAll()
-            .antMatchers("/api/captcha").permitAll()
-            // 修改 Swagger 相关路径配置
-            .antMatchers("/swagger-ui/**", "/swagger-resources/**", "/v3/api-docs/**", 
-                        "/webjars/**", "/doc.html").permitAll()
+            // 1. 完全公开的接口
+            .antMatchers(
+                "/api/auth/login",     // 登录接口
+                "/api/auth/captcha",   // 验证码接口
+                "/api/auth/register"   // 注册接口
+            ).permitAll()
+            // 2. Swagger UI 相关接口
+            .antMatchers(
+                "/api/swagger-ui.html",
+                "/api/swagger-resources/**",
+                "/api/v2/api-docs",
+                "/api/v3/api-docs/**",
+                "/api/webjars/**",
+                "/api/doc.html"
+            ).permitAll()
+            // 3. 其他所有接口都需要认证
             .anyRequest().authenticated()
             .and()
             // 配置异常处理
             .exceptionHandling()
             .authenticationEntryPoint((request, response, authException) -> {
+                log.debug("认证失败，请求路径: {}", request.getRequestURI());
                 response.setContentType(MediaType.APPLICATION_JSON_VALUE);
                 response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                 objectMapper.writeValue(response.getOutputStream(), 
                     CommonResult.failed(ResultCode.UNAUTHORIZED));
             })
             .accessDeniedHandler((request, response, accessDeniedException) -> {
+                log.debug("访问被拒绝，请求路径: {}", request.getRequestURI());
                 response.setContentType(MediaType.APPLICATION_JSON_VALUE);
                 response.setStatus(HttpServletResponse.SC_FORBIDDEN);
                 objectMapper.writeValue(response.getOutputStream(), 
                     CommonResult.failed(ResultCode.FORBIDDEN));
             })
             .and()
+            // 添加 JWT 过滤器
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+
+        // 允许跨域
+        http.cors();
 
         return http.build();
     }

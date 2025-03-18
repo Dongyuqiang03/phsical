@@ -70,3 +70,8 @@ knife4j:
     enableRequestCache: true
     enableHost: false
     enableHostText:
+
+logging:
+  level:
+    org.springframework.security: DEBUG
+    com.shpes.security: DEBUG

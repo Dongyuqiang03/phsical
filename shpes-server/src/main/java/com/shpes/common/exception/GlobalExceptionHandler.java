@@ -18,18 +18,14 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
  */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
-    private static final Logger LOGGER = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+    private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     /**
      * 处理自定义API异常
      */
     @ExceptionHandler(ApiException.class)
     public CommonResult<Void> handleApiException(ApiException e) {
-        if (e.getErrorCode() != null) {
-            LOGGER.error("API异常: {}", e.getMessage());
-            return CommonResult.failed(e.getErrorCode());
-        }
-        LOGGER.error("API异常: {}", e.getMessage());
+        logger.error("API异常：{}", e.getMessage());
         return CommonResult.failed(e.getMessage());
     }
 
@@ -43,11 +39,10 @@ public class GlobalExceptionHandler {
         if (bindingResult.hasErrors()) {
             FieldError fieldError = bindingResult.getFieldError();
             if (fieldError != null) {
-                message = fieldError.getField() + fieldError.getDefaultMessage();
+                message = fieldError.getDefaultMessage();
             }
         }
-        LOGGER.error("参数验证异常: {}", message);
-        return CommonResult.validateFailed(message);
+        return CommonResult.failed(message);
     }
 
     /**
@@ -55,15 +50,15 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(BindException.class)
     public CommonResult<Void> handleBindException(BindException e) {
+        BindingResult bindingResult = e.getBindingResult();
         String message = null;
-        if (e.getBindingResult().hasErrors()) {
-            FieldError fieldError = e.getBindingResult().getFieldError();
+        if (bindingResult.hasErrors()) {
+            FieldError fieldError = bindingResult.getFieldError();
             if (fieldError != null) {
-                message = fieldError.getField() + fieldError.getDefaultMessage();
+                message = fieldError.getDefaultMessage();
             }
         }
-        LOGGER.error("参数绑定异常: {}", message);
-        return CommonResult.validateFailed(message);
+        return CommonResult.failed(message);
     }
 
     /**
@@ -71,8 +66,8 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(BadCredentialsException.class)
     public CommonResult<Void> handleBadCredentialsException(BadCredentialsException e) {
-        LOGGER.error("认证异常: {}", e.getMessage());
-        return CommonResult.unauthorized("用户名或密码错误");
+        logger.error("认证失败：{}", e.getMessage());
+        return CommonResult.failed("用户名或密码错误");
     }
 
     /**
@@ -80,8 +75,8 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(UsernameNotFoundException.class)
     public CommonResult<Void> handleUsernameNotFoundException(UsernameNotFoundException e) {
-        LOGGER.error("用户不存在: {}", e.getMessage());
-        return CommonResult.unauthorized(e.getMessage());
+        logger.error("用户不存在：{}", e.getMessage());
+        return CommonResult.failed("用户名或密码错误");
     }
 
     /**
@@ -89,8 +84,8 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(AccessDeniedException.class)
     public CommonResult<Void> handleAccessDeniedException(AccessDeniedException e) {
-        LOGGER.error("访问权限异常: {}", e.getMessage());
-        return CommonResult.forbidden("没有相关权限");
+        logger.error("访问被拒绝：{}", e.getMessage());
+        return CommonResult.failed("暂无权限访问");
     }
 
     /**
@@ -98,7 +93,7 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(Exception.class)
     public CommonResult<Void> handleException(Exception e) {
-        LOGGER.error("系统异常: ", e);
+        logger.error("系统异常：", e);
         return CommonResult.failed("系统异常，请联系管理员");
     }
 } 

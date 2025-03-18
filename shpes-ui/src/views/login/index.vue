@@ -40,6 +40,24 @@
         </span>
       </el-form-item>
 
+      <el-form-item prop="captcha">
+        <span class="svg-container">
+          <i class="el-icon-picture-outline"/>
+        </span>
+        <el-input
+          v-model="loginForm.captchaCode"
+          placeholder="验证码"
+          style="width: 65%"
+          @keyup.enter.native="handleLogin"
+        />
+        <img 
+          :src="captchaUrl" 
+          alt="验证码" 
+          class="captcha-img"
+          @click="refreshCaptcha"
+        >
+      </el-form-item>
+
       <el-button :loading="loading" type="primary" style="width:100%;margin-bottom:30px;" @click.native.prevent="handleLogin">
         登录
       </el-button>
@@ -49,6 +67,7 @@
 
 <script>
 import { validUsername } from '@/utils/validate'
+import { login, getCaptcha } from '@/api/auth'
 
 export default {
   name: 'Login',
@@ -70,17 +89,25 @@ export default {
     return {
       loginForm: {
         username: 'admin',
-        password: '123456'
+        password: '123456',
+        captchaCode: '',
+        captchaKey: ''
       },
       loginRules: {
         username: [{ required: true, trigger: 'blur', validator: validateUsername }],
-        password: [{ required: true, trigger: 'blur', validator: validatePassword }]
+        password: [{ required: true, trigger: 'blur', validator: validatePassword }],
+        captchaCode: [{ required: true, message: '请输入验证码', trigger: 'blur' }]
       },
       passwordType: 'password',
       loading: false,
       redirect: undefined,
-      otherQuery: {}
+      otherQuery: {},
+      captchaUrl: '',
+      captchaLoading: false
     }
+  },
+  created() {
+    this.getCaptcha()
   },
   watch: {
     $route: {
@@ -95,12 +122,26 @@ export default {
     }
   },
   methods: {
+    getCaptcha() {
+      this.captchaLoading = true
+      getCaptcha()
+        .then(response => {
+          const { key, image } = response.data
+          this.captchaUrl = image
+          this.loginForm.captchaKey = key
+        })
+        .catch(() => {
+          this.$message.error('获取验证码失败，请刷新重试')
+        })
+        .finally(() => {
+          this.captchaLoading = false
+        })
+    },
+    refreshCaptcha() {
+      this.getCaptcha()
+    },
     showPwd() {
-      if (this.passwordType === 'password') {
-        this.passwordType = ''
-      } else {
-        this.passwordType = 'password'
-      }
+      this.passwordType = this.passwordType === 'password' ? '' : 'password'
       this.$nextTick(() => {
         this.$refs.password.focus()
       })
@@ -109,17 +150,15 @@ export default {
       this.$refs.loginForm.validate(valid => {
         if (valid) {
           this.loading = true
-          this.$store.dispatch('user/login', this.loginForm)
-            .then(() => {
-              this.$router.push({ path: this.redirect || '/', query: this.otherQuery })
+          login(this.loginForm)
+            .then(response => {
               this.loading = false
+              this.$router.push({ path: this.redirect || '/', query: this.otherQuery })
             })
             .catch(() => {
               this.loading = false
+              this.getCaptcha() // 登录失败时刷新验证码
             })
-        } else {
-          console.log('error submit!!')
-          return false
         }
       })
     },
@@ -224,6 +263,22 @@ $cursor: #fff;
     background: rgba(0, 0, 0, 0.1);
     border-radius: 5px;
     color: #454545;
+  }
+
+  .captcha-img {
+    height: 32px;
+    margin-top: 4px;
+    margin-left: 10px;
+    cursor: pointer;
+    vertical-align: middle;
+  }
+
+  .el-form-item {
+    position: relative;
+    
+    .el-input {
+      display: inline-block;
+    }
   }
 }
 </style>

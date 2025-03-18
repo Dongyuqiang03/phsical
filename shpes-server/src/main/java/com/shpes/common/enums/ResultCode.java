@@ -18,6 +18,7 @@ public enum ResultCode implements IErrorCode {
     USER_ACCOUNT_EXPIRED(1002, "账号已过期"),
     USER_ACCOUNT_LOCKED(1003, "账号已被锁定"),
     USER_ACCOUNT_DISABLED(1004, "账号已被禁用"),
+    USER_DISABLED(1002, "账号已被禁用"),
     DUPLICATE_USERNAME(1005, "用户名已存在"),
     
     // 角色权限相关：2000-2999

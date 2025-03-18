@@ -20,6 +20,8 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -47,31 +49,56 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public LoginVO login(LoginDTO loginDTO) {
-        // 使用Spring Security进行认证
-        Authentication authentication = authenticationManager.authenticate(
-            new UsernamePasswordAuthenticationToken(loginDTO.getUsername(), loginDTO.getPassword())
-        );
-        SecurityContextHolder.getContext().setAuthentication(authentication);
+        try {
+            log.debug("开始登录，用户名：{}", loginDTO.getUsername());
+            
+            // 使用Spring Security进行认证
+            Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(loginDTO.getUsername(), loginDTO.getPassword())
+            );
+            
+            // 设置认证信息
+            SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        // 获取用户信息
-        SysUser user = userService.getByUsername(loginDTO.getUsername());
-        UserVO userVO = new UserVO();
-        BeanUtils.copyProperties(user, userVO);
+            // 获取用户信息
+            SysUser user = userService.getByUsername(loginDTO.getUsername());
+            if (user == null) {
+                throw new UsernameNotFoundException("用户不存在");
+            }
+            
+            // 检查用户状态
+            if (user.getStatus() == 0) {
+                throw new ApiException(ResultCode.USER_DISABLED);
+            }
 
-        // 获取用户权限
-        List<String> permissions = permissionService.getUserPermissions(user.getId());
-        List<String> roles = permissionService.getUserRoles(user.getId());
-        userVO.setPermissions(permissions);
-        userVO.setRoles(roles);
+            UserVO userVO = new UserVO();
+            BeanUtils.copyProperties(user, userVO);
 
-        // 生成token
-        String token = jwtUtils.generateToken(user);
+            // 获取用户权限
+            List<String> permissions = permissionService.getUserPermissions(user.getId());
+            List<String> roles = permissionService.getUserRoles(user.getId());
+            userVO.setPermissions(permissions);
+            userVO.setRoles(roles);
 
-        // 返回登录结果
-        LoginVO loginVO = new LoginVO();
-        loginVO.setToken(token);
-        loginVO.setUser(userVO);
-        return loginVO;
+            // 生成token
+            String token = jwtUtils.generateToken(user);
+            log.debug("登录成功，生成token：{}", token);
+
+            // 返回登录结果
+            LoginVO loginVO = new LoginVO();
+            loginVO.setToken(token);
+            loginVO.setUser(userVO);
+            return loginVO;
+        } catch (BadCredentialsException e) {
+            log.error("登录失败，用户名或密码错误：{}", e.getMessage());
+            throw new ApiException(ResultCode.USERNAME_OR_PASSWORD_ERROR);
+        } catch (UsernameNotFoundException e) {
+            log.error("登录失败，用户不存在：{}", e.getMessage());
+            throw new ApiException(ResultCode.USERNAME_OR_PASSWORD_ERROR);
+        } catch (Exception e) {
+            log.error("登录失败，系统异常：", e);
+            throw new ApiException(ResultCode.FAILED);
+        }
     }
 
     @Override

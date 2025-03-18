@@ -16,32 +16,32 @@ public class DepartmentVO {
     @ApiModelProperty("部门ID")
     private Long id;
     
+    @ApiModelProperty("父部门ID")
+    private Long parentId;
+    
     @ApiModelProperty("部门名称")
-    private String name;
+    private String deptName;
     
     @ApiModelProperty("部门编码")
-    private String code;
+    private String deptCode;
     
-    @ApiModelProperty("部门主任ID")
-    private Long leaderId;
+    @ApiModelProperty("部门描述")
+    private String description;
     
-    @ApiModelProperty("部门主任姓名")
-    private String leaderName;
+    @ApiModelProperty("负责人")
+    private String leader;
     
     @ApiModelProperty("联系电话")
     private String phone;
-    
-    @ApiModelProperty("部门位置")
-    private String location;
-    
-    @ApiModelProperty("部门说明")
-    private String description;
     
     @ApiModelProperty("排序")
     private Integer sort;
     
     @ApiModelProperty("状态：0-禁用，1-启用")
     private Integer status;
+    
+    @ApiModelProperty("备注")
+    private String remark;
     
     @ApiModelProperty("人员数量")
     private Integer userCount;
