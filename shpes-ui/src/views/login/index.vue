@@ -155,8 +155,8 @@ export default {
           this.$store.dispatch('user/login', this.loginForm)
             .then(() => {
               this.$message.success('登录成功')
-              // 直接跳转到首页
-              window.location.href = '/dashboard'
+              // 等待路由生成完成后再跳转
+              this.$router.push('/dashboard')
             })
             .catch(() => {
               this.getCaptcha()

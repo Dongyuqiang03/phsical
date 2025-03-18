@@ -69,13 +69,13 @@ const actions = {
   login({ commit, dispatch }, loginData) {
     return new Promise((resolve, reject) => {
       login(loginData)
-        .then(response => {
+        .then(async response => {
           const { token, user } = response.data
           setToken(token)
           commit('SET_TOKEN', token)
           commit('SET_USER', user)
-          // 生成路由
-          dispatch('generateRoutes')
+          // 等待路由生成完成
+          await dispatch('generateRoutes')
           resolve(response)
         })
         .catch(error => {
