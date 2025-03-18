@@ -1,13 +1,13 @@
 import { asyncRoutes, constantRoutes } from '@/router'
 
 /**
- * 使用meta.roles判断当前用户是否有权限
- * @param roles
+ * 使用 meta.permissions 判断当前用户是否有权限
+ * @param permissions
  * @param route
  */
-function hasPermission(roles, route) {
-  if (route.meta && route.meta.roles) {
-    return roles.some(role => route.meta.roles.includes(role))
+function hasPermission(permissions, route) {
+  if (route.meta && route.meta.permissions) {
+    return route.meta.permissions.some(permission => permissions.includes(permission))
   } else {
     return true
   }
@@ -16,21 +16,24 @@ function hasPermission(roles, route) {
 /**
  * 通过递归过滤异步路由表
  * @param routes asyncRoutes
- * @param roles
+ * @param permissions
  */
-export function filterAsyncRoutes(routes, roles) {
+export function filterAsyncRoutes(routes, permissions) {
   const res = []
+  console.log('Filtering routes:', routes)
+  console.log('With permissions:', permissions)
 
   routes.forEach(route => {
     const tmp = { ...route }
-    if (hasPermission(roles, tmp)) {
+    if (hasPermission(permissions, tmp)) {
       if (tmp.children) {
-        tmp.children = filterAsyncRoutes(tmp.children, roles)
+        tmp.children = filterAsyncRoutes(tmp.children, permissions)
       }
       res.push(tmp)
     }
   })
 
+  console.log('Filtered result:', res)
   return res
 }
 
@@ -47,14 +50,15 @@ const mutations = {
 }
 
 const actions = {
-  generateRoutes({ commit }, roles) {
+  generateRoutes({ commit }, { permissions }) {
     return new Promise(resolve => {
-      let accessedRoutes
-      if (roles.includes('admin')) {
-        accessedRoutes = asyncRoutes || []
-      } else {
-        accessedRoutes = filterAsyncRoutes(asyncRoutes, roles)
+      console.log('Generating routes with permissions:', permissions)
+      let accessedRoutes = []
+      
+      if (permissions && permissions.length > 0) {
+        accessedRoutes = filterAsyncRoutes(asyncRoutes, permissions)
       }
+      
       commit('SET_ROUTES', accessedRoutes)
       resolve(accessedRoutes)
     })

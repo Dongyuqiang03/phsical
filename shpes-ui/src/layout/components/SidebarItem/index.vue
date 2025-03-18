@@ -1,21 +1,19 @@
 <template>
-  <div v-if="!item.hidden">
-    <template v-if="hasOneShowingChild(item.children, item) && (!onlyOneChild.children || onlyOneChild.noShowingChildren) && !item.alwaysShow">
-      <app-link v-if="onlyOneChild.meta" :to="resolvePath(onlyOneChild.path)">
-        <el-menu-item :index="resolvePath(onlyOneChild.path)" :class="{'submenu-title-noDropdown': !isNest}">
-          <item :icon="onlyOneChild.meta.icon || (item.meta && item.meta.icon)" :title="onlyOneChild.meta.title" />
-        </el-menu-item>
-      </app-link>
-    </template>
-
-    <el-submenu v-else ref="subMenu" :index="resolvePath(item.path)" popper-append-to-body>
+  <div class="sidebar-menu">
+    <!-- 普通菜单项 -->
+    <el-menu-item v-if="!item.hidden" :index="resolvePath(item.path)" :class="{'submenu-title-noDropdown':!isNest}">
+      <i v-if="item.meta && item.meta.icon" :class="'el-icon-' + item.meta.icon"></i>
+      <span slot="title">{{ item.meta.title }}</span>
+    </el-menu-item>
+    <!-- 带子菜单的菜单项 -->
+    <el-submenu v-else-if="!item.hidden && item.children && item.children.length > 0" :index="resolvePath(item.path)">
       <template slot="title">
-        <item v-if="item.meta" :icon="item.meta && item.meta.icon" :title="item.meta.title" />
+        <i v-if="item.meta && item.meta.icon" :class="'el-icon-' + item.meta.icon"></i>
+        <span>{{ item.meta.title }}</span>
       </template>
       <sidebar-item
         v-for="child in item.children"
         :key="child.path"
-        :is-nest="true"
         :item="child"
         :base-path="resolvePath(child.path)"
         class="nest-menu"

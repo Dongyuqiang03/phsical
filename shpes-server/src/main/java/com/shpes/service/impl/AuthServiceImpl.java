@@ -13,9 +13,9 @@ import com.shpes.service.SysUserService;
 import com.shpes.utils.PasswordUtils;
 import com.shpes.vo.LoginVO;
 import com.shpes.vo.UserVO;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -33,43 +33,44 @@ import java.util.List;
  */
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
 
-    @Autowired
-    private SysUserService userService;
-
-    @Autowired
-    private PermissionService permissionService;
-
-    @Autowired
-    private JwtUtils jwtUtils;
-
-    @Autowired
-    private AuthenticationManager authenticationManager;
+    private final SysUserService userService;
+    private final PermissionService permissionService;
+    private final JwtUtils jwtUtils;
+    private final AuthenticationManager authenticationManager;
 
     @Override
     public LoginVO login(LoginDTO loginDTO) {
         try {
-            log.debug("开始登录，用户名：{}", loginDTO.getUsername());
+            log.info("开始登录，用户名：{}", loginDTO.getUsername());
             
-            // 使用Spring Security进行认证
-            Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(loginDTO.getUsername(), loginDTO.getPassword())
-            );
-            
-            // 设置认证信息
-            SecurityContextHolder.getContext().setAuthentication(authentication);
-
             // 获取用户信息
             SysUser user = userService.getByUsername(loginDTO.getUsername());
             if (user == null) {
+                log.error("用户不存在：{}", loginDTO.getUsername());
                 throw new UsernameNotFoundException("用户不存在");
             }
             
+            // 验证密码
+            if (!PasswordUtils.matches(loginDTO.getPassword(), user.getPassword())) {
+                log.error("密码错误：{}", loginDTO.getUsername());
+                throw new BadCredentialsException("密码错误");
+            }
+
             // 检查用户状态
             if (user.getStatus() == 0) {
                 throw new ApiException(ResultCode.USER_DISABLED);
             }
+
+            // 创建认证信息
+            Authentication authentication = new UsernamePasswordAuthenticationToken(
+                user.getUsername(),
+                null,
+                userService.getUserAuthorities(user.getId())
+            );
+            SecurityContextHolder.getContext().setAuthentication(authentication);
 
             UserVO userVO = new UserVO();
             BeanUtils.copyProperties(user, userVO);
@@ -79,10 +80,11 @@ public class AuthServiceImpl implements AuthService {
             List<String> roles = permissionService.getUserRoles(user.getId());
             userVO.setPermissions(permissions);
             userVO.setRoles(roles);
+            log.debug("获取用户权限：permissions={}, roles={}", permissions, roles);
 
             // 生成token
             String token = jwtUtils.generateToken(user);
-            log.debug("登录成功，生成token：{}", token);
+            log.debug("生成token：{}", token);
 
             // 返回登录结果
             LoginVO loginVO = new LoginVO();
@@ -90,10 +92,10 @@ public class AuthServiceImpl implements AuthService {
             loginVO.setUser(userVO);
             return loginVO;
         } catch (BadCredentialsException e) {
-            log.error("登录失败，用户名或密码错误：{}", e.getMessage());
+            log.error("登录失败，用户名或密码错误：{}", e.getMessage(), e);
             throw new ApiException(ResultCode.USERNAME_OR_PASSWORD_ERROR);
         } catch (UsernameNotFoundException e) {
-            log.error("登录失败，用户不存在：{}", e.getMessage());
+            log.error("登录失败，用户不存在：{}", e.getMessage(), e);
             throw new ApiException(ResultCode.USERNAME_OR_PASSWORD_ERROR);
         } catch (Exception e) {
             log.error("登录失败，系统异常：", e);

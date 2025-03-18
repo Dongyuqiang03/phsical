@@ -1,8 +1,13 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
 import Layout from '../layout/index.vue'
+import { getToken } from '@/utils/auth' // 确保这个工具函数存在
+import store from '@/store'
 
 Vue.use(VueRouter)
+
+// 白名单列表，不需要登录就可以访问的路由
+const whiteList = ['/login']
 
 // 基础路由，不需要权限
 export const constantRoutes = [
@@ -13,11 +18,14 @@ export const constantRoutes = [
   },
   {
     path: '/',
+    redirect: '/dashboard'
+  },
+  {
+    path: '/dashboard',
     component: Layout,
-    redirect: '/dashboard',
     children: [
       {
-        path: 'dashboard',
+        path: '',
         component: () => import('../views/dashboard/index.vue'),
         name: 'Dashboard',
         meta: { title: '首页', icon: 'dashboard' }
@@ -93,6 +101,36 @@ const createRouter = () => new VueRouter({
 })
 
 const router = createRouter()
+
+// 全局前置守卫
+router.beforeEach((to, from, next) => {
+  const hasToken = getToken()
+
+  if (to.path === '/login') {
+    // 访问登录页，直接放行
+    next()
+  } else if (hasToken) {
+    // 已登录状态
+    const hasRoles = store.state.user.roles && store.state.user.roles.length > 0
+    if (hasRoles) {
+      next()
+    } else {
+      // 有 token 但没有角色信息，可能是 token 失效
+      store.dispatch('user/resetToken').then(() => {
+        next('/login')
+      })
+    }
+  } else {
+    // 未登录状态
+    if (whiteList.indexOf(to.path) !== -1) {
+      // 在免登录白名单中，直接进入
+      next()
+    } else {
+      // 其他所有页面重定向到登录页
+      next(`/login?redirect=${to.path}`)
+    }
+  }
+})
 
 export function resetRouter() {
   const newRouter = createRouter()

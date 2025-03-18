@@ -4,7 +4,7 @@ import router, { asyncRoutes, constantRoutes, resetRouter } from '@/router'
 
 const state = {
   token: getToken(),
-  user: null,
+  user: {},
   roles: [],
   permissions: [],
   routes: []
@@ -12,9 +12,11 @@ const state = {
 
 const getters = {
   permission_routes: state => {
-    const routes = constantRoutes.concat(state.routes).filter(route => !route.hidden)
-    console.log('Permission routes getter:', routes)
-    return routes
+    // 合并静态路由和动态路由，过滤掉隐藏的路由
+    const allRoutes = constantRoutes.concat(state.routes)
+    const visibleRoutes = allRoutes.filter(route => !route.hidden)
+    console.log('All visible routes:', visibleRoutes)
+    return visibleRoutes
   }
 }
 
@@ -27,13 +29,8 @@ const mutations = {
   },
   SET_USER: (state, user) => {
     state.user = user
-    if (user) {
-      state.roles = user.roles || []
-      state.permissions = user.permissions || []
-    } else {
-      state.roles = []
-      state.permissions = []
-    }
+    state.roles = user.roles || []
+    state.permissions = user.permissions || []
   },
   SET_ROUTES: (state, routes) => {
     state.routes = routes
@@ -71,20 +68,42 @@ function hasPermission(permissions, route) {
 }
 
 const actions = {
-  // 用户登录
-  login({ commit, dispatch }, loginData) {
+  // 登录
+  login({ commit }, userInfo) {
+    console.log('Starting login with data:', userInfo)
     return new Promise((resolve, reject) => {
-      login(loginData)
-        .then(async response => {
-          const { token, user } = response.data
-          setToken(token)
-          commit('SET_TOKEN', token)
-          commit('SET_USER', user)
-          // 等待路由生成完成
-          await dispatch('generateRoutes')
-          resolve(response)
+      login(userInfo)
+        .then(response => {
+          console.log('Raw login response:', response)
+          // 确保响应数据存在
+          if (!response || !response.data) {
+            reject(new Error('登录响应数据为空'))
+            return
+          }
+
+          const { data: responseData } = response
+          console.log('Login response data:', responseData)
+
+          // 检查响应状态
+          if (responseData.code === 200) {
+            const { token, user } = responseData.data
+            // 检查必要的数据
+            if (!token || !user) {
+              reject(new Error('登录响应缺少必要的数据'))
+              return
+            }
+
+            console.log('Setting user data:', { token, user })
+            commit('SET_TOKEN', token)
+            commit('SET_USER', user)
+            setToken(token)
+            resolve(response)
+          } else {
+            reject(new Error(responseData.message || '登录失败'))
+          }
         })
         .catch(error => {
+          console.error('Login API error:', error)
           reject(error)
         })
     })
@@ -92,17 +111,40 @@ const actions = {
 
   // 生成路由
   generateRoutes({ commit, state }) {
-    return new Promise(resolve => {
-      const { permissions } = state
-      console.log('Generating routes with permissions:', permissions)
-      // 过滤异步路由
-      const accessedRoutes = filterAsyncRoutes(asyncRoutes, permissions)
-      console.log('Generated routes:', accessedRoutes)
-      // 更新路由
-      commit('SET_ROUTES', accessedRoutes)
-      // 动态添加路由
-      router.addRoutes(accessedRoutes)
-      resolve(accessedRoutes)
+    return new Promise((resolve, reject) => {
+      try {
+        const { permissions } = state
+        console.log('Generating routes with permissions:', permissions)
+        
+        if (!Array.isArray(permissions)) {
+          reject(new Error('权限数据格式错误'))
+          return
+        }
+
+        let accessedRoutes = []
+        if (permissions.length > 0) {
+          // 过滤异步路由
+          accessedRoutes = filterAsyncRoutes(asyncRoutes, permissions)
+          console.log('Generated routes:', accessedRoutes)
+          
+          // 更新路由
+          commit('SET_ROUTES', accessedRoutes)
+          
+          // 动态添加路由
+          accessedRoutes.forEach(route => {
+            console.log('Adding route:', route)
+            router.addRoute(route)
+          })
+        } else {
+          console.warn('No permissions found, menu might not show up')
+        }
+        
+        // 返回所有路由，包括基础路由
+        resolve(constantRoutes.concat(accessedRoutes))
+      } catch (error) {
+        console.error('Generate routes error:', error)
+        reject(error)
+      }
     })
   },
 
@@ -126,34 +168,27 @@ const actions = {
     })
   },
 
-  // 用户登出
+  // 登出
   logout({ commit }) {
     return new Promise((resolve, reject) => {
-      logout()
-        .then(() => {
-          commit('SET_TOKEN', '')
-          commit('SET_USER', null)
-          commit('SET_ROUTES', [])
-          removeToken()
-          resetRouter()
-          resolve()
-          // 登出后跳转到登录页
-          window.location.href = '/login'
-        })
-        .catch(error => {
-          reject(error)
-        })
+      try {
+        commit('SET_TOKEN', '')
+        commit('SET_USER', {})
+        removeToken()
+        resetRouter()
+        resolve()
+      } catch (error) {
+        reject(error)
+      }
     })
   },
 
-  // 重置token
+  // 重置 token
   resetToken({ commit }) {
     return new Promise(resolve => {
       commit('SET_TOKEN', '')
-      commit('SET_USER', null)
-      commit('SET_ROUTES', [])
+      commit('SET_USER', {})
       removeToken()
-      resetRouter()
       resolve()
     })
   }

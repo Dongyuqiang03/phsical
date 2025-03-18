@@ -50,6 +50,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser>imple
     @Autowired
     private SysDepartmentService departmentService;
 
+
     @Override
     public CommonPage<UserVO> getUserPage(Integer pageNum, Integer pageSize, String username, String name,
             String phone, Long departmentId, Integer userType, Integer status) {

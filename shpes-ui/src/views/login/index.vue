@@ -69,6 +69,27 @@
 import { validUsername } from '@/utils/validate'
 import { login, getCaptcha } from '@/api/auth'
 
+// 登录成功后的路由处理
+async function handleLoginSuccess(response, router, store) {
+  try {
+    // 打印完整的响应数据，用于调试
+    console.log('Full response:', JSON.stringify(response, null, 2))
+    
+    // 确保响应数据结构正确
+    if (!response.data || !response.data.data || !response.data.data.user) {
+      throw new Error('登录响应数据格式错误')
+    }
+    
+    // 生成路由并添加到路由器
+    await store.dispatch('user/generateRoutes')
+    
+    return true
+  } catch (error) {
+    console.error('Handle login success error:', error)
+    throw error
+  }
+}
+
 export default {
   name: 'Login',
   data() {
@@ -107,8 +128,8 @@ export default {
     }
   },
   created() {
-    // 确保清除旧的认证信息
-    localStorage.removeItem('token')
+    // 使用 Vuex action 清除认证信息
+    this.$store.dispatch('user/resetToken')
     this.getCaptcha()
   },
   watch: {
@@ -149,21 +170,55 @@ export default {
       })
     },
     handleLogin() {
-      this.$refs.loginForm.validate(valid => {
+      this.$refs.loginForm.validate(async valid => {
         if (valid) {
           this.loading = true
-          this.$store.dispatch('user/login', this.loginForm)
-            .then(() => {
+          try {
+            // 构造登录参数，包含验证码信息
+            const loginData = {
+              username: this.loginForm.username,
+              password: this.loginForm.password,
+              captchaCode: this.loginForm.captchaCode,
+              captchaKey: this.loginForm.captchaKey
+            }
+            
+            console.log('Submitting login data:', loginData)
+            
+            try {
+              // 调用登录接口
+              const response = await this.$store.dispatch('user/login', loginData)
+              console.log('Login API response:', response)
+              
+              // 处理登录成功后的路由
+              await handleLoginSuccess(response, this.$router, this.$store)
+              
+              // 确保路由生成完成后再跳转
+              const targetPath = this.redirect || '/'
+              console.log('Redirecting to:', targetPath)
+              await this.$router.push(targetPath)
+              
+              // 显示登录成功消息
               this.$message.success('登录成功')
-              // 等待路由生成完成后再跳转
-              this.$router.push('/dashboard')
+            } catch (error) {
+              console.error('Login process error:', error)
+              if (error.response) {
+                console.error('Error response:', error.response)
+              }
+              throw error // 继续向上传递错误
+            }
+          } catch (error) {
+            console.error('Login error:', error)
+            console.error('Error details:', {
+              message: error.message,
+              stack: error.stack,
+              response: error.response
             })
-            .catch(() => {
-              this.getCaptcha()
-            })
-            .finally(() => {
-              this.loading = false
-            })
+            // 登录失败，刷新验证码
+            this.getCaptcha()
+            this.$message.error(error.message || '登录失败')
+          } finally {
+            this.loading = false
+          }
         }
       })
     },

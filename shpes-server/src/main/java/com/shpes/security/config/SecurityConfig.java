@@ -23,8 +23,6 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.AccessDeniedHandler;
@@ -46,12 +44,11 @@ import java.io.IOException;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final SysUserService userService;
-    private final JwtAuthFilter jwtAuthFilter;
     private final ObjectMapper objectMapper;
+    private final UserDetailsService userDetailsService;
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http, JwtAuthFilter jwtAuthFilter) throws Exception {
         http
             // 关闭CSRF
             .csrf().disable()
@@ -96,7 +93,9 @@ public class SecurityConfig {
             })
             .and()
             // 添加 JWT 过滤器
-            .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+            .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+            // 设置自定义 UserDetailsService
+            .userDetailsService(userDetailsService);
 
         // 允许跨域
         http.cors();
@@ -107,28 +106,5 @@ public class SecurityConfig {
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
         return authConfig.getAuthenticationManager();
-    }
-
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
-
-    @Bean
-    public UserDetailsService userDetailsService() {
-        return username -> {
-            SysUser user = userService.getByUsername(username);
-            if (user == null) {
-                throw new UsernameNotFoundException("用户名或密码错误");
-            }
-            if (user.getStatus() == 0) {
-                throw new UsernameNotFoundException("账号已被禁用");
-            }
-            return new org.springframework.security.core.userdetails.User(
-                user.getUsername(),
-                user.getPassword(),
-                userService.getUserAuthorities(user.getId())
-            );
-        };
     }
 }
