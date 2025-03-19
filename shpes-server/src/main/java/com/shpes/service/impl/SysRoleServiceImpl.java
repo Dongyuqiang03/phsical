@@ -148,10 +148,7 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
 
     @Override
     public List<RoleVO> getUserRoles(Long userId) {
-        List<SysRole> roles = userRoleMapper.selectRoleDetailsByUserId(userId);
-        return roles.stream()
-                .map(RoleVO::convertToVO)
-                .collect(Collectors.toList());
+        return userRoleMapper.selectRoleDetailsByUserId(userId);
     }
 
     @Override

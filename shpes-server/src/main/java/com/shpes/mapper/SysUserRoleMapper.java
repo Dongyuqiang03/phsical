@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.shpes.entity.SysRole;
 import com.shpes.entity.SysUserDetail;
 import com.shpes.entity.SysUserRole;
+import com.shpes.vo.RoleVO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
@@ -31,7 +32,7 @@ public interface SysUserRoleMapper extends BaseMapper<SysUserRole> {
     /**
      * 获取用户的角色详细信息
      */
-    List<SysRole> selectRoleDetailsByUserId(@Param("userId") Long userId);
+    List<RoleVO> selectRoleDetailsByUserId(@Param("userId") Long userId);
 
     /**
      * 获取角色的用户详细信息

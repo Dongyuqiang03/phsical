@@ -154,7 +154,7 @@
 
 <script>
 import Pagination from '@/components/Pagination'
-import { getRoleList, createRole, updateRole, deleteRole, batchDeleteRole, updateRoleStatus, getRolePermissions, updateRolePermissions, getRoleUsers, updateRoleUsers } from '@/api/role'
+import { getRoleList, createRole, updateRole, deleteRole, batchDeleteRole, updateRoleStatus, getRolePermissions, updateRolePermissions, getRoleUsers, updateRoleUsers } from '@/api/system/role'
 
 export default {
   name: 'Role',
@@ -210,13 +210,24 @@ export default {
     async getList() {
       this.listLoading = true
       try {
-        const { data } = await getRoleList(this.listQuery)
-        this.list = data.items
-        this.total = data.total
+        const response = await getRoleList(this.listQuery)
+        if (response.code === 200) {
+          this.list = response.data.items || []
+          this.total = response.data.total || 0
+        } else {
+          this.list = []
+          this.total = 0
+          this.$message.warning(`获取角色列表失败: ${response.message || '未知错误'}`)
+          console.warn('获取角色列表失败:', response.message)
+        }
       } catch (error) {
+        this.list = []
+        this.total = 0
+        this.$message.warning('获取角色列表失败，可能缺少必要权限')
         console.error('获取角色列表失败:', error)
+      } finally {
+        this.listLoading = false
       }
-      this.listLoading = false
     },
     handleFilter() {
       this.listQuery.page = 1
