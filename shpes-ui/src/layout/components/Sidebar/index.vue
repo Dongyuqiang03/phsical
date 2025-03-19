@@ -1,5 +1,10 @@
 <template>
-  <div class="sidebar-menu">
+  <div class="sidebar-container">
+    <div class="logo-container">
+      <img src="@/assets/logo.png" class="sidebar-logo">
+      <h1 class="sidebar-title">体检管理系统</h1>
+    </div>
+    <div class="sidebar-menu">
     <el-menu-item v-if="!item.hidden" :index="resolvePath(item.path)" :class="{'submenu-title-noDropdown':!isNest}">
       <i v-if="item.meta && item.meta.icon" :class="'el-icon-' + item.meta.icon"></i>
       <span slot="title">{{ item.meta.title }}</span>
@@ -17,6 +22,7 @@
         class="nest-menu"
       />
     </el-submenu>
+  </div>
   </div>
 </template>
 
@@ -54,6 +60,33 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+.sidebar-container {
+  height: 100%;
+  background-color: #304156;
+}
+
+.logo-container {
+  height: 60px;
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  background-color: #2b2f3a;
+
+  .sidebar-logo {
+    width: 32px;
+    height: 32px;
+    margin-right: 12px;
+  }
+
+  .sidebar-title {
+    color: #fff;
+    font-size: 16px;
+    font-weight: 600;
+    margin: 0;
+    white-space: nowrap;
+  }
+}
+
 .sidebar-menu {
   .el-menu-item, .el-submenu__title {
     height: 50px;

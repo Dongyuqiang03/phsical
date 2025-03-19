@@ -1,12 +1,7 @@
 <template>
   <div class="sidebar-menu">
-    <!-- 普通菜单项 -->
-    <el-menu-item v-if="!item.hidden" :index="resolvePath(item.path)" :class="{'submenu-title-noDropdown':!isNest}">
-      <i v-if="item.meta && item.meta.icon" :class="'el-icon-' + item.meta.icon"></i>
-      <span slot="title">{{ item.meta.title }}</span>
-    </el-menu-item>
     <!-- 带子菜单的菜单项 -->
-    <el-submenu v-else-if="!item.hidden && item.children && item.children.length > 0" :index="resolvePath(item.path)">
+    <el-submenu v-if="item.children && item.children.length > 0 && !item.hidden" :index="resolvePath(item.path)">
       <template slot="title">
         <i v-if="item.meta && item.meta.icon" :class="'el-icon-' + item.meta.icon"></i>
         <span>{{ item.meta.title }}</span>
@@ -15,15 +10,19 @@
         v-for="child in item.children"
         :key="child.path"
         :item="child"
-        :base-path="resolvePath(child.path)"
+        :base-path="resolvePath(item.path)"
         class="nest-menu"
       />
     </el-submenu>
+    <!-- 普通菜单项 -->
+    <el-menu-item v-else-if="!item.hidden" :index="resolvePath(item.path)" :class="{'submenu-title-noDropdown':!isNest}">
+      <i v-if="item.meta && item.meta.icon" :class="'el-icon-' + item.meta.icon"></i>
+      <span slot="title">{{ item.meta.title }}</span>
+    </el-menu-item>
   </div>
 </template>
 
 <script>
-import path from 'path'
 import { isExternal } from '@/utils/validate'
 import Item from './Item.vue'
 import AppLink from './Link.vue'
@@ -78,7 +77,7 @@ export default {
       if (isExternal(this.basePath)) {
         return this.basePath
       }
-      return path.resolve(this.basePath, routePath)
+      return this.basePath.replace(/\/?$/, '/') + routePath.replace(/^\//, '')
     }
   }
 }

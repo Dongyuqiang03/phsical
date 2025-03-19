@@ -7,7 +7,8 @@ import { asyncRoutes, constantRoutes } from '@/router'
  */
 function hasPermission(permissions, route) {
   if (route.meta && route.meta.permissions) {
-    return route.meta.permissions.some(permission => permissions.includes(permission))
+    const hasAccess = route.meta.permissions.some(permission => permissions.includes(permission))
+    return hasAccess
   } else {
     return true
   }
@@ -20,8 +21,6 @@ function hasPermission(permissions, route) {
  */
 export function filterAsyncRoutes(routes, permissions) {
   const res = []
-  console.log('Filtering routes:', routes)
-  console.log('With permissions:', permissions)
 
   routes.forEach(route => {
     const tmp = { ...route }
@@ -33,7 +32,6 @@ export function filterAsyncRoutes(routes, permissions) {
     }
   })
 
-  console.log('Filtered result:', res)
   return res
 }
 
@@ -70,4 +68,4 @@ export default {
   state,
   mutations,
   actions
-} 
+}

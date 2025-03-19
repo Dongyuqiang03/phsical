@@ -64,7 +64,7 @@ export const asyncRoutes = [
   {
     path: '/exam',
     component: Layout,
-    meta: { title: '体检管理', icon: 'medical', permissions: ['exam'] },
+    meta: { title: '体检管理', icon: 'first-aid-kit', permissions: ['exam'] },
     children: [
       {
         path: 'item',
@@ -102,6 +102,19 @@ const createRouter = () => new VueRouter({
 
 const router = createRouter()
 
+// 动态添加路由的方法
+export function addRoutes(routes) {
+  // 检查是否已存在相同路由
+  const existingRoutes = router.getRoutes()
+  routes.forEach(route => {
+    // 如果路由已存在，先删除
+    if (route.name && existingRoutes.some(existing => existing.name === route.name)) {
+      router.removeRoute(route.name)
+    }
+    router.addRoute(route)
+  })
+}
+
 // 全局前置守卫
 router.beforeEach((to, from, next) => {
   const hasToken = getToken()
@@ -115,10 +128,25 @@ router.beforeEach((to, from, next) => {
     if (hasRoles) {
       next()
     } else {
-      // 有 token 但没有角色信息，可能是 token 失效
-      store.dispatch('user/resetToken').then(() => {
-        next('/login')
-      })
+      // 有 token 但没有角色信息，说明可能是页面刷新
+      // 尝试从localStorage获取用户信息
+      const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}')
+      if (userInfo && userInfo.roles) {
+        // 如果本地存储有用户信息，更新到store
+        store.commit('user/SET_USER', userInfo)
+        store.dispatch('user/generateRoutes').then(() => {
+          next({ ...to, replace: true })
+        }).catch(() => {
+          store.dispatch('user/resetToken').then(() => {
+            next('/login')
+          })
+        })
+      } else {
+        // 如果本地也没有用户信息，重置token并跳转到登录页
+        store.dispatch('user/resetToken').then(() => {
+          next('/login')
+        })
+      }
     }
   } else {
     // 未登录状态
