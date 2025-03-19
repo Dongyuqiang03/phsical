@@ -9,9 +9,11 @@ import com.shpes.entity.SysUser;
 import com.shpes.security.core.JwtUtils;
 import com.shpes.service.AuthService;
 import com.shpes.service.PermissionService;
+import com.shpes.service.SysRoleService;
 import com.shpes.service.SysUserService;
 import com.shpes.utils.PasswordUtils;
 import com.shpes.vo.LoginVO;
+import com.shpes.vo.RoleVO;
 import com.shpes.vo.UserVO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -38,6 +40,7 @@ public class AuthServiceImpl implements AuthService {
 
     private final SysUserService userService;
     private final PermissionService permissionService;
+    private final SysRoleService roleService;
     private final JwtUtils jwtUtils;
     private final AuthenticationManager authenticationManager;
 
@@ -75,9 +78,9 @@ public class AuthServiceImpl implements AuthService {
             UserVO userVO = new UserVO();
             BeanUtils.copyProperties(user, userVO);
 
-            // 获取用户权限
+            // 获取用户权限和角色
             List<String> permissions = permissionService.getUserPermissions(user.getId());
-            List<String> roles = permissionService.getUserRoles(user.getId());
+            List<RoleVO> roles = roleService.getUserRoles(user.getId());
             userVO.setPermissions(permissions);
             userVO.setRoles(roles);
             log.debug("获取用户权限：permissions={}, roles={}", permissions, roles);
@@ -171,9 +174,9 @@ public class AuthServiceImpl implements AuthService {
         UserVO userVO = new UserVO();
         BeanUtils.copyProperties(user, userVO);
 
-        // 获取用户权限
+        // 获取用户权限和角色
         List<String> permissions = permissionService.getUserPermissions(userId);
-        List<String> roles = permissionService.getUserRoles(userId);
+        List<RoleVO> roles = roleService.getUserRoles(userId);
         userVO.setPermissions(permissions);
         userVO.setRoles(roles);
 
@@ -197,9 +200,9 @@ public class AuthServiceImpl implements AuthService {
         UserVO userVO = new UserVO();
         BeanUtils.copyProperties(user, userVO);
 
-        // 获取用户权限
+        // 获取用户权限和角色
         List<String> permissions = permissionService.getUserPermissions(userId);
-        List<String> roles = permissionService.getUserRoles(userId);
+        List<RoleVO> roles = roleService.getUserRoles(userId);
         userVO.setPermissions(permissions);
         userVO.setRoles(roles);
 

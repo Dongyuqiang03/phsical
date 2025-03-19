@@ -21,7 +21,7 @@ import java.util.List;
  */
 @Api(tags = "体检结果管理")
 @RestController
-@RequestMapping("/api/results")
+@RequestMapping("/exam/results")
 public class ExamResultController {
 
     @Autowired
@@ -35,7 +35,7 @@ public class ExamResultController {
     }
 
     @ApiOperation("分页查询体检结果")
-    @GetMapping
+    @GetMapping("/list")
     @RequiresPermission(RoleConstants.ADMIN)
     public CommonResult<CommonPage<ExamResultVO>> getResultPage(
             @ApiParam("页码") @RequestParam(defaultValue = "1") Integer pageNum,

@@ -2,6 +2,9 @@ import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue2'
 import { resolve } from 'path'
 
+// 后端服务地址
+const target = 'http://localhost:8080'
+
 export default defineConfig({
   plugins: [
     vue()
@@ -10,19 +13,18 @@ export default defineConfig({
   server: {
     port: 3000,
     proxy: {
-      '/api': {
-        target: 'http://localhost:8080',
+      '^/api': {
+        target,
         changeOrigin: true,
-        secure: false,
         configure: (proxy, options) => {
           proxy.on('error', (err, req, res) => {
             console.log('proxy error', err)
           })
           proxy.on('proxyReq', (proxyReq, req, res) => {
-            console.log('Sending Request:', req.method, req.url)
+            console.log('Sending Request to:', target + req.url)
           })
           proxy.on('proxyRes', (proxyRes, req, res) => {
-            console.log('Received Response:', proxyRes.statusCode, req.url)
+            console.log('Received Response from:', target + req.url, proxyRes.statusCode)
           })
         }
       }

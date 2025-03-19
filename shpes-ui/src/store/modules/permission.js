@@ -2,22 +2,21 @@ import { asyncRoutes, constantRoutes } from '@/router'
 
 /**
  * 使用 meta.permissions 判断当前用户是否有权限
- * @param permissions
- * @param route
+ * @param permissions 权限列表（包含权限编码和角色编码）
+ * @param route 路由对象
  */
 function hasPermission(permissions, route) {
   if (route.meta && route.meta.permissions) {
-    const hasAccess = route.meta.permissions.some(permission => permissions.includes(permission))
-    return hasAccess
-  } else {
-    return true
+    // 如果路由需要的权限是数组中的任意一个，就允许访问
+    return route.meta.permissions.some(permission => permissions.includes(permission))
   }
+  return true
 }
 
 /**
  * 通过递归过滤异步路由表
  * @param routes asyncRoutes
- * @param permissions
+ * @param permissions 权限列表（包含权限编码和角色编码）
  */
 export function filterAsyncRoutes(routes, permissions) {
   const res = []

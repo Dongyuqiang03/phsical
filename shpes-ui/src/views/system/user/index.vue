@@ -13,7 +13,7 @@
         </el-form-item>
         <el-form-item>
           <el-input
-            v-model="listQuery.realName"
+            v-model="listQuery.name"
             placeholder="姓名"
             clearable
             @keyup.enter.native="handleFilter"
@@ -63,8 +63,12 @@
       @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
       <el-table-column label="用户名" prop="username" />
-      <el-table-column label="姓名" prop="realName" />
-      <el-table-column label="角色" prop="roleName" />
+      <el-table-column label="姓名" prop="name" />
+      <el-table-column label="角色">
+        <template slot-scope="{row}">
+          <span>{{ (row.roles || []).map(role => role.name).join(', ') }}</span>
+        </template>
+      </el-table-column>
       <el-table-column label="部门" prop="departmentName" />
       <el-table-column label="手机号" prop="phone" />
       <el-table-column label="邮箱" prop="email" />
@@ -78,7 +82,11 @@
           />
         </template>
       </el-table-column>
-      <el-table-column label="创建时间" prop="createTime" width="180" />
+      <el-table-column label="创建时间">
+        <template slot-scope="{row}">
+          <span>{{ parseTime(row.createTime) }}</span>
+        </template>
+      </el-table-column>
       <el-table-column label="操作" align="center" width="230">
         <template slot-scope="{row}">
           <el-button type="primary" size="mini" @click="handleUpdate(row)">编辑</el-button>
@@ -108,11 +116,11 @@
         <el-form-item label="用户名" prop="username">
           <el-input v-model="temp.username" placeholder="请输入用户名" />
         </el-form-item>
-        <el-form-item label="姓名" prop="realName">
-          <el-input v-model="temp.realName" placeholder="请输入姓名" />
+        <el-form-item label="姓名" prop="name">
+          <el-input v-model="temp.name" placeholder="请输入姓名" />
         </el-form-item>
-        <el-form-item label="角色" prop="roleId">
-          <el-select v-model="temp.roleId" placeholder="请选择角色">
+        <el-form-item label="角色" prop="roles">
+          <el-select v-model="temp.roles" placeholder="请选择角色" multiple>
             <el-option
               v-for="item in roleOptions"
               :key="item.id"
@@ -176,6 +184,9 @@
 import { getToken } from '@/utils/auth'
 import Pagination from '@/components/Pagination'
 import { validUsername, validPhone, validEmail } from '@/utils/validate'
+import { getUserList, createUser, updateUser, deleteUser, batchDeleteUser, updateUserStatus, resetUserPassword, exportUser } from '@/api/user'
+import { getAllRoles } from '@/api/role'
+import { getDepartmentList } from '@/api/department'
 
 export default {
   name: 'User',
@@ -205,12 +216,12 @@ export default {
     return {
       list: [],
       total: 0,
-      listLoading: false,
+      listLoading: true,
       listQuery: {
         page: 1,
         limit: 10,
         username: undefined,
-        realName: undefined,
+        name: undefined,
         roleId: undefined,
         departmentId: undefined
       },
@@ -223,8 +234,8 @@ export default {
       temp: {
         id: undefined,
         username: '',
-        realName: '',
-        roleId: undefined,
+        name: '',
+        roles: [],
         departmentId: undefined,
         phone: '',
         email: '',
@@ -235,10 +246,10 @@ export default {
           { required: true, message: '请输入用户名', trigger: 'blur' },
           { validator: validateUsername, trigger: 'blur' }
         ],
-        realName: [
+        name: [
           { required: true, message: '请输入姓名', trigger: 'blur' }
         ],
-        roleId: [
+        roles: [
           { required: true, message: '请选择角色', trigger: 'change' }
         ],
         departmentId: [
@@ -263,55 +274,32 @@ export default {
   },
   methods: {
     async getList() {
-      this.listLoading = true
       try {
-        // TODO: 调用后端API获取用户列表数据
-        // const { data } = await getUserList(this.listQuery)
-        // this.list = data.items
-        // this.total = data.total
-        
-        // 模拟数据
-        this.list = [
-          {
-            id: 1,
-            username: 'admin',
-            realName: '管理员',
-            roleName: '系统管理员',
-            departmentName: '信息科',
-            phone: '13800138000',
-            email: 'admin@example.com',
-            status: 1,
-            createTime: '2024-03-11 10:00:00'
-          }
-        ]
-        this.total = 1
+        this.listLoading = true
+        const response = await getUserList(this.listQuery)
+        console.log('User list response:', response)
+        this.list = response.data.records || []
+        this.total = response.data.total || 0
       } catch (error) {
-        console.error('获取用户列表失败:', error)
+        console.error('Get user list error:', error)
+      } finally {
+        this.listLoading = false
       }
-      this.listLoading = false
     },
     async getRoleOptions() {
       try {
-        // TODO: 调用后端API获取角色列表
-        this.roleOptions = [
-          { id: 1, name: '系统管理员' },
-          { id: 2, name: '医生' },
-          { id: 3, name: '护士' }
-        ]
+        const { data } = await getAllRoles()
+        this.roleOptions = data
       } catch (error) {
         console.error('获取角色列表失败:', error)
       }
     },
     async getDepartmentOptions() {
       try {
-        // TODO: 调用后端API获取部门列表
-        this.departmentOptions = [
-          { id: 1, name: '信息科' },
-          { id: 2, name: '内科' },
-          { id: 3, name: '外科' }
-        ]
+        const response = await getDepartmentList()
+        this.departmentOptions = response.data || []
       } catch (error) {
-        console.error('获取部门列表失败:', error)
+        console.error('Get department options error:', error)
       }
     },
     handleFilter() {
@@ -323,7 +311,7 @@ export default {
         page: 1,
         limit: 10,
         username: undefined,
-        realName: undefined,
+        name: undefined,
         roleId: undefined,
         departmentId: undefined
       }
@@ -337,8 +325,8 @@ export default {
       this.temp = {
         id: undefined,
         username: '',
-        realName: '',
-        roleId: undefined,
+        name: '',
+        roles: [],
         departmentId: undefined,
         phone: '',
         email: '',
@@ -352,6 +340,7 @@ export default {
     handleUpdate(row) {
       this.dialogTitle = '编辑用户'
       this.temp = Object.assign({}, row)
+      this.temp.roleIds = (row.roles || []).map(role => role.id)
       this.dialogVisible = true
       this.$nextTick(() => {
         this.$refs['dataForm'].clearValidate()
@@ -362,7 +351,7 @@ export default {
         await this.$confirm('是否确认删除该用户?', '提示', {
           type: 'warning'
         })
-        // TODO: 调用后端API删除用户
+        await deleteUser(row.id)
         this.$message.success('删除成功')
         this.getList()
       } catch (error) {
@@ -374,7 +363,7 @@ export default {
         await this.$confirm(`是否确认删除这${this.selectedIds.length}个用户?`, '提示', {
           type: 'warning'
         })
-        // TODO: 调用后端API批量删除用户
+        await batchDeleteUser(this.selectedIds)
         this.$message.success('删除成功')
         this.getList()
       } catch (error) {
@@ -383,7 +372,7 @@ export default {
     },
     async handleStatusChange(row) {
       try {
-        // TODO: 调用后端API更新用户状态
+        await updateUserStatus(row.id, row.status)
         this.$message.success('状态更新成功')
       } catch (error) {
         console.error('更新用户状态失败:', error)
@@ -395,7 +384,7 @@ export default {
         await this.$confirm('是否确认重置该用户的密码?', '提示', {
           type: 'warning'
         })
-        // TODO: 调用后端API重置用户密码
+        await resetUserPassword(row.id)
         this.$message.success('密码重置成功')
       } catch (error) {
         console.error('重置密码失败:', error)
@@ -406,9 +395,9 @@ export default {
         if (valid) {
           try {
             if (this.temp.id) {
-              // TODO: 调用后端API更新用户
+              await updateUser(this.temp)
             } else {
-              // TODO: 调用后端API创建用户
+              await createUser(this.temp)
             }
             this.dialogVisible = false
             this.$message.success('保存成功')
@@ -423,7 +412,7 @@ export default {
       this.importVisible = true
     },
     handleExport() {
-      // TODO: 调用后端API导出用户数据
+      exportUser(this.listQuery)
     },
     handleImportSuccess() {
       this.importVisible = false
@@ -456,4 +445,4 @@ export default {
     text-align: center;
   }
 }
-</style> 
+</style>

@@ -6,19 +6,23 @@ import { getToken } from '@/utils/auth'
 // 创建axios实例
 const service = axios.create({
   baseURL: import.meta.env.VITE_APP_BASE_API,
-  timeout: 5000
+  timeout: 5000,
+  withCredentials: true // 允许携带cookie
 })
 
 // 请求拦截器
 service.interceptors.request.use(
   config => {
-    if (store.getters.token) {
+    // 在发送请求之前做些什么
+    console.log('[Request]', config.method.toUpperCase(), config.url, config.data || config.params)
+    
+    if (store.state.user.token) {
       config.headers['Authorization'] = 'Bearer ' + getToken()
     }
     return config
   },
   error => {
-    console.log(error)
+    console.error('[Request Error]', error)
     return Promise.reject(error)
   }
 )
@@ -26,7 +30,9 @@ service.interceptors.request.use(
 // 响应拦截器
 service.interceptors.response.use(
   response => {
+    console.log('[Response]', response.config.url, response.data)
     const res = response.data
+
     if (res.code !== 200) {
       Message({
         message: res.message || '错误',
@@ -56,12 +62,21 @@ service.interceptors.response.use(
     }
   },
   error => {
-    console.log('err' + error)
-    Message({
-      message: error.message,
-      type: 'error',
-      duration: 5 * 1000
-    })
+    console.error('[Response Error]', error)
+    // 处理 CORS 错误
+    if (error.message.includes('Network Error')) {
+      Message({
+        message: '网络错误，请检查您的网络连接或联系管理员',
+        type: 'error',
+        duration: 5 * 1000
+      })
+    } else {
+      Message({
+        message: error.message,
+        type: 'error',
+        duration: 5 * 1000
+      })
+    }
     return Promise.reject(error)
   }
 )

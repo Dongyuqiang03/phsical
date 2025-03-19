@@ -21,14 +21,14 @@ import java.time.LocalDate;
  */
 @Api(tags = "体检预约管理")
 @RestController
-@RequestMapping("/api/appointments")
+@RequestMapping("/exam/appointments")
 public class ExamAppointmentController {
 
     @Autowired
     private ExamAppointmentService appointmentService;
 
     @ApiOperation("获取预约列表")
-    @GetMapping
+    @GetMapping("/list")
     @RequiresPermission(RoleConstants.ADMIN)
     public CommonResult<CommonPage<AppointmentVO>> getAppointmentPage(
             @RequestParam(defaultValue = "1") Integer pageNum,

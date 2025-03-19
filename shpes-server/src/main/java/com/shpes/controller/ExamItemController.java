@@ -19,14 +19,14 @@ import javax.validation.Valid;
  */
 @Api(tags = "体检项目管理")
 @RestController
-@RequestMapping("/api/items")
+@RequestMapping("/exam/items")
 public class ExamItemController {
 
     @Autowired
     private ExamItemService itemService;
 
     @ApiOperation("获取项目列表")
-    @GetMapping
+    @GetMapping("/list")
     @RequiresPermission(RoleConstants.ADMIN)
     public CommonResult<CommonPage<ExamItemVO>> getItemPage(
             @RequestParam(defaultValue = "1") Integer pageNum,

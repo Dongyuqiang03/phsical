@@ -32,7 +32,7 @@ public class SysDepartmentServiceImpl extends ServiceImpl<SysDepartmentMapper, S
         LambdaQueryWrapper<SysDepartment> wrapper = new LambdaQueryWrapper<>();
         wrapper.like(StringUtils.isNotBlank(deptName), SysDepartment::getDeptName, deptName)
                 .eq(status != null, SysDepartment::getStatus, status)
-                .orderByAsc(SysDepartment::getSort);
+                .orderByAsc(SysDepartment::getId);
         
         Page<SysDepartment> resultPage = this.page(page, wrapper);
         Page<DepartmentVO> voPage = new Page<>();

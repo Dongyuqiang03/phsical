@@ -3,7 +3,7 @@ import request from '@/utils/request'
 // 获取时间段列表
 export function getTimeSlotList(params) {
   return request({
-    url: '/api/exam/timeslot/list',
+    url: '/api/timeslots/list',
     method: 'get',
     params
   })

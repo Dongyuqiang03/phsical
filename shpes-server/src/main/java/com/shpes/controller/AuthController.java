@@ -4,7 +4,9 @@ import com.shpes.common.api.CommonResult;
 import com.shpes.utils.CaptchaUtils;
 import com.shpes.dto.LoginDTO;
 import com.shpes.dto.PasswordDTO;
+import com.shpes.dto.UserDTO;
 import com.shpes.service.AuthService;
+import com.shpes.service.SysUserService;
 import com.shpes.utils.SecurityUtils;
 import com.shpes.vo.CaptchaVO;
 import com.shpes.vo.LoginVO;
@@ -21,17 +23,19 @@ import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
 
 /**
- * 认证控制器
- * 极简版本
+ * 认证控制器 - 处理认证和当前用户相关操作
  */
 @Api(tags = "认证管理")
 @RestController
-@RequestMapping("/api/auth")
+@RequestMapping("/auth")
 @Validated
 public class AuthController {
 
     @Autowired
     private AuthService authService;
+
+    @Autowired
+    private SysUserService userService;
 
     @Autowired
     private CaptchaUtils captchaUtils;
@@ -58,24 +62,6 @@ public class AuthController {
         return CommonResult.success(null);
     }
 
-    @ApiOperation("重置密码")
-    @PostMapping("/password/reset")
-    public CommonResult<Void> resetPassword(
-            @ApiParam("用户名") 
-            @NotBlank(message = "用户名不能为空") 
-            @RequestParam String username) {
-        authService.resetPassword(username);
-        return CommonResult.success(null);
-    }
-
-    @ApiOperation("修改密码")
-    @PostMapping("/password/change")
-    public CommonResult<Void> changePassword(@Valid @RequestBody PasswordDTO passwordDTO) {
-        Long userId = SecurityUtils.getCurrentUserId();
-        authService.updatePassword(userId, passwordDTO);
-        return CommonResult.success(null);
-    }
-
     @ApiOperation("获取验证码")
     @GetMapping("/captcha")
     public CommonResult<CaptchaVO> getCaptcha() {
@@ -93,6 +79,13 @@ public class AuthController {
     @GetMapping("/current")
     public CommonResult<UserVO> getCurrentUser() {
         Long userId = SecurityUtils.getCurrentUserId();
-        return CommonResult.success(authService.getCurrentUser(userId));
+        return CommonResult.success(userService.getUserById(userId));
+    }
+
+    @ApiOperation("更新当前用户信息")
+    @PutMapping("/current")
+    public CommonResult<UserVO> updateCurrentUser(@Valid @RequestBody UserDTO userDTO) {
+        Long userId = SecurityUtils.getCurrentUserId();
+        return CommonResult.success(userService.updateUser(userId, userDTO));
     }
 }

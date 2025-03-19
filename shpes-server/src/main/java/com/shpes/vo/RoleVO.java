@@ -5,16 +5,17 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
-import java.util.List;
-
-/**
- * 角色返回值对象
- */
 @Data
-@ApiModel("角色详情VO")
-public class RoleVO extends SysRole {
-    @ApiModelProperty("权限列表")
-    private List<PermissionVO> permissions;
+@ApiModel("角色视图对象")
+public class RoleVO {
+    @ApiModelProperty("角色ID")
+    private Long id;
+
+    @ApiModelProperty("角色名称")
+    private String roleName;
+
+    @ApiModelProperty("角色编码")
+    private String roleCode;
 
     /**
      * 将角色实体转换为VO对象
@@ -27,10 +28,6 @@ public class RoleVO extends SysRole {
         vo.setId(role.getId());
         vo.setRoleName(role.getRoleName());
         vo.setRoleCode(role.getRoleCode());
-        vo.setDescription(role.getDescription());
-        vo.setStatus(role.getStatus());
-        vo.setCreateTime(role.getCreateTime());
-        vo.setUpdateTime(role.getUpdateTime());
         return vo;
     }
 }

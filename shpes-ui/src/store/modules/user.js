@@ -29,7 +29,8 @@ const mutations = {
   },
   SET_USER: (state, user) => {
     state.user = user
-    state.roles = user.roles || []
+    // 从RoleVO对象中提取角色编码
+    state.roles = (user.roles || []).map(role => role.roleCode)
     state.permissions = user.permissions || []
   },
   SET_ROUTES: (state, routes) => {
@@ -40,13 +41,15 @@ const mutations = {
 // 根据权限过滤路由
 function filterAsyncRoutes(routes, permissions) {
   const res = []
+  console.log('[Route Filter] Starting route filtering with permissions:', permissions)
   routes.forEach(route => {
     const tmp = { ...route }
     const hasAccess = hasPermission(permissions, tmp)
     console.log('[Route Filter] Permission check:', {
       path: tmp.path,
       hasAccess,
-      requiredPermissions: tmp.meta?.permissions
+      requiredPermissions: tmp.meta?.permissions,
+      component: tmp.component ? 'Component exists' : 'No component'
     })
 
     if (hasAccess) {
@@ -86,6 +89,7 @@ const actions = {
           // 检查响应状态
           if (response.code === 200) {
             const { token, user } = responseData
+            console.log('[Login] Login successful, responseData:', responseData)
             // 检查必要的数据
             if (!token || !user) {
               console.error('Missing required data - token:', !token, 'user:', !user)
@@ -97,14 +101,12 @@ const actions = {
               commit('SET_TOKEN', token)
               commit('SET_USER', user)
               setToken(token)
+              // 保存用户信息到localStorage
+              localStorage.setItem('userInfo', JSON.stringify(user))
               console.log('[Login] User permissions:', state.permissions)
 
-              // 生成路由
+              // 生成路由并添加到router实例
               await dispatch('generateRoutes')
-              
-              // 添加路由到router实例
-              state.routes.forEach(route => router.addRoute(route))
-              console.log('[Login] Routes added successfully')
               
               resolve({ response, redirectPath: '/' })
             } catch (error) {
@@ -134,11 +136,26 @@ const actions = {
         }
 
         let accessedRoutes = []
+        console.log('[Route Generation] Starting route generation with state:', {
+          roles: state.roles,
+          permissions: permissions,
+          asyncRoutesCount: asyncRoutes.length
+        })
+        
+        // 先重置路由，清除所有动态路由
+        resetRouter()
+        
         if (permissions.length > 0) {
           accessedRoutes = filterAsyncRoutes(asyncRoutes, permissions)
           commit('SET_ROUTES', accessedRoutes)
           console.log('[Route Generation] Routes generated:', accessedRoutes.length)
-          console.log('[Route Generation] Final routes:', JSON.stringify(accessedRoutes, null, 2))
+          
+          // 只在这里添加路由到router实例
+          accessedRoutes.forEach(route => {
+            router.addRoute(route)
+          })
+          
+          console.log('[Route Generation] Routes added to router:', router.getRoutes())
         } else {
           console.warn('[Route Generation] No permissions found, menu might not show up')
         }

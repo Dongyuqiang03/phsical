@@ -13,6 +13,12 @@
         <result column="update_time" property="updateTime"/>
     </resultMap>
 
+    <!-- 简单角色VO映射 -->
+    <resultMap id="RoleVOMap" type="com.shpes.vo.RoleVO">
+        <id column="id" property="id"/>
+        <result column="role_name" property="name"/>
+    </resultMap>
+
     <!-- 获取角色详情（包含权限列表） -->
     <select id="getRoleDetail" resultMap="RoleDetailMap">
         SELECT 
@@ -28,8 +34,8 @@
     </select>
 
     <!-- 角色详情映射 -->
-    <resultMap id="RoleDetailMap" type="com.shpes.vo.RoleVO" extends="BaseResultMap">
-        <collection property="permissions" ofType="com.shpes.vo.PermissionVO">
+    <resultMap id="RoleDetailMap" type="com.shpes.vo.RoleDetailVO" extends="BaseResultMap">
+        <collection property="permissions" ofType="com.shpes.vo.PermissionVO" javaType="java.util.ArrayList">
             <id column="permission_id" property="id"/>
             <result column="permission_name" property="permissionName"/>
             <result column="permission_code" property="permissionCode"/>
@@ -38,8 +44,8 @@
     </resultMap>
 
     <!-- 获取用户的角色列表 -->
-    <select id="getUserRoles" resultMap="BaseResultMap">
-        SELECT r.*
+    <select id="getUserRoles" resultMap="RoleVOMap">
+        SELECT r.id, r.role_name
         FROM sys_role r
         INNER JOIN sys_user_role ur ON r.id = ur.role_id
         WHERE ur.user_id = #{userId}

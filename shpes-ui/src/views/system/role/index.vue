@@ -40,8 +40,8 @@
       style="width: 100%"
       @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
-      <el-table-column label="角色名称" prop="name" />
-      <el-table-column label="角色编码" prop="code" />
+      <el-table-column label="角色名称" prop="roleName" />
+      <el-table-column label="角色编码" prop="roleCode" />
       <el-table-column label="描述" prop="description" show-overflow-tooltip />
       <el-table-column label="状态" align="center">
         <template slot-scope="{row}">
@@ -81,11 +81,11 @@
         :model="temp"
         label-position="right"
         label-width="100px">
-        <el-form-item label="角色名称" prop="name">
-          <el-input v-model="temp.name" placeholder="请输入角色名称" />
+        <el-form-item label="角色名称" prop="roleName">
+          <el-input v-model="temp.roleName" placeholder="请输入角色名称" />
         </el-form-item>
-        <el-form-item label="角色编码" prop="code">
-          <el-input v-model="temp.code" placeholder="请输入角色编码" />
+        <el-form-item label="角色编码" prop="roleCode">
+          <el-input v-model="temp.roleCode" placeholder="请输入角色编码" />
         </el-form-item>
         <el-form-item label="描述" prop="description">
           <el-input
@@ -177,16 +177,16 @@ export default {
       userVisible: false,
       temp: {
         id: undefined,
-        name: '',
-        code: '',
+        roleName: '',
+        roleCode: '',
         description: '',
         status: 1
       },
       rules: {
-        name: [
+        roleName: [
           { required: true, message: '请输入角色名称', trigger: 'blur' }
         ],
-        code: [
+        roleCode: [
           { required: true, message: '请输入角色编码', trigger: 'blur' }
         ]
       },
@@ -238,8 +238,8 @@ export default {
       this.dialogTitle = '新增角色'
       this.temp = {
         id: undefined,
-        name: '',
-        code: '',
+        roleName: '',
+        roleCode: '',
         description: '',
         status: 1
       }

@@ -22,14 +22,14 @@ import java.util.List;
  */
 @Api(tags = "体检时间段管理")
 @RestController
-@RequestMapping("/api/timeslots")
+@RequestMapping("/exam/timeslots")
 public class ExamTimeSlotController {
 
     @Autowired
     private ExamTimeSlotService timeSlotService;
 
     @ApiOperation("获取时间段列表")
-    @GetMapping
+    @GetMapping("/list")
     @RequiresPermission(RoleConstants.ADMIN)
     public CommonResult<CommonPage<ExamTimeSlotVO>> getTimeSlotPage(
             @RequestParam(defaultValue = "1") Integer pageNum,

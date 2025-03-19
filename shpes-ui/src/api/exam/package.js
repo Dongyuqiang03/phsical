@@ -3,7 +3,7 @@ import request from '@/utils/request'
 // 获取体检套餐列表
 export function getExamPackageList(params) {
   return request({
-    url: '/api/exam/package/list',
+    url: '/api/packages/list',
     method: 'get',
     params
   })

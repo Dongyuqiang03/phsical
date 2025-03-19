@@ -23,14 +23,14 @@ import java.util.Map;
  */
 @Api(tags = "体检记录管理")
 @RestController
-@RequestMapping("/api/records")
+@RequestMapping("/exam/records")
 public class ExamRecordController {
 
     @Autowired
     private ExamRecordService recordService;
 
     @ApiOperation("获取记录列表")
-    @GetMapping
+    @GetMapping("/list")
     @RequiresPermission(RoleConstants.ADMIN)
     public CommonResult<CommonPage<ExamRecordVO>> getRecordPage(
             @RequestParam(defaultValue = "1") Integer pageNum,

@@ -9,11 +9,7 @@
         <result column="dept_name" property="deptName"/>
         <result column="dept_code" property="deptCode"/>
         <result column="description" property="description"/>
-        <result column="leader" property="leader"/>
-        <result column="phone" property="phone"/>
         <result column="status" property="status"/>
-        <result column="sort" property="sort"/>
-        <result column="remark" property="remark"/>
         <result column="create_time" property="createTime"/>
         <result column="update_time" property="updateTime"/>
     </resultMap>

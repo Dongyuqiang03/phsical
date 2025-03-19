@@ -13,8 +13,10 @@ import com.shpes.mapper.SysRoleMapper;
 import com.shpes.mapper.SysRolePermissionMapper;
 import com.shpes.mapper.SysUserRoleMapper;
 import com.shpes.service.SysRoleService;
+import com.shpes.vo.RoleDetailVO;
 import com.shpes.vo.RoleVO;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,25 +35,19 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
     private SysUserRoleMapper userRoleMapper;
 
     @Override
-    public CommonPage<RoleVO> getRolePage(Integer pageNum, Integer pageSize, String keyword) {
-        // 构建查询条件
-        LambdaQueryWrapper<SysRole> wrapper = new LambdaQueryWrapper<>();
-        wrapper.like(StringUtils.isNotBlank(keyword), SysRole::getRoleName, keyword)
-                .or()
-                .like(StringUtils.isNotBlank(keyword), SysRole::getRoleCode, keyword)
-                .orderByDesc(SysRole::getCreateTime);
-
-        // 执行分页查询
+    public CommonPage<RoleDetailVO> getRolePage(Integer pageNum, Integer pageSize, String name, Integer status) {
         Page<SysRole> page = new Page<>(pageNum, pageSize);
-        page = baseMapper.selectPage(page, wrapper);
-
-        // 转换记录列表
-        List<RoleVO> records = page.getRecords().stream()
-                .map(RoleVO::convertToVO)
+        LambdaQueryWrapper<SysRole> wrapper = new LambdaQueryWrapper<>();
+        wrapper.like(StringUtils.isNotBlank(name), SysRole::getRoleName, name)
+                .eq(status != null, SysRole::getStatus, status)
+                .orderByAsc(SysRole::getId);
+        Page<SysRole> rolePage = baseMapper.selectPage(page, wrapper);
+        
+        List<RoleDetailVO> records = rolePage.getRecords().stream()
+                .map(this::convertToDetailVO)
                 .collect(Collectors.toList());
-
-        // 使用通用分页对象，使用一致的命名
-        return CommonPage.restPage(records, page.getTotal(), pageNum, pageSize);
+        
+        return CommonPage.restPage(records, rolePage.getTotal(), pageNum, pageSize);
     }
 
     @Override
@@ -151,24 +147,6 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
     }
 
     @Override
-    public List<String> getRoleNamesByIds(List<Long> roleIds) {
-        if (roleIds == null || roleIds.isEmpty()) {
-            return new ArrayList<>();
-        }
-
-        // 查询指定ID的角色列表
-        List<SysRole> roles = baseMapper.selectList(
-                new LambdaQueryWrapper<SysRole>()
-                        .in(SysRole::getId, roleIds)
-                        .orderByAsc(SysRole::getId));
-
-        // 提取角色名称
-        return roles.stream()
-                .map(SysRole::getRoleName)
-                .collect(Collectors.toList());
-    }
-
-    @Override
     public List<RoleVO> getUserRoles(Long userId) {
         List<SysRole> roles = userRoleMapper.selectRoleDetailsByUserId(userId);
         return roles.stream()
@@ -178,7 +156,13 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
 
     @Override
     public List<Long> getRolePermissionIds(Long roleId) {
-        return baseMapper.selectRolePermissionIds(roleId);
+        return rolePermissionMapper.selectList(
+                new LambdaQueryWrapper<SysRolePermission>()
+                        .eq(SysRolePermission::getRoleId, roleId)
+                        .select(SysRolePermission::getPermissionId))
+                .stream()
+                .map(SysRolePermission::getPermissionId)
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -203,6 +187,7 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
         List<SysRole> roles = baseMapper.selectList(
                 new LambdaQueryWrapper<SysRole>()
                         .in(SysRole::getId, roleIds)
+                        .eq(SysRole::getStatus, 1)
                         .orderByAsc(SysRole::getId));
 
         // 提取角色编码
@@ -211,6 +196,28 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public List<RoleVO> getRoleVOsByIds(List<Long> roleIds) {
+        if (roleIds == null || roleIds.isEmpty()) {
+            return new ArrayList<>();
+        }
+
+        // 查询指定ID的角色列表
+        List<SysRole> roles = baseMapper.selectList(
+                new LambdaQueryWrapper<SysRole>()
+                        .in(SysRole::getId, roleIds)
+                        .orderByAsc(SysRole::getId));
+
+        // 转换为VO对象
+        return roles.stream()
+                .map(RoleVO::convertToVO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public RoleDetailVO getRoleById(Long id) {
+        return RoleDetailVO.convertToVO(baseMapper.selectById(id));
+    }
 
     /**
      * 检查角色名称是否已存在
@@ -226,5 +233,18 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
     private boolean isRoleCodeExists(String code) {
         return baseMapper.selectCount(new LambdaQueryWrapper<SysRole>()
                 .eq(SysRole::getRoleCode, code)) > 0;
+    }
+
+    private RoleDetailVO convertToDetailVO(SysRole role) {
+        if (role == null) {
+            return null;
+        }
+        RoleDetailVO vo = new RoleDetailVO();
+        vo.setId(role.getId());
+        vo.setName(role.getRoleName());
+        vo.setCode(role.getRoleCode());
+        vo.setStatus(role.getStatus());
+        vo.setCreateTime(role.getCreateTime());
+        return vo;
     }
 }

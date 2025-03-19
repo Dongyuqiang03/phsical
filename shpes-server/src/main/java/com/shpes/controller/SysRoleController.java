@@ -6,9 +6,11 @@ import com.shpes.common.constant.RoleConstants;
 import com.shpes.annotation.RequiresPermission;
 import com.shpes.entity.SysRole;
 import com.shpes.service.SysRoleService;
+import com.shpes.vo.RoleDetailVO;
 import com.shpes.vo.RoleVO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,20 +22,35 @@ import java.util.List;
  */
 @Api(tags = "角色管理")
 @RestController
-@RequestMapping("/api/roles")
+@RequestMapping("/system/role")
 public class SysRoleController {
 
     @Autowired
     private SysRoleService roleService;
 
-    @ApiOperation("获取角色列表")
-    @GetMapping
+    @ApiOperation("分页查询角色")
+    @GetMapping("/list")
     @RequiresPermission(RoleConstants.ADMIN)
-    public CommonResult<CommonPage<RoleVO>> getRolePage(
-            @RequestParam(defaultValue = "1") Integer pageNum,
-            @RequestParam(defaultValue = "10") Integer pageSize,
-            @RequestParam(required = false) String keyword) {
-        return CommonResult.success(roleService.getRolePage(pageNum, pageSize, keyword));
+    public CommonResult<CommonPage<RoleDetailVO>> getRolePage(
+            @ApiParam("页码") @RequestParam(defaultValue = "1") Integer pageNum,
+            @ApiParam("每页记录数") @RequestParam(defaultValue = "10") Integer pageSize,
+            @ApiParam("角色名称") @RequestParam(required = false) String name,
+            @ApiParam("状态：0-禁用，1-启用") @RequestParam(required = false) Integer status) {
+        return CommonResult.success(roleService.getRolePage(pageNum, pageSize, name, status));
+    }
+
+    @ApiOperation("获取所有角色（用于下拉选择）")
+    @GetMapping("/all")
+    @RequiresPermission(RoleConstants.ADMIN)
+    public CommonResult<List<RoleVO>> getAllRoles() {
+        return CommonResult.success(roleService.getAllRoles());
+    }
+
+    @ApiOperation("获取角色详情")
+    @GetMapping("/{id}")
+    @RequiresPermission(RoleConstants.ADMIN)
+    public CommonResult<RoleDetailVO> getRoleById(@PathVariable Long id) {
+        return CommonResult.success(roleService.getRoleById(id));
     }
 
     @ApiOperation("创建角色")
@@ -59,13 +76,6 @@ public class SysRoleController {
     public CommonResult<Void> deleteRole(@PathVariable Long id) {
         roleService.deleteRole(id);
         return CommonResult.success(null);
-    }
-
-    @ApiOperation("获取所有角色")
-    @GetMapping("/all")
-    @RequiresPermission(RoleConstants.ADMIN)
-    public CommonResult<List<RoleVO>> getAllRoles() {
-        return CommonResult.success(roleService.getAllRoles());
     }
 
     @ApiOperation("分配角色权限")

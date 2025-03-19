@@ -42,19 +42,19 @@ export const asyncRoutes = [
     meta: { title: '系统管理', icon: 'setting', permissions: ['system'] },
     children: [
       {
-        path: 'user',
+        path: '/system/user',
         component: () => import('../views/system/user/index.vue'),
         name: 'User',
-        meta: { title: '用户管理', permissions: ['system:user'] }
+        meta: { title: '用户管理', icon: 'user', permissions: ['system:user'] }
       },
       {
-        path: 'role',
+        path: '/system/role',
         component: () => import('../views/system/role/index.vue'),
         name: 'Role',
         meta: { title: '角色管理', permissions: ['system:role'] }
       },
       {
-        path: 'department',
+        path: '/system/department',
         component: () => import('../views/system/department/index.vue'),
         name: 'Department',
         meta: { title: '部门管理', permissions: ['system:department'] }
@@ -118,30 +118,43 @@ export function addRoutes(routes) {
 // 全局前置守卫
 router.beforeEach((to, from, next) => {
   const hasToken = getToken()
+  console.log('[Router Guard] Current route:', to.path)
+  console.log('[Router Guard] Has token:', hasToken)
+  console.log('[Router Guard] Route meta:', to.meta)
+  console.log('[Router Guard] Route matched:', to.matched)
+  console.log('[Router Guard] Current router routes:', router.getRoutes().map(route => route.path))
 
   if (to.path === '/login') {
-    // 访问登录页，直接放行
     next()
   } else if (hasToken) {
-    // 已登录状态
     const hasRoles = store.state.user.roles && store.state.user.roles.length > 0
+    console.log('[Router Guard] Has roles:', hasRoles)
+    
     if (hasRoles) {
+      console.log('[Router Guard] Roles exist, proceeding...')
       next()
     } else {
+      console.log('[Router Guard] No roles found, checking localStorage...')
       // 有 token 但没有角色信息，说明可能是页面刷新
       // 尝试从localStorage获取用户信息
       const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}')
+      
       if (userInfo && userInfo.roles) {
         // 如果本地存储有用户信息，更新到store
         store.commit('user/SET_USER', userInfo)
+        console.log('[Router Guard] User info from localStorage:', userInfo)
         store.dispatch('user/generateRoutes').then(() => {
+          console.log('[Router Guard] Routes generated successfully')
+          // 路由已在 generateRoutes 中添加，这里不需要重复添加
           next({ ...to, replace: true })
-        }).catch(() => {
+        }).catch((error) => {
+          console.error('[Router Guard] Failed to generate routes:', error)
           store.dispatch('user/resetToken').then(() => {
             next('/login')
           })
         })
       } else {
+        console.log('[Router Guard] No valid userInfo found, redirecting to login...')
         // 如果本地也没有用户信息，重置token并跳转到登录页
         store.dispatch('user/resetToken').then(() => {
           next('/login')
@@ -162,7 +175,7 @@ router.beforeEach((to, from, next) => {
 
 export function resetRouter() {
   const newRouter = createRouter()
-  router.matcher = newRouter.matcher
+  router.matcher = newRouter.matcher // 重置路由器的matcher
 }
 
 export default router

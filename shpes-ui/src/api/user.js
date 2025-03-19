@@ -1,28 +1,5 @@
 import request from '@/utils/request'
 
-// 认证相关
-export function login(data) {
-  return request({
-    url: '/api/auth/login',
-    method: 'post',
-    data
-  })
-}
-
-export function getInfo() {
-  return request({
-    url: '/api/auth/info',
-    method: 'get'
-  })
-}
-
-export function logout() {
-  return request({
-    url: '/api/auth/logout',
-    method: 'post'
-  })
-}
-
 // 用户管理相关
 export function getUserList(params) {
   return request({
@@ -66,7 +43,7 @@ export function batchDeleteUser(ids) {
 export function updateUserStatus(id, status) {
   return request({
     url: `/api/system/user/${id}/status`,
-    method: 'put',
+    method: 'post',
     data: { status }
   })
 }
@@ -74,13 +51,13 @@ export function updateUserStatus(id, status) {
 export function resetUserPassword(id) {
   return request({
     url: `/api/system/user/${id}/password/reset`,
-    method: 'put'
+    method: 'post'
   })
 }
 
 export function updateProfile(data) {
   return request({
-    url: '/api/system/user/profile',
+    url: '/api/system/user/current',
     method: 'put',
     data
   })
@@ -88,9 +65,9 @@ export function updateProfile(data) {
 
 export function updatePassword(data) {
   return request({
-    url: '/api/system/user/password',
-    method: 'put',
-    data
+    url: `/api/system/user/${data.id}/password`,
+    method: 'post',
+    data: { newPassword: data.newPassword }
   })
 }
 

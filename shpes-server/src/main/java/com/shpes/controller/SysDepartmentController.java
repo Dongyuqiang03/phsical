@@ -19,7 +19,7 @@ import java.util.List;
  */
 @Api(tags = "部门管理")
 @RestController
-@RequestMapping("/api/system/dept")
+@RequestMapping("/system/department")
 @RequiredArgsConstructor
 public class SysDepartmentController {
 

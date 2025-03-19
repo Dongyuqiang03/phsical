@@ -7,6 +7,7 @@ import com.shpes.common.api.CommonPage;
 import com.shpes.common.enums.ResultCode;
 import com.shpes.common.exception.ApiException;
 import com.shpes.dto.UserDTO;
+import com.shpes.entity.SysRole;
 import com.shpes.entity.SysUser;
 import com.shpes.entity.SysUserRole;
 import com.shpes.mapper.SysUserMapper;
@@ -15,6 +16,7 @@ import com.shpes.service.SysDepartmentService;
 import com.shpes.service.SysRoleService;
 import com.shpes.service.SysUserService;
 import com.shpes.utils.PasswordUtils;
+import com.shpes.vo.RoleVO;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import com.shpes.utils.SecurityUtils;
 import com.shpes.vo.UserVO;
@@ -433,11 +435,10 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser>imple
         List<Long> roleIds = userRoleMapper.selectList(wrapper).stream()
                 .map(SysUserRole::getRoleId)
                 .collect(Collectors.toList());
-        userVO.setRoleIds(roleIds);
 
-        // 设置角色名称
         if (!roleIds.isEmpty()) {
-            userVO.setRoleNames(roleService.getRoleNamesByIds(roleIds));
+            List<RoleVO> roleVOs = roleService.getRoleVOsByIds(roleIds);
+            userVO.setRoles(roleVOs);
         }
 
         return userVO;

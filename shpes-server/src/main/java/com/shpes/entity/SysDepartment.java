@@ -27,18 +27,6 @@ public class SysDepartment extends BaseEntity {
     @ApiModelProperty("部门描述")
     private String description;
 
-    @ApiModelProperty("负责人")
-    private String leader;
-
-    @ApiModelProperty("联系电话")
-    private String phone;
-
-    @ApiModelProperty("排序")
-    private Integer sort;
-
     @ApiModelProperty("状态：0-禁用，1-启用")
     private Integer status;
-
-    @ApiModelProperty("备注")
-    private String remark;
 }

@@ -22,14 +22,14 @@ import java.util.List;
  */
 @Api(tags = "体检套餐管理")
 @RestController
-@RequestMapping("/api/packages")
+@RequestMapping("/exam/packages")
 public class ExamPackageController {
 
     @Autowired
     private ExamPackageService packageService;
 
     @ApiOperation("分页查询体检套餐")
-    @GetMapping
+    @GetMapping("/list")
     @RequiresPermission(RoleConstants.ADMIN)
     public CommonResult<CommonPage<ExamPackageVO>> getPackagePage(
             @ApiParam("页码") @RequestParam(defaultValue = "1") Integer pageNum,

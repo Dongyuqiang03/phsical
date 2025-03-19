@@ -59,18 +59,18 @@ public class SecurityConfig {
             .authorizeRequests()
             // 1. 完全公开的接口
             .antMatchers(
-                "/api/auth/login",     // 登录接口
-                "/api/auth/captcha",   // 验证码接口
-                "/api/auth/register"   // 注册接口
+                "/auth/login",     // 登录接口
+                "/auth/captcha",   // 验证码接口
+                "/auth/register"   // 注册接口
             ).permitAll()
             // 2. Swagger UI 相关接口
             .antMatchers(
-                "/api/swagger-ui.html",
-                "/api/swagger-resources/**",
-                "/api/v2/api-docs",
-                "/api/v3/api-docs/**",
-                "/api/webjars/**",
-                "/api/doc.html"
+                "/swagger-ui.html",
+                "/swagger-resources/**",
+                "/v2/api-docs",
+                "/v3/api-docs/**",
+                "/webjars/**",
+                "/doc.html"
             ).permitAll()
             // 3. 其他所有接口都需要认证
             .anyRequest().authenticated()

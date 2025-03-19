@@ -12,7 +12,7 @@ export function createAppointment(data) {
 // 获取预约列表
 export function getAppointmentList(params) {
   return request({
-    url: '/api/exam/appointment/list',
+    url: '/api/appointments/list',
     method: 'get',
     params
   })

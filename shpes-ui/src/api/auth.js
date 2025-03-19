@@ -5,7 +5,7 @@ import { setToken, removeToken } from '@/utils/auth'
 
 // Create axios instance with base configuration
 const service = axios.create({
-  baseURL: '/api',  // 添加 baseURL
+  baseURL: '',  // 移除 baseURL，使用完整路径
   timeout: 5000,
   headers: {
     'Content-Type': 'application/json'
@@ -156,7 +156,7 @@ export const logout = () => {
 }
 
 export const getUserInfo = () => {
-  return service.get('/api/users/info')
+  return service.get('/api/auth/current')
 }
 
 export const getCaptcha = () => {

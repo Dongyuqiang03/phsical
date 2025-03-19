@@ -15,7 +15,7 @@
       />
     </el-submenu>
     <!-- 普通菜单项 -->
-    <el-menu-item v-else-if="!item.hidden" :index="resolvePath(item.path)" :class="{'submenu-title-noDropdown':!isNest}">
+    <el-menu-item v-else-if="!item.hidden" :index="resolvePath(item.path)" :class="{'submenu-title-noDropdown':!isNest}" @click="handleClick(resolvePath(item.path))">
       <i v-if="item.meta && item.meta.icon" :class="'el-icon-' + item.meta.icon"></i>
       <span slot="title">{{ item.meta.title }}</span>
     </el-menu-item>
@@ -77,7 +77,15 @@ export default {
       if (isExternal(this.basePath)) {
         return this.basePath
       }
+      if (routePath.startsWith('/')) {
+        return routePath
+      }
       return this.basePath.replace(/\/?$/, '/') + routePath.replace(/^\//, '')
+    },
+    handleClick(path) {
+      if (this.$route.path !== path) {
+        this.$router.push(path)
+      }
     }
   }
 }
