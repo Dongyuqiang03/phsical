@@ -10,6 +10,7 @@ import com.shpes.dto.UserDTO;
 import com.shpes.dto.UserQueryDTO;
 import com.shpes.entity.SysUser;
 import com.shpes.entity.SysUserRole;
+import com.shpes.mapper.SysRolePermissionMapper;
 import com.shpes.mapper.SysUserMapper;
 import com.shpes.mapper.SysUserRoleMapper;
 import com.shpes.service.SysDepartmentService;
@@ -49,6 +50,9 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser>imple
 
     @Autowired
     private SysDepartmentService departmentService;
+
+    @Autowired
+    private SysRolePermissionMapper sysRolePermissionMapper;
 
 
     @Override
@@ -356,7 +360,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser>imple
     @Override
     public List<SimpleGrantedAuthority> getUserAuthorities(Long userId) {
         // 获取用户的所有权限编码
-        List<String> permissionCodes = getUserPermissionCodes(userId);
+        List<String> permissionCodes = sysRolePermissionMapper.selectUserPermissionCodes(userId);
         
         // 转换为Spring Security的权限对象
         return permissionCodes.stream()

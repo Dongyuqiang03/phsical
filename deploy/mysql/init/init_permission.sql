@@ -14,7 +14,8 @@ INSERT INTO sys_permission (permission_name, permission_code, permission_type, p
 ('体检套餐', 'exam:package', 1, 8, 'package', 'exam/package/index', 'package', 2),
 ('预约管理', 'exam:appointment', 1, 8, 'appointment', 'exam/appointment/index', 'appointment', 3),
 ('体检记录', 'exam:record', 1, 8, 'record', 'exam/record/index', 'record', 4),
-('体检结果', 'exam:result', 1, 8, 'result', 'exam/result/index', 'result', 5);
+('体检结果', 'exam:result', 1, 8, 'result', 'exam/result/index', 'result', 5),
+('体检项目分类', 'exam:category', 1, 8, 'category', 'exam/category/index', 'category', 6);
 
 -- 为系统管理员角色分配所有权限
 INSERT INTO sys_role_permission (role_id, permission_id)
@@ -24,6 +25,8 @@ SELECT 1, id FROM sys_permission;
 INSERT INTO sys_role_permission (role_id, permission_id)
 SELECT 2, id FROM sys_permission WHERE permission_code LIKE 'exam%';
 
--- 为普通用户角色分配查看权限
+-- 为普通用户分配必要的菜单权限
 INSERT INTO sys_role_permission (role_id, permission_id)
-SELECT 3, id FROM sys_permission WHERE permission_code = 'exam:item:view';
+SELECT 3, id FROM sys_permission WHERE permission_code IN ('exam:item', 'exam:category');
+
+-- 普通用户不需要菜单权限，通过角色控制接口访问

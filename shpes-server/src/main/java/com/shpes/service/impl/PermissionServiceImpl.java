@@ -1,5 +1,6 @@
 package com.shpes.service.impl;
 
+import com.shpes.mapper.SysRolePermissionMapper;
 import com.shpes.service.PermissionService;
 import com.shpes.service.SysRoleService;
 import com.shpes.service.SysUserService;
@@ -26,11 +27,13 @@ public class PermissionServiceImpl implements PermissionService {
 
     @Autowired
     private SysRoleService roleService;
+    @Autowired
+    private SysRolePermissionMapper sysRolePermissionMapper;
 
     @Override
     @Cacheable(key = "'perm:' + #userId")
     public List<String> getUserPermissions(Long userId) {
-        return userService.getUserPermissionCodes(userId);
+        return sysRolePermissionMapper.selectUserPermissionCodes(userId);
     }
 
     @Override

@@ -67,6 +67,12 @@ export const asyncRoutes = [
     meta: { title: '体检管理', icon: 'first-aid-kit', permissions: ['exam'] },
     children: [
       {
+        path: 'category',
+        component: () => import('../views/exam/category/index.vue'),
+        name: 'ExamCategory',
+        meta: { title: '体检项目分类管理', permissions: ['exam:category'] }
+      },
+      {
         path: 'item',
         component: () => import('../views/exam/item/index.vue'),
         name: 'ExamItem',
