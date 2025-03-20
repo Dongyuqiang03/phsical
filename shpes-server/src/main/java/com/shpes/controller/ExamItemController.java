@@ -27,7 +27,7 @@ public class ExamItemController {
 
     @ApiOperation("获取项目列表")
     @GetMapping("/list")
-    @RequiresPermission("")
+    @RequiresPermission("exam:item")
     public CommonResult<CommonPage<ExamItemVO>> getItemPage(
             @RequestParam(defaultValue = "1") Integer pageNum,
             @RequestParam(defaultValue = "10") Integer pageSize,
@@ -37,14 +37,14 @@ public class ExamItemController {
 
     @ApiOperation("获取项目详情")
     @GetMapping("/{id}")
-    @RequiresPermission("")
+    @RequiresPermission("exam:item")
     public CommonResult<ExamItem> getItem(@PathVariable Long id) {
         return CommonResult.success(itemService.getItem(id));
     }
 
     @ApiOperation("创建项目")
     @PostMapping
-    @RequiresPermission("")
+    @RequiresPermission("exam:item")
     public CommonResult<Void> createItem(@Valid @RequestBody ExamItem item) {
         itemService.createItem(item);
         return CommonResult.success(null);
@@ -52,7 +52,7 @@ public class ExamItemController {
 
     @ApiOperation("更新项目")
     @PutMapping("/{id}")
-    @RequiresPermission("")
+    @RequiresPermission("exam:item")
     public CommonResult<Void> updateItem(@PathVariable Long id, @Valid @RequestBody ExamItem item) {
         item.setId(id);
         itemService.updateItem(item);
@@ -61,7 +61,7 @@ public class ExamItemController {
 
     @ApiOperation("删除项目")
     @DeleteMapping("/{id}")
-    @RequiresPermission("")
+    @RequiresPermission("exam:item")
     public CommonResult<Void> deleteItem(@PathVariable Long id) {
         itemService.deleteItem(id);
         return CommonResult.success(null);
@@ -69,7 +69,7 @@ public class ExamItemController {
 
     @ApiOperation("更新项目状态")
     @PutMapping("/{id}/status")
-    @RequiresPermission("")
+    @RequiresPermission("exam:item")
     public CommonResult<Void> updateItemStatus(
             @PathVariable Long id,
             @RequestParam Integer status) {
@@ -79,7 +79,7 @@ public class ExamItemController {
 
     @ApiOperation("获取项目参考值")
     @GetMapping("/{id}/reference")
-    @RequiresPermission("")
+    @RequiresPermission("exam:item")
     public CommonResult<ExamItemVO> getItemReference(@PathVariable Long id) {
         return CommonResult.success(itemService.getItemReference(id));
     }

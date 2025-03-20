@@ -21,11 +21,14 @@ public class UserQueryDTO {
     private String username;
     
     @ApiModelProperty("姓名")
-    private String name;
+    private String realName;
     
     @ApiModelProperty("角色ID")
     private Long roleId;
     
     @ApiModelProperty("状态：0-禁用，1-启用")
     private Integer status;
+    
+    @ApiModelProperty("用户类型")
+    private Integer userType;
 } 

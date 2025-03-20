@@ -13,7 +13,7 @@
         </el-form-item>
         <el-form-item>
           <el-input
-            v-model="listQuery.name"
+            v-model="listQuery.realName"
             placeholder="姓名"
             clearable
             @keyup.enter.native="handleFilter"
@@ -68,68 +68,59 @@
       v-loading="listLoading"
       :data="list"
       border
-      style="width: 100%"
-      row-key="id"
-      @selection-change="handleSelectionChange">
+      style="width: 100%">
       <el-table-column type="selection" width="55" align="center" />
       <el-table-column label="用户名" prop="username" />
-      <el-table-column label="姓名" prop="name">
+      <el-table-column label="姓名">
         <template slot-scope="{row}">
-          <span>{{ row && row.name || '未设置' }}</span>
+          <span>{{ row.realName || '未设置' }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="用户类型" prop="userType">
+      <el-table-column label="用户类型">
         <template slot-scope="{row}">
-          <span>{{ row && getUserTypeName(row.userType) }}</span>
+          <span>{{ getUserTypeName(row.userType) }}</span>
         </template>
       </el-table-column>
       <el-table-column label="角色">
         <template slot-scope="{row}">
-          <span v-if="row && row.roles && Array.isArray(row.roles)">
-            {{ row.roles.map(role => role && role.roleName).filter(Boolean).join(', ') || '未设置' }}
-          </span>
-          <span v-else>未设置</span>
+          <span>{{ row.roles ? row.roles.map(role => role.roleName).join(', ') : '未设置' }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="部门" prop="departmentName">
+      <el-table-column label="部门">
         <template slot-scope="{row}">
-          <span>{{ row && row.departmentName || '未设置' }}</span>
+          <span>{{ row.departmentName || '未设置' }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="手机号" prop="phone">
+      <el-table-column label="手机号">
         <template slot-scope="{row}">
-          <span>{{ row && row.phone || '未设置' }}</span>
+          <span>{{ row.phone || '未设置' }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="邮箱" prop="email">
+      <el-table-column label="邮箱">
         <template slot-scope="{row}">
-          <span>{{ row && row.email || '未设置' }}</span>
+          <span>{{ row.email || '未设置' }}</span>
         </template>
       </el-table-column>
       <el-table-column label="状态" align="center">
         <template slot-scope="{row}">
           <el-switch
-            v-if="row"
             v-model="row.status"
             :active-value="1"
             :inactive-value="0"
             @change="handleStatusChange(row)"
           />
-          <span v-else>未知</span>
         </template>
       </el-table-column>
       <el-table-column label="创建时间">
         <template slot-scope="{row}">
-          <span>{{ row && formatCreateTime(row.createTime) }}</span>
+          <span>{{ formatCreateTime(row.createTime) }}</span>
         </template>
       </el-table-column>
       <el-table-column label="操作" align="center" width="230">
         <template slot-scope="{row}">
-          <template v-if="row && row.id">
-            <el-button type="primary" size="mini" @click="handleUpdate(row)">编辑</el-button>
-            <el-button type="danger" size="mini" @click="handleDelete(row)">删除</el-button>
-            <el-button type="warning" size="mini" @click="handleResetPwd(row)">重置密码</el-button>
-          </template>
+          <el-button type="primary" size="mini" @click="handleUpdate(row)">编辑</el-button>
+          <el-button type="danger" size="mini" @click="handleDelete(row)">删除</el-button>
+          <el-button type="warning" size="mini" @click="handleResetPwd(row)">重置密码</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -154,8 +145,8 @@
         <el-form-item label="用户名" prop="username">
           <el-input v-model="temp.username" placeholder="请输入用户名" />
         </el-form-item>
-        <el-form-item label="姓名" prop="name">
-          <el-input v-model="temp.name" placeholder="请输入姓名" />
+        <el-form-item label="姓名" prop="realName">
+          <el-input v-model="temp.realName" placeholder="请输入姓名" />
         </el-form-item>
         <el-form-item label="用户类型" prop="userType">
           <el-select v-model="temp.userType" placeholder="请选择用户类型" @change="handleUserTypeChange">
@@ -269,7 +260,7 @@ export default {
         page: 1,
         limit: 10,
         username: undefined,
-        name: undefined,
+        realName: undefined,
         roleId: undefined,
         userType: undefined
       },
@@ -282,7 +273,7 @@ export default {
       temp: {
         id: undefined,
         username: '',
-        name: '',
+        realName: '',
         userType: undefined,
         roles: [],
         departmentId: undefined,
@@ -295,7 +286,7 @@ export default {
           { required: true, message: '请输入用户名', trigger: 'blur' },
           { validator: validateUsername, trigger: 'blur' }
         ],
-        name: [
+        realName: [
           { required: true, message: '请输入姓名', trigger: 'blur' }
         ],
         userType: [
@@ -346,7 +337,7 @@ export default {
   created() {
     this.getList()
     this.getRoleOptions()
-    this.getDepartmentOptions()
+    // this.getDepartmentOptions()
   },
   methods: {
     formatCreateTime(timeArray) {
@@ -367,47 +358,20 @@ export default {
     async getList() {
       try {
         this.listLoading = true;
-        console.log('Fetching user list with query:', this.listQuery);
         const response = await getUserList(this.listQuery);
-        console.log('User list response:', response);
         
         if (response && response.code === 200 && response.data) {
-          const { records, total } = response.data;
-          if (Array.isArray(records)) {
-            this.list = records.map(user => {
-              if (!user) return null;
-              return {
-                ...user,
-                name: user.name || '未设置',
-                phone: user.phone || '未设置',
-                email: user.email || '未设置',
-                departmentName: user.departmentName || '未设置',
-                roles: Array.isArray(user.roles) ? user.roles : [],
-                status: typeof user.status === 'number' ? user.status : 0,
-                createTime: Array.isArray(user.createTime) ? user.createTime : null,
-                updateTime: Array.isArray(user.updateTime) ? user.updateTime : null
-              };
-            }).filter(Boolean); // 过滤掉空值
-            
-            this.total = total || 0;
-            console.log('Processed user list:', this.list);
-          } else {
-            console.warn('User list records is not an array:', records);
-            this.list = [];
-            this.total = 0;
-            this.$message.warning('获取用户列表数据格式错误');
-          }
+          this.list = response.data.records;
+          this.total = response.data.total;
         } else {
-          console.error('Failed to get user list:', response ? response.message : 'No response');
-          this.$message.warning(`获取用户列表失败: ${response && response.message || '未知错误'}`);
           this.list = [];
           this.total = 0;
         }
       } catch (error) {
         console.error('Get user list error:', error);
-        this.$message.error('获取用户列表失败');
         this.list = [];
         this.total = 0;
+        this.$message.error('获取用户列表失败');
       } finally {
         this.listLoading = false;
       }
@@ -452,23 +416,27 @@ export default {
         page: 1,
         limit: 10,
         username: undefined,
-        name: undefined,
+        realName: undefined,
         roleId: undefined,
         userType: undefined
       }
       this.getList()
     },
+    getRowKey(row) {
+      return row ? row.id : null;
+    },
+    checkSelectable(row) {
+      return row && row.id;
+    },
     handleSelectionChange(val) {
-      this.selectedIds = val && Array.isArray(val) 
-        ? val.filter(item => item && item.id).map(item => item.id)
-        : [];
+      this.selectedIds = (val || []).filter(item => item && item.id).map(item => item.id);
     },
     handleCreate() {
       this.dialogTitle = '新增用户'
       this.temp = {
         id: undefined,
         username: '',
-        name: '',
+        realName: '',
         userType: undefined,
         roles: [],
         departmentId: undefined,
@@ -576,9 +544,16 @@ export default {
           try {
             const submitData = { ...this.temp };
             
+            // 处理角色ID
             if (Array.isArray(submitData.roles)) {
               submitData.roleIds = submitData.roles;
               delete submitData.roles;
+            }
+            
+            // 确保至少选择了一个角色
+            if (!submitData.roleIds || submitData.roleIds.length === 0) {
+              this.$message.warning('请至少选择一个角色');
+              return;
             }
             
             if (this.temp.id) {
@@ -586,14 +561,14 @@ export default {
               this.$message.success('更新用户成功');
             } else {
               await createUser(submitData);
-              this.$message.success('创建用户成功');
+              this.$message.success('创建用户成功，初始密码请联系管理员');
             }
             
             this.dialogVisible = false;
             this.getList();
           } catch (error) {
             console.error('保存用户失败:', error);
-            this.$message.error(`保存用户失败: ${error.message || '未知错误'}`);
+            this.$message.error(`保存用户失败: ${error.response?.data?.message || error.message || '未知错误'}`);
           }
         }
       })

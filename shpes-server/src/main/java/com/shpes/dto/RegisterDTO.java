@@ -25,7 +25,7 @@ public class RegisterDTO {
 
     @NotBlank(message = "姓名不能为空")
     @ApiModelProperty("姓名")
-    private String name;
+    private String realName;
 
     @Pattern(regexp = "^1[3-9]\\d{9}$", message = "手机号格式不正确")
     @ApiModelProperty("手机号")

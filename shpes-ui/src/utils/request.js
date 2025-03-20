@@ -6,7 +6,7 @@ import { getToken } from '@/utils/auth'
 // 创建axios实例
 const service = axios.create({
   baseURL: import.meta.env.VITE_APP_BASE_API,
-  timeout: 5000,
+  timeout: 30000, // 超时时间设置为30秒
   withCredentials: true // 允许携带cookie
 })
 

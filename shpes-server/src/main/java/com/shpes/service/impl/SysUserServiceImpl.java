@@ -8,7 +8,6 @@ import com.shpes.common.enums.ResultCode;
 import com.shpes.common.exception.ApiException;
 import com.shpes.dto.UserDTO;
 import com.shpes.dto.UserQueryDTO;
-import com.shpes.entity.SysRole;
 import com.shpes.entity.SysUser;
 import com.shpes.entity.SysUserRole;
 import com.shpes.mapper.SysUserMapper;
@@ -17,16 +16,14 @@ import com.shpes.service.SysDepartmentService;
 import com.shpes.service.SysRoleService;
 import com.shpes.service.SysUserService;
 import com.shpes.utils.PasswordUtils;
-import com.shpes.vo.RoleVO;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import com.shpes.utils.SecurityUtils;
+import com.shpes.vo.RoleVO;
 import com.shpes.vo.UserVO;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -59,7 +56,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser>imple
         // 构建查询条件
         LambdaQueryWrapper<SysUser> wrapper = new LambdaQueryWrapper<>();
         wrapper.like(StringUtils.hasText(queryDTO.getUsername()), SysUser::getUsername, queryDTO.getUsername())
-                .like(StringUtils.hasText(queryDTO.getName()), SysUser::getRealName, queryDTO.getName())
+                .like(StringUtils.hasText(queryDTO.getRealName()), SysUser::getRealName, queryDTO.getRealName())
                 .eq(queryDTO.getStatus() != null, SysUser::getStatus, queryDTO.getStatus())
                 .orderByDesc(SysUser::getCreateTime);
 
@@ -110,7 +107,8 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser>imple
         BeanUtils.copyProperties(userDTO, user);
         
         // 设置密码
-        user.setPassword(PasswordUtils.encode(userDTO.getPassword()));        user.setStatus(1);
+        user.setPassword(org.apache.commons.lang3.StringUtils.isBlank(userDTO.getPassword())?PasswordUtils.encode(PasswordUtils.DEFAULT_PASSWORD):PasswordUtils.encode(userDTO.getPassword()));
+        user.setStatus(1);
         user.setCreateTime(LocalDateTime.now());
         user.setUpdateTime(LocalDateTime.now());
 

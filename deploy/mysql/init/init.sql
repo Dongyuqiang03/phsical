@@ -115,27 +115,39 @@ CREATE TABLE sys_log (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='操作日志表';
 
 -- 体检业务相关表
+-- 体检项目分类表
+CREATE TABLE exam_item_category (
+    id BIGINT NOT NULL AUTO_INCREMENT COMMENT '分类ID',
+    name VARCHAR(50) NOT NULL COMMENT '分类名称',
+    code VARCHAR(50) NOT NULL COMMENT '分类编码',
+    status TINYINT NOT NULL DEFAULT 1 COMMENT '状态(0:禁用 1:启用)',
+    create_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    update_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (id),
+    UNIQUE KEY uk_category_code (code)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='体检项目分类表';
+
 -- 体检项目表
 CREATE TABLE exam_item (
     id BIGINT NOT NULL AUTO_INCREMENT COMMENT '项目ID',
     name VARCHAR(100) NOT NULL COMMENT '项目名称',
     code VARCHAR(50) NOT NULL COMMENT '项目编码',
-    category INT NOT NULL COMMENT '项目分类',
+    category_id BIGINT NOT NULL COMMENT '项目分类ID',
     department_id BIGINT NOT NULL COMMENT '执行科室ID',
     lower_limit VARCHAR(50) COMMENT '参考值下限',
     upper_limit VARCHAR(50) COMMENT '参考值上限',
     reference_value VARCHAR(255) COMMENT '参考值描述',
     unit VARCHAR(20) COMMENT '单位',
     price INT COMMENT '价格（分）',
-    sort INT DEFAULT 0 COMMENT '排序',
     status TINYINT NOT NULL DEFAULT 1 COMMENT '状态(0:禁用 1:启用)',
     remark VARCHAR(255) COMMENT '备注',
     create_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     update_time DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     PRIMARY KEY (id),
     UNIQUE KEY uk_item_code (code),
-    KEY idx_category (category),
-    KEY idx_dept_id (department_id)
+    KEY idx_category_id (category_id),
+    KEY idx_dept_id (department_id),
+    CONSTRAINT fk_item_category FOREIGN KEY (category_id) REFERENCES exam_item_category (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='体检项目表';
 
 -- 体检套餐表
@@ -292,15 +304,22 @@ INSERT INTO sys_user (username, password, real_name, user_type, dept_id) VALUES
 INSERT INTO sys_user_role (user_id, role_id) 
 SELECT 1, id FROM sys_role WHERE role_code IN ('ROLE_ADMIN', 'ROLE_MEDICAL');
 
+-- 初始化体检项目分类数据
+INSERT INTO exam_item_category (name, code, status) VALUES
+('常规检查', 'ROUTINE', 1),
+('实验室检查', 'LAB', 1),
+('医学影像', 'IMAGING', 1),
+('其他检查', 'OTHER', 1);
+
 -- 初始化基础体检项目
-INSERT INTO exam_item (name, code, category, department_id, lower_limit, upper_limit, unit, price, sort, status) VALUES
-('身高', 'HEIGHT', 1, 5, '140', '200', 'cm', 1000, 1, 1),
-('体重', 'WEIGHT', 1, 5, '40', '100', 'kg', 1000, 2, 1),
-('血压', 'BP', 1, 5, '90/60', '140/90', 'mmHg', 1500, 3, 1),
-('血常规', 'BLOOD', 4, 3, NULL, NULL, NULL, 3000, 4, 1),
-('尿常规', 'URINE', 5, 3, NULL, NULL, NULL, 3000, 5, 1),
-('胸部X光', 'CHEST_X', 8, 4, NULL, NULL, NULL, 5000, 6, 1),
-('腹部B超', 'ABDOMEN_B', 7, 4, NULL, NULL, NULL, 8000, 7, 1);
+INSERT INTO exam_item (name, code, category_id, department_id, lower_limit, upper_limit, unit, price, status) VALUES
+('身高', 'HEIGHT', 1, 5, '140', '200', 'cm', 1000, 1),
+('体重', 'WEIGHT', 1, 5, '40', '100', 'kg', 1000, 1),
+('血压', 'BP', 1, 5, '90/60', '140/90', 'mmHg', 1500, 1),
+('血常规', 'BLOOD', 2, 3, NULL, NULL, NULL, 3000, 1),
+('尿常规', 'URINE', 2, 3, NULL, NULL, NULL, 3000, 1),
+('胸部X光', 'CHEST_X', 3, 4, NULL, NULL, NULL, 5000, 1),
+('腹部B超', 'ABDOMEN_B', 3, 4, NULL, NULL, NULL, 8000, 1);
 
 -- 初始化基础体检套餐
 INSERT INTO exam_package (name, code, price, original_price, gender, sort, status) VALUES

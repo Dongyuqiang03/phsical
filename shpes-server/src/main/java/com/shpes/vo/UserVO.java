@@ -20,7 +20,7 @@ public class UserVO {
     private String username;
 
     @ApiModelProperty("姓名")
-    private String name;
+    private String realName;
 
     @ApiModelProperty("手机号")
     private String phone;

@@ -38,7 +38,7 @@ public class SysUserController {
             @ApiParam("页码") @RequestParam(defaultValue = "1") Integer pageNum,
             @ApiParam("每页记录数") @RequestParam(defaultValue = "10") Integer pageSize,
             @ApiParam("用户名") @RequestParam(required = false) String username,
-            @ApiParam("姓名") @RequestParam(required = false) String name,
+            @ApiParam("姓名") @RequestParam(required = false) String realName,
             @ApiParam("角色ID") @RequestParam(required = false) Long roleId,
             @ApiParam("状态：0-禁用，1-启用") @RequestParam(required = false) Integer status) {
         
@@ -46,7 +46,7 @@ public class SysUserController {
         queryDTO.setPageNum(pageNum);
         queryDTO.setPageSize(pageSize);
         queryDTO.setUsername(username);
-        queryDTO.setName(name);
+        queryDTO.setRealName(realName);
         queryDTO.setRoleId(roleId);
         queryDTO.setStatus(status);
         

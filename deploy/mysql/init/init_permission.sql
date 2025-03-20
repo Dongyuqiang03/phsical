@@ -19,3 +19,11 @@ INSERT INTO sys_permission (permission_name, permission_code, permission_type, p
 -- 为系统管理员角色分配所有权限
 INSERT INTO sys_role_permission (role_id, permission_id)
 SELECT 1, id FROM sys_permission;
+
+-- 为医护人员角色分配体检相关权限
+INSERT INTO sys_role_permission (role_id, permission_id)
+SELECT 2, id FROM sys_permission WHERE permission_code LIKE 'exam%';
+
+-- 为普通用户角色分配查看权限
+INSERT INTO sys_role_permission (role_id, permission_id)
+SELECT 3, id FROM sys_permission WHERE permission_code = 'exam:item:view';

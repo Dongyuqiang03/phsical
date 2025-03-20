@@ -7,6 +7,7 @@ import cn.hutool.crypto.digest.Digester;
  * 密码工具类 - 使用 Hutool 实现
  */
 public class PasswordUtils {
+    public static final String DEFAULT_PASSWORD = "123456";
     private static final String SALT = "shpes@2024";
     private static final Digester digester = new Digester(DigestAlgorithm.SHA256);
 
