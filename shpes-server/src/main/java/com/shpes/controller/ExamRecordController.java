@@ -31,7 +31,7 @@ public class ExamRecordController {
 
     @ApiOperation("获取记录列表")
     @GetMapping("/list")
-    @RequiresPermission(RoleConstants.ADMIN)
+    @RequiresPermission("")
     public CommonResult<CommonPage<ExamRecordVO>> getRecordPage(
             @RequestParam(defaultValue = "1") Integer pageNum,
             @RequestParam(defaultValue = "10") Integer pageSize,
@@ -44,28 +44,28 @@ public class ExamRecordController {
 
     @ApiOperation("获取记录详情")
     @GetMapping("/{id}")
-    @RequiresPermission(RoleConstants.ADMIN)
+    @RequiresPermission("")
     public CommonResult<ExamRecordVO> getRecord(@PathVariable Long id) {
         return CommonResult.success(recordService.getRecordById(id));
     }
 
     @ApiOperation("获取用户体检记录列表")
     @GetMapping("/user/{userId}")
-    @RequiresPermission(RoleConstants.ADMIN)
+    @RequiresPermission("")
     public CommonResult<List<ExamRecordVO>> getUserRecords(@PathVariable Long userId) {
         return CommonResult.success(recordService.getUserRecords(userId));
     }
 
     @ApiOperation("创建记录")
     @PostMapping
-    @RequiresPermission(RoleConstants.ADMIN)
+    @RequiresPermission("")
     public CommonResult<ExamRecordVO> createRecord(@Valid @RequestBody ExamRecord record) {
         return CommonResult.success(recordService.createRecord(record));
     }
 
     @ApiOperation("更新记录")
     @PutMapping("/{id}")
-    @RequiresPermission(RoleConstants.ADMIN)
+    @RequiresPermission("")
     public CommonResult<ExamRecordVO> updateRecord(@PathVariable Long id, @Valid @RequestBody ExamRecord record) {
         record.setId(id);
         return CommonResult.success(recordService.updateRecord(record));
@@ -73,7 +73,7 @@ public class ExamRecordController {
 
     @ApiOperation("删除记录")
     @DeleteMapping("/{id}")
-    @RequiresPermission(RoleConstants.ADMIN)
+    @RequiresPermission("")
     public CommonResult<Void> deleteRecord(@PathVariable Long id) {
         recordService.deleteRecord(id);
         return CommonResult.success(null);
@@ -81,7 +81,7 @@ public class ExamRecordController {
 
     @ApiOperation("更新记录状态")
     @PutMapping("/{id}/status")
-    @RequiresPermission(RoleConstants.ADMIN)
+    @RequiresPermission("")
     public CommonResult<ExamRecordVO> updateRecordStatus(
             @PathVariable Long id,
             @RequestParam Integer status) {
@@ -90,7 +90,7 @@ public class ExamRecordController {
 
     @ApiOperation("完成体检记录")
     @PutMapping("/{id}/complete")
-    @RequiresPermission(RoleConstants.ADMIN)
+    @RequiresPermission("")
     public CommonResult<ExamRecordVO> completeRecord(
             @PathVariable Long id,
             @RequestParam String conclusion,
@@ -100,14 +100,14 @@ public class ExamRecordController {
 
     @ApiOperation("获取今日体检统计")
     @GetMapping("/stats/today")
-    @RequiresPermission(RoleConstants.ADMIN)
+    @RequiresPermission("")
     public CommonResult<Object> getTodayStats() {
         return CommonResult.success(recordService.getTodayStats());
     }
 
     @ApiOperation("获取体检完成率统计")
     @GetMapping("/stats/completion")
-    @RequiresPermission(RoleConstants.ADMIN)
+    @RequiresPermission("")
     public CommonResult<List<Map<String, Object>>> getCompletionStats(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {

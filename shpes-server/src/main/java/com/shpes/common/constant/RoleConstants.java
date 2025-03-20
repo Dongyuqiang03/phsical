@@ -4,8 +4,33 @@ package com.shpes.common.constant;
  * 角色常量
  */
 public class RoleConstants {
-    public static final String ADMIN = "ADMIN";    // 管理员
-    public static final String DOCTOR = "DOCTOR";  // 医生
-    public static final String NURSE = "NURSE";    // 护士
-    public static final String USER = "USER";      // 普通用户
+    /**
+     * 医护人员角色ID
+     */
+    public static final Long ROLE_MEDICAL_ID = 1L;
+
+    /**
+     * 普通用户角色ID
+     */
+    public static final Long ROLE_USER_ID = 2L;
+
+    /**
+     * 管理员角色ID
+     */
+    public static final Long ROLE_ADMIN_ID = 3L;
+
+    /**
+     * 医护人员角色编码
+     */
+    public static final String ROLE_MEDICAL = "ROLE_MEDICAL";
+
+    /**
+     * 普通用户角色编码
+     */
+    public static final String ROLE_USER = "ROLE_USER";
+
+    /**
+     * 管理员角色编码
+     */
+    public static final String ROLE_ADMIN = "ROLE_ADMIN";
 } 

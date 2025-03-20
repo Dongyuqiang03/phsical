@@ -7,11 +7,26 @@ export function isExternal(path) {
 }
 
 /**
+ * 校验用户名
+ * 规则：
+ * 1. 长度3-20个字符
+ * 2. 允许中文、字母、数字、下划线
+ * 3. 不能以下划线开头和结尾
  * @param {string} str
  * @returns {Boolean}
  */
 export function validUsername(str) {
-  return str.trim().length >= 3
+  if (!str || typeof str !== 'string') {
+    return false
+  }
+  str = str.trim()
+  // 长度3-20个字符
+  if (str.length < 3 || str.length > 20) {
+    return false
+  }
+  // 允许中文、字母、数字、下划线，不能以下划线开头和结尾
+  const reg = /^(?!_)[\u4e00-\u9fa5a-zA-Z0-9_]+(?<!_)$/
+  return reg.test(str)
 }
 
 /**

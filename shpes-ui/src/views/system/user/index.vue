@@ -20,6 +20,13 @@
           />
         </el-form-item>
         <el-form-item>
+          <el-select v-model="listQuery.userType" placeholder="用户类型" clearable>
+            <el-option label="医护人员" :value="1" />
+            <el-option label="教职工" :value="2" />
+            <el-option label="学生" :value="3" />
+          </el-select>
+        </el-form-item>
+        <el-form-item>
           <el-select v-model="listQuery.roleId" placeholder="角色" clearable>
             <el-option
               v-for="item in roleOptions"
@@ -62,55 +69,67 @@
       :data="list"
       border
       style="width: 100%"
+      row-key="id"
       @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
       <el-table-column label="用户名" prop="username" />
       <el-table-column label="姓名" prop="name">
         <template slot-scope="{row}">
-          <span>{{ row.name || '未设置' }}</span>
+          <span>{{ row && row.name || '未设置' }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="用户类型" prop="userType">
+        <template slot-scope="{row}">
+          <span>{{ row && getUserTypeName(row.userType) }}</span>
         </template>
       </el-table-column>
       <el-table-column label="角色">
         <template slot-scope="{row}">
-          <span v-if="row && row.roles">{{ (row.roles || []).map(role => role && role.roleName).filter(Boolean).join(', ') || '未设置' }}</span>
+          <span v-if="row && row.roles && Array.isArray(row.roles)">
+            {{ row.roles.map(role => role && role.roleName).filter(Boolean).join(', ') || '未设置' }}
+          </span>
           <span v-else>未设置</span>
         </template>
       </el-table-column>
       <el-table-column label="部门" prop="departmentName">
         <template slot-scope="{row}">
-          <span>{{ row.departmentName || '未设置' }}</span>
+          <span>{{ row && row.departmentName || '未设置' }}</span>
         </template>
       </el-table-column>
       <el-table-column label="手机号" prop="phone">
         <template slot-scope="{row}">
-          <span>{{ row.phone || '未设置' }}</span>
+          <span>{{ row && row.phone || '未设置' }}</span>
         </template>
       </el-table-column>
       <el-table-column label="邮箱" prop="email">
         <template slot-scope="{row}">
-          <span>{{ row.email || '未设置' }}</span>
+          <span>{{ row && row.email || '未设置' }}</span>
         </template>
       </el-table-column>
       <el-table-column label="状态" align="center">
         <template slot-scope="{row}">
           <el-switch
+            v-if="row"
             v-model="row.status"
             :active-value="1"
             :inactive-value="0"
             @change="handleStatusChange(row)"
           />
+          <span v-else>未知</span>
         </template>
       </el-table-column>
       <el-table-column label="创建时间">
         <template slot-scope="{row}">
-          <span>{{ formatCreateTime(row.createTime) }}</span>
+          <span>{{ row && formatCreateTime(row.createTime) }}</span>
         </template>
       </el-table-column>
       <el-table-column label="操作" align="center" width="230">
         <template slot-scope="{row}">
-          <el-button type="primary" size="mini" @click="handleUpdate(row)">编辑</el-button>
-          <el-button type="danger" size="mini" @click="handleDelete(row)">删除</el-button>
-          <el-button type="warning" size="mini" @click="handleResetPwd(row)">重置密码</el-button>
+          <template v-if="row && row.id">
+            <el-button type="primary" size="mini" @click="handleUpdate(row)">编辑</el-button>
+            <el-button type="danger" size="mini" @click="handleDelete(row)">删除</el-button>
+            <el-button type="warning" size="mini" @click="handleResetPwd(row)">重置密码</el-button>
+          </template>
         </template>
       </el-table-column>
     </el-table>
@@ -138,28 +157,35 @@
         <el-form-item label="姓名" prop="name">
           <el-input v-model="temp.name" placeholder="请输入姓名" />
         </el-form-item>
+        <el-form-item label="用户类型" prop="userType">
+          <el-select v-model="temp.userType" placeholder="请选择用户类型" @change="handleUserTypeChange">
+            <el-option label="医护人员" :value="1" />
+            <el-option label="教职工" :value="2" />
+            <el-option label="学生" :value="3" />
+          </el-select>
+        </el-form-item>
         <el-form-item label="角色" prop="roles">
           <el-select v-model="temp.roles" placeholder="请选择角色" multiple>
             <el-option
-              v-for="item in roleOptions"
+              v-for="item in filteredRoleOptions"
               :key="item.id"
               :label="item.roleName"
               :value="item.id"
             />
           </el-select>
         </el-form-item>
-        <!-- 注释掉部门选择框
         <el-form-item label="部门" prop="departmentId">
-          <el-select v-model="temp.departmentId" placeholder="请选择部门">
+          <el-select 
+            v-model="temp.departmentId" 
+            placeholder="请选择部门">
             <el-option
-              v-for="item in departmentOptions"
+              v-for="item in filteredDepartmentOptions"
               :key="item.id"
-              :label="item.name || item.departmentName"
+              :label="item.departmentName || item.name"
               :value="item.id"
             />
           </el-select>
         </el-form-item>
-        -->
         <el-form-item label="手机号" prop="phone">
           <el-input v-model="temp.phone" placeholder="请输入手机号" />
         </el-form-item>
@@ -208,8 +234,7 @@ import { validUsername, validPhone, validEmail } from '@/utils/validate'
 import { formatDateTime } from '@/utils/date'
 import { getUserList, createUser, updateUser, deleteUser, batchDeleteUser, updateUserStatus, resetUserPassword, exportUser } from '@/api/user'
 import { getAllRoles } from '@/api/system/role'
-// 注释掉部门API导入，但保留代码
-// import { getDepartmentList } from '@/api/department'
+import { getDepartmentList } from '@/api/department'
 
 export default {
   name: 'User',
@@ -217,7 +242,7 @@ export default {
   data() {
     const validateUsername = (rule, value, callback) => {
       if (!validUsername(value)) {
-        callback(new Error('请输入正确的用户名'))
+        callback(new Error('用户名必须为3-20个字符，可以包含中文、字母、数字和下划线，不能以下划线开头和结尾'))
       } else {
         callback()
       }
@@ -245,11 +270,11 @@ export default {
         limit: 10,
         username: undefined,
         name: undefined,
-        roleId: undefined
-        // departmentId: undefined // 注释掉部门ID查询参数
+        roleId: undefined,
+        userType: undefined
       },
       roleOptions: [],
-      // departmentOptions: [], // 注释掉部门选项数组
+      departmentOptions: [],
       selectedIds: [],
       dialogVisible: false,
       dialogTitle: '',
@@ -258,8 +283,9 @@ export default {
         id: undefined,
         username: '',
         name: '',
+        userType: undefined,
         roles: [],
-        // departmentId: undefined, // 注释掉部门ID字段
+        departmentId: undefined,
         phone: '',
         email: '',
         status: 1
@@ -272,12 +298,12 @@ export default {
         name: [
           { required: true, message: '请输入姓名', trigger: 'blur' }
         ],
-        roles: [
-          { required: true, message: '请选择角色', trigger: 'change' }
+        userType: [
+          { required: true, message: '请选择用户类型', trigger: 'change' }
         ],
-        // departmentId: [ // 注释掉部门验证规则
-        //   { required: true, message: '请选择部门', trigger: 'change' }
-        // ],
+        departmentId: [
+          { required: false, message: '请选择部门', trigger: 'change' }
+        ],
         phone: [
           { validator: validatePhone, trigger: 'blur' }
         ],
@@ -290,40 +316,90 @@ export default {
       }
     }
   },
+  computed: {
+    filteredRoleOptions() {
+      if (!this.temp.userType) return this.roleOptions;
+      
+      const roleCodeMap = {
+        1: ['ROLE_MEDICAL', 'ROLE_ADMIN'],
+        2: ['ROLE_USER'],
+        3: ['ROLE_USER']
+      };
+      
+      const allowedRoleCodes = roleCodeMap[this.temp.userType] || [];
+      return this.roleOptions.filter(role => allowedRoleCodes.includes(role.roleCode));
+    },
+    filteredDepartmentOptions() {
+      if (!this.temp.userType) return this.departmentOptions;
+      
+      if (this.temp.userType === 1) {
+        return this.departmentOptions.filter(dept => dept.parentId === 1);
+      }
+      
+      if (this.temp.userType === 2 || this.temp.userType === 3) {
+        return this.departmentOptions.filter(dept => dept.parentId === 7);
+      }
+      
+      return this.departmentOptions;
+    }
+  },
   created() {
     this.getList()
     this.getRoleOptions()
-    // this.getDepartmentOptions() // 注释掉获取部门选项的方法调用
+    this.getDepartmentOptions()
   },
   methods: {
     formatCreateTime(timeArray) {
-      if (!Array.isArray(timeArray) || timeArray.length < 6) {
+      if (!timeArray || !Array.isArray(timeArray) || timeArray.length < 6) {
         return '未设置';
       }
-      const [year, month, day, hour, minute, second] = timeArray;
-      return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')} ${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}:${String(second).padStart(2, '0')}`;
+      try {
+        const [year, month, day, hour, minute, second] = timeArray;
+        if ([year, month, day, hour, minute, second].some(val => typeof val !== 'number')) {
+          return '未设置';
+        }
+        return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')} ${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}:${String(second).padStart(2, '0')}`;
+      } catch (error) {
+        console.error('Error formatting time:', error);
+        return '未设置';
+      }
     },
     async getList() {
       try {
         this.listLoading = true;
+        console.log('Fetching user list with query:', this.listQuery);
         const response = await getUserList(this.listQuery);
         console.log('User list response:', response);
-        if (response.code === 200 && response.data) {
-          this.list = response.data.records || [];
-          this.total = response.data.total || 0;
-          
-          // Process each user record to ensure proper data structure
-          this.list = this.list.map(user => ({
-            ...user,
-            name: user.name || '未设置',
-            phone: user.phone || '未设置',
-            email: user.email || '未设置',
-            departmentName: user.departmentName || '未设置',
-            roles: Array.isArray(user.roles) ? user.roles : [],
-            status: user.status || 0
-          }));
+        
+        if (response && response.code === 200 && response.data) {
+          const { records, total } = response.data;
+          if (Array.isArray(records)) {
+            this.list = records.map(user => {
+              if (!user) return null;
+              return {
+                ...user,
+                name: user.name || '未设置',
+                phone: user.phone || '未设置',
+                email: user.email || '未设置',
+                departmentName: user.departmentName || '未设置',
+                roles: Array.isArray(user.roles) ? user.roles : [],
+                status: typeof user.status === 'number' ? user.status : 0,
+                createTime: Array.isArray(user.createTime) ? user.createTime : null,
+                updateTime: Array.isArray(user.updateTime) ? user.updateTime : null
+              };
+            }).filter(Boolean); // 过滤掉空值
+            
+            this.total = total || 0;
+            console.log('Processed user list:', this.list);
+          } else {
+            console.warn('User list records is not an array:', records);
+            this.list = [];
+            this.total = 0;
+            this.$message.warning('获取用户列表数据格式错误');
+          }
         } else {
-          this.$message.warning(`获取用户列表失败: ${response.message || '未知错误'}`);
+          console.error('Failed to get user list:', response ? response.message : 'No response');
+          this.$message.warning(`获取用户列表失败: ${response && response.message || '未知错误'}`);
           this.list = [];
           this.total = 0;
         }
@@ -353,6 +429,20 @@ export default {
         console.error('获取角色列表失败:', error)
       }
     },
+    async getDepartmentOptions() {
+      try {
+        const response = await getDepartmentList()
+        if (response.code === 200) {
+          this.departmentOptions = response.data || []
+        } else {
+          this.departmentOptions = []
+          this.$message.warning(`获取部门列表失败: ${response.message || '未知错误'}`)
+        }
+      } catch (error) {
+        this.departmentOptions = []
+        this.$message.error('获取部门列表失败')
+      }
+    },
     handleFilter() {
       this.listQuery.page = 1
       this.getList()
@@ -363,16 +453,15 @@ export default {
         limit: 10,
         username: undefined,
         name: undefined,
-        roleId: undefined
+        roleId: undefined,
+        userType: undefined
       }
       this.getList()
     },
     handleSelectionChange(val) {
-      if (!val) {
-        this.selectedIds = [];
-        return;
-      }
-      this.selectedIds = val.filter(item => item && item.id).map(item => item.id);
+      this.selectedIds = val && Array.isArray(val) 
+        ? val.filter(item => item && item.id).map(item => item.id)
+        : [];
     },
     handleCreate() {
       this.dialogTitle = '新增用户'
@@ -380,7 +469,9 @@ export default {
         id: undefined,
         username: '',
         name: '',
+        userType: undefined,
         roles: [],
+        departmentId: undefined,
         phone: '',
         email: '',
         status: 1
@@ -391,7 +482,7 @@ export default {
       })
     },
     handleUpdate(row) {
-      if (!row) {
+      if (!row || !row.id) {
         this.$message.warning('用户数据无效');
         return;
       }
@@ -399,7 +490,8 @@ export default {
       this.dialogTitle = '编辑用户'
       this.temp = Object.assign({}, row)
       
-      // 安全地提取角色ID，添加null检查
+      this.temp.userType = row.userType;
+      
       this.temp.roles = Array.isArray(row.roles) 
         ? row.roles.filter(role => role && typeof role === 'object' && role.id).map(role => role.id)
         : [];
@@ -412,7 +504,7 @@ export default {
       })
     },
     async handleDelete(row) {
-      if (!row || typeof row.id === 'undefined') {
+      if (!row || !row.id) {
         this.$message.warning('用户数据无效');
         return;
       }
@@ -446,7 +538,7 @@ export default {
       }
     },
     async handleStatusChange(row) {
-      if (!row || typeof row.id === 'undefined') {
+      if (!row || !row.id) {
         this.$message.warning('用户数据无效');
         return;
       }
@@ -456,7 +548,10 @@ export default {
         this.$message.success('状态更新成功')
       } catch (error) {
         console.error('更新用户状态失败:', error)
-        row.status = row.status === 1 ? 0 : 1
+        // 恢复原状态
+        if (row) {
+          row.status = row.status === 1 ? 0 : 1
+        }
       }
     },
     async handleResetPwd(row) {
@@ -479,21 +574,17 @@ export default {
       this.$refs['dataForm'].validate(async (valid) => {
         if (valid) {
           try {
-            // 准备提交数据
             const submitData = { ...this.temp };
             
-            // 处理角色数据，确保它是一个角色ID数组
             if (Array.isArray(submitData.roles)) {
               submitData.roleIds = submitData.roles;
               delete submitData.roles;
             }
             
             if (this.temp.id) {
-              // 更新现有用户
               await updateUser(submitData);
               this.$message.success('更新用户成功');
             } else {
-              // 创建新用户
               await createUser(submitData);
               this.$message.success('创建用户成功');
             }
@@ -523,6 +614,37 @@ export default {
     },
     downloadTemplate() {
       // TODO: 下载用户导入模板
+    },
+    handleUserTypeChange(value) {
+      // 保留已选角色和部门（不清空），只在未选择角色时设置默认角色
+      if (!this.temp.roles || this.temp.roles.length === 0) {
+        if (value === 1) {
+          const medicalRole = this.roleOptions.find(role => role.roleCode === 'ROLE_MEDICAL');
+          if (medicalRole) {
+            this.temp.roles = [medicalRole.id];
+          }
+        } else if (value === 2 || value === 3) {
+          const userRole = this.roleOptions.find(role => role.roleCode === 'ROLE_USER');
+          if (userRole) {
+            this.temp.roles = [userRole.id];
+          }
+        }
+      }
+      
+      // 更新部门必选验证规则
+      this.$set(this.rules.departmentId, 0, {
+        required: value === 1,
+        message: value === 1 ? '医护人员必须选择部门' : '请选择部门',
+        trigger: 'change'
+      });
+    },
+    getUserTypeName(type) {
+      const typeMap = {
+        1: '医护人员',
+        2: '教职工',
+        3: '学生'
+      };
+      return typeMap[type] || '未知';
     }
   }
 }

@@ -7,6 +7,7 @@ import com.shpes.common.api.CommonPage;
 import com.shpes.common.enums.ResultCode;
 import com.shpes.common.exception.ApiException;
 import com.shpes.dto.UserDTO;
+import com.shpes.dto.UserQueryDTO;
 import com.shpes.entity.SysRole;
 import com.shpes.entity.SysUser;
 import com.shpes.entity.SysUserRole;
@@ -54,20 +55,32 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser>imple
 
 
     @Override
-    public CommonPage<UserVO> getUserPage(Integer pageNum, Integer pageSize, String username, String name,
-            String phone, Long departmentId, Integer userType, Integer status) {
+    public CommonPage<UserVO> getUserPage(UserQueryDTO queryDTO) {
         // 构建查询条件
         LambdaQueryWrapper<SysUser> wrapper = new LambdaQueryWrapper<>();
-        wrapper.like(StringUtils.hasText(username), SysUser::getUsername, username)
-                .like(StringUtils.hasText(name), SysUser::getUsername, name)
-                .like(StringUtils.hasText(phone), SysUser::getPhone, phone)
-                .eq(departmentId != null, SysUser::getDeptId, departmentId)
-                .eq(userType != null, SysUser::getUserType, userType)
-                .eq(status != null, SysUser::getStatus, status)
+        wrapper.like(StringUtils.hasText(queryDTO.getUsername()), SysUser::getUsername, queryDTO.getUsername())
+                .like(StringUtils.hasText(queryDTO.getName()), SysUser::getRealName, queryDTO.getName())
+                .eq(queryDTO.getStatus() != null, SysUser::getStatus, queryDTO.getStatus())
                 .orderByDesc(SysUser::getCreateTime);
 
+        // 如果指定了角色ID，先查询该角色下的用户ID
+        if (queryDTO.getRoleId() != null) {
+            LambdaQueryWrapper<SysUserRole> userRoleWrapper = new LambdaQueryWrapper<>();
+            userRoleWrapper.eq(SysUserRole::getRoleId, queryDTO.getRoleId());
+            List<Long> userIds = userRoleMapper.selectList(userRoleWrapper).stream()
+                    .map(SysUserRole::getUserId)
+                    .collect(Collectors.toList());
+            
+            if (userIds.isEmpty()) {
+                // 如果没有找到用户，直接返回空结果
+                return CommonPage.restPage(new ArrayList<>(), 0L, queryDTO.getPageNum(), queryDTO.getPageSize());
+            }
+            
+            wrapper.in(SysUser::getId, userIds);
+        }
+
         // 执行分页查询
-        Page<SysUser> page = page(new Page<>(pageNum, pageSize), wrapper);
+        Page<SysUser> page = page(new Page<>(queryDTO.getPageNum(), queryDTO.getPageSize()), wrapper);
         
         // 转换为VO对象
         List<UserVO> records = page.getRecords().stream()
@@ -373,21 +386,21 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser>imple
             throw new ApiException(ResultCode.DUPLICATE_USERNAME);
         }
 
-        // 检查邮箱
-        wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(SysUser::getEmail, userDTO.getEmail())
-                .ne(userId != null, SysUser::getId, userId);
-        if (count(wrapper) > 0) {
-            throw new ApiException(ResultCode.DUPLICATE_USERNAME);
-        }
-
-        // 检查身份证号
-        wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(SysUser::getIdCard, userDTO.getIdCard())
-                .ne(userId != null, SysUser::getId, userId);
-        if (count(wrapper) > 0) {
-            throw new ApiException(ResultCode.DUPLICATE_USERNAME);
-        }
+//        // 检查邮箱
+//        wrapper = new LambdaQueryWrapper<>();
+//        wrapper.eq(SysUser::getEmail, userDTO.getEmail())
+//                .ne(userId != null, SysUser::getId, userId);
+//        if (count(wrapper) > 0) {
+//            throw new ApiException(ResultCode.DUPLICATE_USERNAME);
+//        }
+//
+//        // 检查身份证号
+//        wrapper = new LambdaQueryWrapper<>();
+//        wrapper.eq(SysUser::getIdCard, userDTO.getIdCard())
+//                .ne(userId != null, SysUser::getId, userId);
+//        if (count(wrapper) > 0) {
+//            throw new ApiException(ResultCode.DUPLICATE_USERNAME);
+//        }
     }
 
     /**

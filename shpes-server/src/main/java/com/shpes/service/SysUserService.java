@@ -3,6 +3,7 @@ package com.shpes.service;
 import com.shpes.common.api.CommonPage;
 import com.shpes.dto.RegisterDTO;
 import com.shpes.dto.UserDTO;
+import com.shpes.dto.UserQueryDTO;
 import com.shpes.entity.SysUser;
 import com.shpes.vo.UserVO;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -16,9 +17,11 @@ public interface SysUserService extends IBaseService<SysUser> {
 
     /**
      * 分页查询用户
+     *
+     * @param queryDTO 查询参数
+     * @return 分页结果
      */
-    CommonPage<UserVO> getUserPage(Integer pageNum, Integer pageSize, String username, String name, 
-            String phone, Long departmentId, Integer userType, Integer status);
+    CommonPage<UserVO> getUserPage(UserQueryDTO queryDTO);
 
     /**
      * 获取用户详情

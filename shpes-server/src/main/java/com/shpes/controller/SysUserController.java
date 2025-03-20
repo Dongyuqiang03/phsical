@@ -4,6 +4,7 @@ import com.shpes.common.api.CommonPage;
 import com.shpes.common.api.CommonResult;
 import com.shpes.common.constant.RoleConstants;
 import com.shpes.dto.UserDTO;
+import com.shpes.dto.UserQueryDTO;
 import com.shpes.annotation.RequiresPermission;
 import com.shpes.service.SysUserService;
 import com.shpes.vo.UserVO;
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import javax.validation.groups.Default;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -29,7 +31,7 @@ public class SysUserController {
     @Autowired
     private SysUserService userService;
 
-    @ApiOperation("分页查询用户")
+    @ApiOperation(value = "分页查询用户", notes = "支持按用户名、姓名、角色和状态筛选")
     @GetMapping("/list")
     @RequiresPermission("system:user")
     public CommonResult<CommonPage<UserVO>> getUserPage(
@@ -37,11 +39,18 @@ public class SysUserController {
             @ApiParam("每页记录数") @RequestParam(defaultValue = "10") Integer pageSize,
             @ApiParam("用户名") @RequestParam(required = false) String username,
             @ApiParam("姓名") @RequestParam(required = false) String name,
-            @ApiParam("手机号") @RequestParam(required = false) String phone,
-            @ApiParam("部门ID") @RequestParam(required = false) Long departmentId,
-            @ApiParam("用户类型") @RequestParam(required = false) Integer userType,
+            @ApiParam("角色ID") @RequestParam(required = false) Long roleId,
             @ApiParam("状态：0-禁用，1-启用") @RequestParam(required = false) Integer status) {
-        return CommonResult.success(userService.getUserPage(pageNum, pageSize, username, name, phone, departmentId, userType, status));
+        
+        UserQueryDTO queryDTO = new UserQueryDTO();
+        queryDTO.setPageNum(pageNum);
+        queryDTO.setPageSize(pageSize);
+        queryDTO.setUsername(username);
+        queryDTO.setName(name);
+        queryDTO.setRoleId(roleId);
+        queryDTO.setStatus(status);
+        
+        return CommonResult.success(userService.getUserPage(queryDTO));
     }
 
     @ApiOperation("获取用户详情")
@@ -55,6 +64,21 @@ public class SysUserController {
     @PostMapping
     @RequiresPermission("system:user")
     public CommonResult<UserVO> createUser(@Validated({UserDTO.Create.class, Default.class}) @RequestBody UserDTO userDTO) {
+        // 根据用户类型设置默认角色
+        if (userDTO.getUserType() != null) {
+            if (userDTO.getRoleIds() == null || userDTO.getRoleIds().isEmpty()) {
+                List<Long> defaultRoles = new ArrayList<>();
+                if (userDTO.getUserType() == 1) {
+                    // 医护人员默认设置为医护角色
+                    defaultRoles.add(RoleConstants.ROLE_MEDICAL_ID);
+                } else {
+                    // 教职工和学生默认设置为普通用户角色
+                    defaultRoles.add(RoleConstants.ROLE_USER_ID);
+                }
+                userDTO.setRoleIds(defaultRoles);
+            }
+        }
+        
         return CommonResult.success(userService.createUser(userDTO));
     }
 
@@ -62,7 +86,35 @@ public class SysUserController {
     @PutMapping("/{id}")
     @RequiresPermission("system:user")
     public CommonResult<UserVO> updateUser(@PathVariable Long id, @Valid @RequestBody UserDTO userDTO) {
+        // 验证角色是否符合用户类型
+        if (userDTO.getRoleIds() != null && !userDTO.getRoleIds().isEmpty()) {
+            boolean isValid = validateUserTypeRoles(userDTO.getUserType(), userDTO.getRoleIds());
+            if (!isValid) {
+                return CommonResult.failed("所选角色与用户类型不匹配");
+            }
+        }
+        
         return CommonResult.success(userService.updateUser(id, userDTO));
+    }
+
+    // 添加用户类型与角色验证的私有方法
+    private boolean validateUserTypeRoles(Integer userType, List<Long> roleIds) {
+        if (userType == null || roleIds == null) {
+            return true;
+        }
+        
+        switch (userType) {
+            case 1: // 医护人员
+                return roleIds.stream().anyMatch(id -> 
+                    id.equals(RoleConstants.ROLE_MEDICAL_ID) || 
+                    id.equals(RoleConstants.ROLE_ADMIN_ID));
+            case 2: // 教职工
+            case 3: // 学生
+                return roleIds.stream().anyMatch(id -> 
+                    id.equals(RoleConstants.ROLE_USER_ID));
+            default:
+                return false;
+        }
     }
 
     @ApiOperation("更新用户状态")

@@ -14,63 +14,51 @@ import java.util.List;
 @ApiModel(description = "用户数据传输对象")
 public class UserDTO {
     
-    @ApiModelProperty("用户名")
-    @NotBlank(message = "用户名不能为空")
-    @Pattern(regexp = "^[a-zA-Z0-9_]{4,16}$", message = "用户名必须为4-16位字母、数字或下划线")
-    private String username;
-    
-    @ApiModelProperty("密码")
-    @NotBlank(message = "密码不能为空", groups = {Create.class})
-    @Pattern(regexp = "^[a-zA-Z0-9_@#$%^&*]{6,20}$", message = "密码必须为6-20位字母、数字或特殊字符")
-    private String password;
-    
-    @ApiModelProperty("姓名")
-    @NotBlank(message = "姓名不能为空")
-    private String name;
-    
-    @ApiModelProperty("性别：0-未知，1-男，2-女")
-    @NotNull(message = "性别不能为空")
-    @Min(value = 0, message = "性别值不正确")
-    @Max(value = 2, message = "性别值不正确")
-    private Integer gender;
-    
-    @ApiModelProperty("手机号")
-    @NotBlank(message = "手机号不能为空")
-    @Pattern(regexp = "^1[3-9]\\d{9}$", message = "手机号格式不正确")
-    private String phone;
-    
-    @ApiModelProperty("邮箱")
-    @NotBlank(message = "邮箱不能为空")
-    @Email(message = "邮箱格式不正确")
-    private String email;
-    
-    @ApiModelProperty("身份证号")
-    @NotBlank(message = "身份证号不能为空")
-    @Pattern(regexp = "^[1-9]\\d{5}(18|19|20)\\d{2}((0[1-9])|(1[0-2]))(([0-2][1-9])|10|20|30|31)\\d{3}[0-9Xx]$", message = "身份证号格式不正确")
-    private String idCard;
-    
-    @ApiModelProperty("出生日期")
-    private String birthday;
-    
-    @ApiModelProperty("头像")
-    private String avatar;
-    
-    @ApiModelProperty("部门ID")
-    @NotNull(message = "部门不能为空")
-    private Long departmentId;
-    
-    @ApiModelProperty("用户类型：1-管理员，2-医生，3-护士，4-教职工，5-学生")
-    @NotNull(message = "用户类型不能为空")
-    @Min(value = 1, message = "用户类型值不正确")
-    @Max(value = 5, message = "用户类型值不正确")
-    private Integer userType;
-    
-    @ApiModelProperty("角色ID列表")
-    @NotEmpty(message = "角色不能为空")
-    private List<Long> roleIds;
-    
     /**
-     * 创建校验组
+     * 用于标识创建操作的验证组
      */
     public interface Create {}
+
+    @ApiModelProperty(value = "用户ID")
+    private Long id;
+
+    @NotBlank(message = "用户名不能为空", groups = {Create.class})
+    @Pattern(regexp = "^[a-zA-Z0-9_]{3,20}$", message = "用户名必须为3-20个字符，只能包含字母、数字和下划线")
+    @ApiModelProperty(value = "用户名", required = true)
+    private String username;
+    
+    @NotBlank(message = "姓名不能为空", groups = {Create.class})
+    @ApiModelProperty(value = "姓名", required = true)
+    private String name;
+    
+    @NotNull(message = "用户类型不能为空", groups = {Create.class})
+    @Min(value = 1, message = "用户类型不正确")
+    @Max(value = 3, message = "用户类型不正确")
+    @ApiModelProperty(value = "用户类型：1-医护人员，2-教职工，3-学生", required = true)
+    private Integer userType;
+    
+    @ApiModelProperty(value = "角色ID列表")
+    private List<Long> roleIds;
+    
+    @ApiModelProperty(value = "部门ID")
+    private Long departmentId;
+    
+    @Pattern(regexp = "^1[3-9]\\d{9}$", message = "手机号格式不正确")
+    @ApiModelProperty(value = "手机号")
+    private String phone;
+    
+    @Email(message = "邮箱格式不正确")
+    @ApiModelProperty(value = "邮箱")
+    private String email;
+    
+    @NotNull(message = "状态不能为空", groups = {Create.class})
+    @Min(value = 0, message = "状态值不正确")
+    @Max(value = 1, message = "状态值不正确")
+    @ApiModelProperty(value = "状态：0-禁用，1-启用", required = true)
+    private Integer status;
+    
+    @ApiModelProperty(value = "密码")
+    @NotBlank(message = "密码不能为空", groups = {Create.class})
+    @Size(min = 6, max = 20, message = "密码长度必须在6-20个字符之间", groups = {Create.class})
+    private String password;
 } 

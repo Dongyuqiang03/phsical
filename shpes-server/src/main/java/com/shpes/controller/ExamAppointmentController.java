@@ -29,7 +29,7 @@ public class ExamAppointmentController {
 
     @ApiOperation("获取预约列表")
     @GetMapping("/list")
-    @RequiresPermission(RoleConstants.ADMIN)
+    @RequiresPermission("")
     public CommonResult<CommonPage<AppointmentVO>> getAppointmentPage(
             @RequestParam(defaultValue = "1") Integer pageNum,
             @RequestParam(defaultValue = "10") Integer pageSize,
@@ -42,14 +42,14 @@ public class ExamAppointmentController {
 
     @ApiOperation("获取预约详情")
     @GetMapping("/{id}")
-    @RequiresPermission(RoleConstants.ADMIN)
+    @RequiresPermission("")
     public CommonResult<AppointmentVO> getAppointment(@PathVariable Long id) {
         return CommonResult.success(appointmentService.getAppointment(id));
     }
 
     @ApiOperation("创建预约")
     @PostMapping
-    @RequiresPermission(RoleConstants.USER)
+    @RequiresPermission("")
     public CommonResult<Void> createAppointment(@Valid @RequestBody ExamAppointment appointment) {
         appointmentService.createAppointment(appointment);
         return CommonResult.success(null);
@@ -57,7 +57,7 @@ public class ExamAppointmentController {
 
     @ApiOperation("取消预约")
     @PutMapping("/{id}/cancel")
-    @RequiresPermission(RoleConstants.USER)
+    @RequiresPermission("")
     public CommonResult<Void> cancelAppointment(
             @PathVariable Long id,
             @RequestParam String reason) {
@@ -67,7 +67,7 @@ public class ExamAppointmentController {
 
     @ApiOperation("更新预约时间")
     @PutMapping("/{id}/time")
-    @RequiresPermission(RoleConstants.ADMIN)
+    @RequiresPermission("")
     public CommonResult<Void> updateAppointmentTime(
             @PathVariable Long id,
             @RequestParam Long timeSlotId) {
@@ -77,7 +77,7 @@ public class ExamAppointmentController {
 
     @ApiOperation("完成预约")
     @PutMapping("/{id}/complete")
-    @RequiresPermission(RoleConstants.ADMIN)
+    @RequiresPermission("")
     public CommonResult<Void> completeAppointment(@PathVariable Long id) {
         appointmentService.completeAppointment(id);
         return CommonResult.success(null);

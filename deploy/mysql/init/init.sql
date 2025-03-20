@@ -268,11 +268,9 @@ CREATE TABLE notice_record (
 
 -- 初始化系统角色
 INSERT INTO sys_role (role_name, role_code, description) VALUES
-('系统管理员', 'ROLE_ADMIN', '系统管理员，拥有所有权限'),
-('医生', 'ROLE_DOCTOR', '体检医生，负责体检结果录入和审核'),
-('护士', 'ROLE_NURSE', '护士，负责体检预约和基础信息录入'),
-('教职工', 'ROLE_STAFF', '教职工用户'),
-('学生', 'ROLE_STUDENT', '学生用户');
+('管理员', 'ROLE_ADMIN', '系统管理员，可以进行系统管理'),
+('医护人员', 'ROLE_MEDICAL', '医护人员，负责体检相关工作'),
+('普通用户', 'ROLE_USER', '普通用户，可以预约体检和查看自己的体检记录');
 
 -- 初始化部门数据
 INSERT INTO sys_department (dept_name, dept_code, parent_id, description) VALUES
@@ -281,14 +279,18 @@ INSERT INTO sys_department (dept_name, dept_code, parent_id, description) VALUES
 ('外科', 'SURGERY', 1, '外科检查'),
 ('化验科', 'LABORATORY', 1, '血液、尿液等化验'),
 ('影像科', 'RADIOLOGY', 1, 'X光、B超等检查'),
-('体检中心', 'PHYSICAL', 1, '体检管理部门');
+('体检中心', 'PHYSICAL', 1, '体检管理部门'),
+('教学部门', 'TEACHING', NULL, '教学单位总部'),
+('计算机学院', 'CS', 7, '计算机科学与技术学院'),
+('医学院', 'MED', 7, '医学院');
 
--- 初始化系统管理员账号(123456)
+-- 初始化系统管理员账号(密码: 123456)
 INSERT INTO sys_user (username, password, real_name, user_type, dept_id) VALUES
 ('admin', '$2a$10$VQIknwW5PUZ6SQQyBF1YVOgtJXQqGbwFxwEQxQPLBzLXrWlGCGcOy', '系统管理员', 1, 1);
 
--- 初始化用户角色关联
-INSERT INTO sys_user_role (user_id, role_id) VALUES (1, 1);
+-- 初始化用户角色关联（系统管理员同时具有管理员和医护人员角色）
+INSERT INTO sys_user_role (user_id, role_id) 
+SELECT 1, id FROM sys_role WHERE role_code IN ('ROLE_ADMIN', 'ROLE_MEDICAL');
 
 -- 初始化基础体检项目
 INSERT INTO exam_item (name, code, category, department_id, lower_limit, upper_limit, unit, price, sort, status) VALUES
