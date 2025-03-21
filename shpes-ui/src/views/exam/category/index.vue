@@ -1,119 +1,93 @@
 <template>
     <div class="app-container">
-      <!-- 搜索区域 -->
-      <el-card class="filter-container" shadow="never">
-        <div>
-          <el-form :inline="true" :model="listQuery" class="demo-form-inline">
-            <el-form-item label="分类名称">
-              <el-input
-                v-model="listQuery.name"
-                placeholder="请输入分类名称"
-                clearable
-                size="small"
-                @keyup.enter.native="handleFilter"
-              />
-            </el-form-item>
-            <el-form-item label="分类编码">
-              <el-input
-                v-model="listQuery.code"
-                placeholder="请输入分类编码"
-                clearable
-                size="small"
-                @keyup.enter.native="handleFilter"
-              />
-            </el-form-item>
-            <el-form-item label="状态">
-              <el-select v-model="listQuery.status" placeholder="请选择状态" clearable size="small" style="width: 130px">
-                <el-option label="启用" :value="1" />
-                <el-option label="禁用" :value="0" />
-              </el-select>
-            </el-form-item>
-            <el-form-item>
-              <el-button type="primary" size="small" @click="handleFilter">查询</el-button>
-              <el-button size="small" @click="resetQuery">重置</el-button>
-            </el-form-item>
-          </el-form>
-        </div>
-      </el-card>
+      <div class="filter-container">
+        <el-form :inline="true" :model="listQuery" class="form-inline">
+          <el-form-item>
+            <el-input
+              v-model="listQuery.name"
+              placeholder="分类名称"
+              clearable
+              @keyup.enter.native="handleFilter"
+            />
+          </el-form-item>
+          <el-form-item>
+            <el-input
+              v-model="listQuery.code"
+              placeholder="分类编码"
+              clearable
+              @keyup.enter.native="handleFilter"
+            />
+          </el-form-item>
+          <el-form-item>
+            <el-select v-model="listQuery.status" placeholder="状态" clearable>
+              <el-option label="启用" :value="1" />
+              <el-option label="禁用" :value="0" />
+            </el-select>
+          </el-form-item>
+          <el-form-item>
+            <el-button type="primary" icon="el-icon-search" @click="handleFilter">搜索</el-button>
+            <el-button icon="el-icon-refresh" @click="resetQuery">重置</el-button>
+          </el-form-item>
+        </el-form>
+      </div>
   
-      <!-- 操作按钮区域 -->
-      <el-card class="box-card">
-        <div slot="header" class="clearfix">
-          <el-button
-            class="filter-item"
-            style="margin-left: 10px;"
-            type="primary"
-            icon="el-icon-plus"
-            size="mini"
-            @click="handleCreate"
-          >添加</el-button>
-        </div>
+      <div class="action-container">
+        <el-button type="primary" icon="el-icon-plus" @click="handleCreate">新增分类</el-button>
+      </div>
   
-        <!-- 表格区域 -->
-        <el-table
-          v-loading="listLoading"
-          :data="list"
-          border
-          fit
-          highlight-current-row
-          style="width: 100%;"
-        >
-          <el-table-column label="ID" prop="id" align="center" width="80" />
-          <el-table-column label="分类名称" prop="name" align="center" />
-          <el-table-column label="分类编码" prop="code" align="center" />
-          <el-table-column label="状态" align="center" width="100">
-            <template slot-scope="{row}">
-              <el-tag :type="row.status === 1 ? 'success' : 'info'">
-                {{ row.status === 1 ? '启用' : '禁用' }}
-              </el-tag>
-            </template>
-          </el-table-column>
-          <el-table-column label="创建时间" align="center" width="180">
-            <template slot-scope="{row}">
-              <span>{{ row.createTime | formatDateTime }}</span>
-            </template>
-          </el-table-column>
-          <el-table-column label="操作" align="center" width="200">
-            <template slot-scope="{row}">
-              <el-button
-                size="mini"
-                type="primary"
-                @click="handleUpdate(row)"
-              >编辑</el-button>
-              <el-button
-                size="mini"
-                type="danger"
-                @click="handleDelete(row)"
-              >删除</el-button>
-            </template>
-          </el-table-column>
-        </el-table>
+      <el-table
+        v-loading="listLoading"
+        :data="pagedList"
+        border
+        style="width: 100%"
+      >
+        <el-table-column label="ID" prop="id" align="center" width="80" />
+        <el-table-column label="分类名称" prop="name" />
+        <el-table-column label="分类编码" prop="code" />
+        <el-table-column label="状态" align="center" width="100">
+          <template slot-scope="{row}">
+            <el-switch
+              v-model="row.status"
+              :active-value="1"
+              :inactive-value="0"
+              @change="handleStatusChange(row)"
+            />
+          </template>
+        </el-table-column>
+        <el-table-column label="创建时间" prop="createTime" width="180">
+          <template slot-scope="{row}">
+            <span>{{ row.createTime | formatDateTime }}</span>
+          </template>
+        </el-table-column>
+        <el-table-column label="操作" align="center" width="200">
+          <template slot-scope="{row}">
+            <el-button type="primary" size="mini" @click="handleUpdate(row)">编辑</el-button>
+            <el-button type="danger" size="mini" @click="handleDelete(row)">删除</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
   
-        <!-- 分页区域 -->
-        <pagination
-          v-show="total>0"
-          :total="total"
-          :page.sync="listQuery.pageNum"
-          :limit.sync="listQuery.pageSize"
-          @pagination="getList"
-        />
-      </el-card>
+      <pagination
+        v-show="total>0"
+        :total="total"
+        :page.sync="listQuery.pageNum"
+        :limit.sync="listQuery.pageSize"
+        @pagination="getList"
+      />
   
-      <!-- 添加/编辑对话框 -->
-      <el-dialog :title="dialogTitle" :visible.sync="dialogVisible">
+      <el-dialog :title="dialogTitle" :visible.sync="dialogVisible" width="500px">
         <el-form
           ref="dataForm"
           :rules="rules"
           :model="temp"
           label-position="right"
           label-width="100px"
-          style="width: 600px; margin-left:50px;"
         >
           <el-form-item label="分类名称" prop="name">
-            <el-input v-model="temp.name" />
+            <el-input v-model="temp.name" placeholder="请输入分类名称" />
           </el-form-item>
           <el-form-item label="分类编码" prop="code">
-            <el-input v-model="temp.code" />
+            <el-input v-model="temp.code" placeholder="请输入分类编码" />
           </el-form-item>
           <el-form-item label="状态" prop="status">
             <el-radio-group v-model="temp.status">
@@ -124,7 +98,7 @@
         </el-form>
         <div slot="footer" class="dialog-footer">
           <el-button @click="dialogVisible = false">取消</el-button>
-          <el-button type="primary" @click="dialogStatus==='create'?createData():updateData()">确认</el-button>
+          <el-button type="primary" @click="submitForm">确定</el-button>
         </div>
       </el-dialog>
     </div>
@@ -138,21 +112,15 @@
     name: 'ExamItemCategory',
     components: { Pagination },
     filters: {
-      formatDateTime(time) {
-        if (!time) return ''
-        const date = new Date(time)
-        const year = date.getFullYear()
-        const month = (date.getMonth() + 1).toString().padStart(2, '0')
-        const day = date.getDate().toString().padStart(2, '0')
-        const hour = date.getHours().toString().padStart(2, '0')
-        const minute = date.getMinutes().toString().padStart(2, '0')
-        const second = date.getSeconds().toString().padStart(2, '0')
-        return `${year}-${month}-${day} ${hour}:${minute}:${second}`
+      formatDateTime(timeArray) {
+        if (!Array.isArray(timeArray) || timeArray.length < 6) return ''
+        const [year, month, day, hour, minute, second] = timeArray
+        return `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')} ${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}:${second.toString().padStart(2, '0')}`
       }
     },
     data() {
       return {
-        list: null,
+        list: [],
         total: 0,
         listLoading: true,
         listQuery: {
@@ -163,7 +131,6 @@
           status: undefined
         },
         dialogVisible: false,
-        dialogStatus: '',
         dialogTitle: '',
         temp: {
           id: undefined,
@@ -178,17 +145,37 @@
         }
       }
     },
+    computed: {
+      pagedList() {
+        const start = (this.listQuery.pageNum - 1) * this.listQuery.pageSize
+        const end = start + this.listQuery.pageSize
+        return this.list.slice(start, end)
+      }
+    },
     created() {
       this.getList()
     },
     methods: {
-      getList() {
+      async getList() {
         this.listLoading = true
-        getCategoryPage(this.listQuery).then(response => {
-          this.list = response.data.list
-          this.total = response.data.total
+        try {
+          const response = await getCategoryPage(this.listQuery)
+          if (response.code === 200 && Array.isArray(response.data)) {
+            this.list = response.data
+            this.total = response.data.length
+          } else {
+            this.list = []
+            this.total = 0
+            this.$message.warning(response?.message || '获取数据失败')
+          }
+        } catch (error) {
+          console.error('获取分类列表失败:', error)
+          this.list = []
+          this.total = 0
+          this.$message.error('获取分类列表失败')
+        } finally {
           this.listLoading = false
-        })
+        }
       },
       handleFilter() {
         this.listQuery.pageNum = 1
@@ -214,86 +201,99 @@
       },
       handleCreate() {
         this.resetTemp()
-        this.dialogStatus = 'create'
-        this.dialogTitle = '添加分类'
+        this.dialogTitle = '新增分类'
         this.dialogVisible = true
         this.$nextTick(() => {
           this.$refs['dataForm'].clearValidate()
         })
       },
-      createData() {
-        this.$refs['dataForm'].validate((valid) => {
-          if (valid) {
-            createCategory(this.temp).then(() => {
-              this.list.unshift(this.temp)
-              this.dialogVisible = false
-              this.$notify({
-                title: '成功',
-                message: '创建成功',
-                type: 'success',
-                duration: 2000
-              })
-            })
-          }
-        })
-      },
       handleUpdate(row) {
         this.temp = Object.assign({}, row)
-        this.dialogStatus = 'update'
         this.dialogTitle = '编辑分类'
         this.dialogVisible = true
         this.$nextTick(() => {
           this.$refs['dataForm'].clearValidate()
         })
       },
-      updateData() {
-        this.$refs['dataForm'].validate((valid) => {
-          if (valid) {
-            const tempData = Object.assign({}, this.temp)
-            updateCategory(tempData).then(() => {
-              const index = this.list.findIndex(v => v.id === this.temp.id)
-              this.list.splice(index, 1, this.temp)
-              this.dialogVisible = false
-              this.$notify({
-                title: '成功',
-                message: '更新成功',
-                type: 'success',
-                duration: 2000
-              })
-            })
-          }
-        })
-      },
-      handleDelete(row) {
-        this.$confirm('确认删除该分类吗？', '提示', {
-          confirmButtonText: '确定',
-          cancelButtonText: '取消',
-          type: 'warning'
-        }).then(() => {
-          deleteCategory(row.id).then(() => {
-            const index = this.list.findIndex(v => v.id === row.id)
-            this.list.splice(index, 1)
-            this.$notify({
-              title: '成功',
-              message: '删除成功',
-              type: 'success',
-              duration: 2000
-            })
+      async handleStatusChange(row) {
+        if (!row || typeof row.id === 'undefined') {
+          this.$message.warning('分类数据无效')
+          return
+        }
+        
+        const originalStatus = row.status
+        try {
+          await updateCategory({
+            id: row.id,
+            status: row.status
           })
+          this.$message.success('状态更新成功')
+          this.getList() // 刷新列表以获取最新数据
+        } catch (error) {
+          console.error('更新分类状态失败:', error)
+          // 恢复原状态
+          row.status = originalStatus
+          this.$message.error('更新状态失败')
+        }
+      },
+      async handleDelete(row) {
+        if (!row || !row.id) {
+          this.$message.warning('分类数据无效')
+          return
+        }
+        
+        try {
+          await this.$confirm('是否确认删除该分类?', '提示', {
+            type: 'warning'
+          })
+          await deleteCategory(row.id)
+          this.$message.success('删除成功')
+          this.getList()
+        } catch (error) {
+          if (error === 'cancel') {
+            return
+          }
+          console.error('删除分类失败:', error)
+          this.$message.error('删除失败')
+        }
+      },
+      submitForm() {
+        this.$refs['dataForm'].validate(async (valid) => {
+          if (valid) {
+            try {
+              const submitData = { ...this.temp }
+              
+              if (this.temp.id) {
+                await updateCategory(submitData)
+                this.$message.success('更新分类成功')
+              } else {
+                await createCategory(submitData)
+                this.$message.success('创建分类成功')
+              }
+              
+              this.dialogVisible = false
+              this.getList()
+            } catch (error) {
+              console.error('保存分类失败:', error)
+              this.$message.error(`保存失败: ${error.response?.data?.message || error.message || '未知错误'}`)
+            }
+          }
         })
       }
     }
   }
   </script>
   
-  <style scoped>
-  .filter-container {
-    padding-bottom: 10px;
-  }
-  .filter-item {
-    display: inline-block;
-    vertical-align: middle;
-    margin-bottom: 10px;
-    margin-right: 10px;
+  <style lang="scss" scoped>
+  .app-container {
+    padding: 20px;
+  
+    .filter-container {
+      margin-bottom: 20px;
+    }
+  
+    .action-container {
+      margin-bottom: 20px;
+    }
   }
   </style>

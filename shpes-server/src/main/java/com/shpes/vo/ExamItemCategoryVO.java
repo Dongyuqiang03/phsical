@@ -19,10 +19,4 @@ public class ExamItemCategoryVO {
     
     @ApiModelProperty("状态(0:禁用 1:启用)")
     private Integer status;
-    
-    @ApiModelProperty("创建时间")
-    private LocalDateTime createTime;
-    
-    @ApiModelProperty("更新时间")
-    private LocalDateTime updateTime;
 } 

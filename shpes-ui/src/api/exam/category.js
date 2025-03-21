@@ -2,7 +2,7 @@ import request from '@/utils/request'
 
 export function getCategoryPage(params) {
   return request({
-    url: '/api/exam/category/page',
+    url: '/api/exam/category/list',
     method: 'get',
     params
   })
@@ -10,7 +10,7 @@ export function getCategoryPage(params) {
 
 export function getAllCategories() {
   return request({
-    url: '/api/exam/category/list',
+    url: '/api/exam/category/all',
     method: 'get'
   })
 }

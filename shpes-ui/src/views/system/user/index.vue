@@ -88,7 +88,7 @@
       </el-table-column>
       <el-table-column label="部门">
         <template slot-scope="{row}">
-          <span>{{ row.departmentName || '未设置' }}</span>
+          <span>{{ row.departmentName || '未设置' }}</span> 
         </template>
       </el-table-column>
       <el-table-column label="手机号">

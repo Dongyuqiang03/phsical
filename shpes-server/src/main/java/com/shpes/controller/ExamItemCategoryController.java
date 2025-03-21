@@ -24,7 +24,7 @@ public class ExamItemCategoryController {
     private ExamItemCategoryService categoryService;
 
     @ApiOperation(value = "分页查询分类", notes = "支持按分类名称、编码和状态筛选")
-    @GetMapping("/page")
+    @GetMapping("/list")
     @RequiresPermission("exam:category")
     public CommonResult<CommonPage<ExamItemCategoryVO>> getCategoryPage(
             @ApiParam("页码") @RequestParam(defaultValue = "1") Integer pageNum,
@@ -36,7 +36,7 @@ public class ExamItemCategoryController {
     }
 
     @ApiOperation("获取所有分类")
-    @GetMapping("/list")
+    @GetMapping("/all")
     @RequiresPermission("exam:category")
     public CommonResult<List<ExamItemCategoryVO>> getAllCategories() {
         List<ExamItemCategoryVO> categories = categoryService.getAllCategories();
