@@ -16,7 +16,6 @@ import com.shpes.service.SysRoleService;
 import com.shpes.vo.RoleDetailVO;
 import com.shpes.vo.RoleVO;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -44,7 +43,7 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
         Page<SysRole> rolePage = baseMapper.selectPage(page, wrapper);
         
         List<RoleDetailVO> records = rolePage.getRecords().stream()
-                .map(this::convertToDetailVO)
+                .map(RoleDetailVO::convertToVO)
                 .collect(Collectors.toList());
         
         return CommonPage.restPage(records, rolePage.getTotal(), pageNum, pageSize);
@@ -238,8 +237,8 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
         }
         RoleDetailVO vo = new RoleDetailVO();
         vo.setId(role.getId());
-        vo.setName(role.getRoleName());
-        vo.setCode(role.getRoleCode());
+        vo.setRoleName(role.getRoleName());
+        vo.setRoleCode(role.getRoleCode());
         vo.setStatus(role.getStatus());
         vo.setCreateTime(role.getCreateTime());
         return vo;

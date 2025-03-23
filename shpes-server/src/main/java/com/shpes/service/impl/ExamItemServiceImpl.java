@@ -13,12 +13,13 @@ import com.shpes.mapper.ExamItemMapper;
 import com.shpes.mapper.SysDepartmentMapper;
 import com.shpes.service.ExamItemService;
 import com.shpes.vo.ExamItemVO;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.apache.commons.lang3.StringUtils;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -132,13 +133,9 @@ public class ExamItemServiceImpl extends ServiceImpl<ExamItemMapper, ExamItem> i
 
     @Override
     public ExamItemVO getItemReference(Long id) {
-        if (id == null) {
-            throw new ApiException(ResultCode.VALIDATE_FAILED);
-        }
-        ExamItem item = baseMapper.selectById(id);
-        if (item == null) {
-            throw new ApiException(ResultCode.EXAM_ITEM_NOT_EXIST);
-        }
+        // 获取项目
+        ExamItem item = getItem(id);
+        // 转换为VO
         return convertToVO(item);
     }
 
@@ -196,6 +193,19 @@ public class ExamItemServiceImpl extends ServiceImpl<ExamItemMapper, ExamItem> i
         return item;
     }
 
+    @Override
+    public List<ExamItemVO> getAvailableItems() {
+        // 获取所有状态为启用的项目
+        LambdaQueryWrapper<ExamItem> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(ExamItem::getStatus, 1);  // 1表示启用状态
+        
+        // 查询数据库
+        List<ExamItem> items = baseMapper.selectList(wrapper);
+        
+        // 转换为VO列表
+        return items.stream().map(this::convertToVO).collect(Collectors.toList());
+    }
+
     /**
      * 检查项目编码是否已存在
      */
@@ -222,7 +232,7 @@ public class ExamItemServiceImpl extends ServiceImpl<ExamItemMapper, ExamItem> i
     }
 
     /**
-     * 将实体对象转换为VO对象
+     * 将ExamItem转为ExamItemVO
      */
     private ExamItemVO convertToVO(ExamItem item) {
         ExamItemVO vo = new ExamItemVO();

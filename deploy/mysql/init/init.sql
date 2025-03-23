@@ -134,10 +134,7 @@ CREATE TABLE exam_item (
     code VARCHAR(50) NOT NULL COMMENT '项目编码',
     category_id BIGINT NOT NULL COMMENT '项目分类ID',
     department_id BIGINT NOT NULL COMMENT '执行科室ID',
-    lower_limit VARCHAR(50) COMMENT '参考值下限',
-    upper_limit VARCHAR(50) COMMENT '参考值上限',
     reference_value VARCHAR(255) COMMENT '参考值描述',
-    unit VARCHAR(20) COMMENT '单位',
     price INT COMMENT '价格（分）',
     status TINYINT NOT NULL DEFAULT 1 COMMENT '状态(0:禁用 1:启用)',
     remark VARCHAR(255) COMMENT '备注',
@@ -312,14 +309,19 @@ INSERT INTO exam_item_category (name, code, status) VALUES
 ('其他检查', 'OTHER', 1);
 
 -- 初始化基础体检项目
-INSERT INTO exam_item (name, code, category_id, department_id, lower_limit, upper_limit, unit, price, status) VALUES
-('身高', 'HEIGHT', 1, 5, '140', '200', 'cm', 1000, 1),
-('体重', 'WEIGHT', 1, 5, '40', '100', 'kg', 1000, 1),
-('血压', 'BP', 1, 5, '90/60', '140/90', 'mmHg', 1500, 1),
-('血常规', 'BLOOD', 2, 3, NULL, NULL, NULL, 3000, 1),
-('尿常规', 'URINE', 2, 3, NULL, NULL, NULL, 3000, 1),
-('胸部X光', 'CHEST_X', 3, 4, NULL, NULL, NULL, 5000, 1),
-('腹部B超', 'ABDOMEN_B', 3, 4, NULL, NULL, NULL, 8000, 1);
+INSERT INTO exam_item (name, code, category_id, department_id, reference_value, price, status) VALUES
+('身高', 'HEIGHT', 1, 5, '140-200cm', 1000, 1),
+('体重', 'WEIGHT', 1, 5, '40-100kg', 1000, 1),
+('血压', 'BP', 1, 5, '90/60-140/90mmHg', 1500, 1),
+('血常规', 'BLOOD', 2, 3, '红细胞(RBC): 4.0-5.5×10^12/L; 血红蛋白(HGB): 120-160g/L; 白细胞(WBC): 4.0-10.0×10^9/L; 血小板(PLT): 100-300×10^9/L', 3000, 1),
+('尿常规', 'URINE', 2, 3, '颜色: 淡黄色或黄色透明; 尿蛋白: 阴性; 尿糖: 阴性; 尿胆原: 阴性; pH值: 5.0-8.0; 尿比重: 1.003-1.030', 3000, 1),
+('肝功能', 'LIVER', 2, 3, '谷丙转氨酶(ALT): 0-40U/L; 谷草转氨酶(AST): 0-40U/L; 总胆红素(TBIL): 5.1-17.1μmol/L; 直接胆红素(DBIL): 0-6.8μmol/L', 4000, 1),
+('肾功能', 'KIDNEY', 2, 3, '尿素氮(BUN): 2.86-7.14mmol/L; 肌酐(Cr): 44-133μmol/L; 尿酸(UA): 149-416μmol/L', 4000, 1),
+('血脂', 'LIPID', 2, 3, '总胆固醇(TC): 3.1-5.7mmol/L; 甘油三酯(TG): 0.4-1.7mmol/L; 高密度脂蛋白(HDL-C): 0.9-1.8mmol/L; 低密度脂蛋白(LDL-C): 1.9-3.1mmol/L', 3500, 1),
+('胸部X光', 'CHEST_X', 3, 4, '肺野清晰，心影大小、形态正常，纵隔宽度正常，膈肌光滑规则', 5000, 1),
+('腹部B超', 'ABDOMEN_B', 3, 4, '肝脏: 大小正常，形态正常，回声均匀; 胆囊: 大小正常，囊壁光滑，腔内未见明显异常回声; 脾脏: 大小正常，回声均匀; 胰腺: 显示不清，未见明显异常回声; 肾脏: 双肾大小正常，形态正常，皮质厚度正常，集合系统未见明显扩张', 8000, 1),
+('心电图', 'ECG', 3, 5, '心率: 60-100次/分; 心律: 窦性心律; 各间期正常; 无明显ST-T改变', 3000, 1),
+('骨密度', 'BONE', 3, 4, 'T值≥-1.0为正常; -2.5<T值<-1.0为骨量减少; T值≤-2.5为骨质疏松', 5000, 1);
 
 -- 初始化基础体检套餐
 INSERT INTO exam_package (name, code, price, original_price, gender, sort, status) VALUES
@@ -328,5 +330,7 @@ INSERT INTO exam_package (name, code, price, original_price, gender, sort, statu
 
 -- 初始化套餐项目关联
 INSERT INTO exam_package_item (package_id, item_id) VALUES
-(1, 1), (1, 2), (1, 3), (1, 4), (1, 5), (1, 6), -- 入学体检套餐项目
-(2, 1), (2, 2), (2, 3), (2, 4), (2, 5), (2, 6), (2, 7); -- 教职工体检套餐项目
+-- 入学体检套餐项目（基础检查项目）
+(1, 1), (1, 2), (1, 3), (1, 4), (1, 5), (1, 9), 
+-- 教职工体检套餐项目（全面检查项目）
+(2, 1), (2, 2), (2, 3), (2, 4), (2, 5), (2, 6), (2, 7), (2, 8), (2, 9), (2, 10), (2, 11), (2, 12);

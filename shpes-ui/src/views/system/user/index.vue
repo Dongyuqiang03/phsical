@@ -88,7 +88,7 @@
       </el-table-column>
       <el-table-column label="部门">
         <template slot-scope="{row}">
-          <span>{{ row.departmentName || '未设置' }}</span> 
+          <span>{{ row.deptName || '未设置' }}</span> 
         </template>
       </el-table-column>
       <el-table-column label="手机号">
@@ -116,9 +116,10 @@
           <span>{{ formatCreateTime(row.createTime) }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="操作" align="center" width="230">
+      <el-table-column label="操作" align="center" width="300">
         <template slot-scope="{row}">
           <el-button type="primary" size="mini" @click="handleUpdate(row)">编辑</el-button>
+          <el-button type="success" size="mini" @click="handleAssignRoles(row)">分配角色</el-button>
           <el-button type="danger" size="mini" @click="handleDelete(row)">删除</el-button>
           <el-button type="warning" size="mini" @click="handleResetPwd(row)">重置密码</el-button>
         </template>
@@ -155,16 +156,6 @@
             <el-option label="学生" :value="3" />
           </el-select>
         </el-form-item>
-        <el-form-item label="角色" prop="roles">
-          <el-select v-model="temp.roles" placeholder="请选择角色" multiple>
-            <el-option
-              v-for="item in filteredRoleOptions"
-              :key="item.id"
-              :label="item.roleName"
-              :value="item.id"
-            />
-          </el-select>
-        </el-form-item>
         <el-form-item label="部门" prop="departmentId">
           <el-select 
             v-model="temp.departmentId" 
@@ -172,7 +163,7 @@
             <el-option
               v-for="item in filteredDepartmentOptions"
               :key="item.id"
-              :label="item.departmentName || item.name"
+              :label="item.deptName"
               :value="item.id"
             />
           </el-select>
@@ -193,6 +184,29 @@
       <div slot="footer" class="dialog-footer">
         <el-button @click="dialogVisible = false">取消</el-button>
         <el-button type="primary" @click="submitForm">确定</el-button>
+      </div>
+    </el-dialog>
+
+    <!-- 角色分配对话框 -->
+    <el-dialog title="分配角色" :visible.sync="roleDialogVisible" width="500px">
+      <el-form :model="roleForm" label-width="80px">
+        <el-form-item label="用户">
+          <span>{{ roleForm.username }} ({{ roleForm.realName }})</span>
+        </el-form-item>
+        <el-form-item label="角色" prop="roleIds">
+          <el-select v-model="roleForm.roleIds" multiple placeholder="请选择角色">
+            <el-option
+              v-for="item in roleOptions"
+              :key="item.id"
+              :label="item.roleName"
+              :value="item.id"
+            />
+          </el-select>
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="roleDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="submitRoleAssignment">确定</el-button>
       </div>
     </el-dialog>
 
@@ -225,7 +239,7 @@ import { validUsername, validPhone, validEmail } from '@/utils/validate'
 import { formatDateTime } from '@/utils/date'
 import { getUserList, createUser, updateUser, deleteUser, batchDeleteUser, updateUserStatus, resetUserPassword, exportUser } from '@/api/user'
 import { getAllRoles } from '@/api/system/role'
-import { getDepartmentList } from '@/api/department'
+import { getAllDepartments } from '@/api/department'
 
 export default {
   name: 'User',
@@ -304,6 +318,14 @@ export default {
       },
       headers: {
         Authorization: 'Bearer ' + getToken()
+      },
+      roleDialogVisible: false,
+      roleForm: {
+        id: undefined,
+        username: '',
+        realName: '',
+        userType: undefined,
+        roleIds: []
       }
     }
   },
@@ -312,9 +334,9 @@ export default {
       if (!this.temp.userType) return this.roleOptions;
       
       const roleCodeMap = {
-        1: ['ROLE_MEDICAL', 'ROLE_ADMIN'],
-        2: ['ROLE_USER'],
-        3: ['ROLE_USER']
+        1: ['ROLE_MEDICAL', 'ROLE_ADMIN'], // 医护人员可以是医护人员或管理员
+        2: ['ROLE_USER', 'ROLE_ADMIN'],    // 教职工可以是普通用户或管理员
+        3: ['ROLE_USER']                    // 学生只能是普通用户
       };
       
       const allowedRoleCodes = roleCodeMap[this.temp.userType] || [];
@@ -323,21 +345,18 @@ export default {
     filteredDepartmentOptions() {
       if (!this.temp.userType) return this.departmentOptions;
       
+      // 医护人员只能选择医疗相关部门（parentId 为 1 的部门，即校医院下属部门）
       if (this.temp.userType === 1) {
         return this.departmentOptions.filter(dept => dept.parentId === 1);
       }
       
-      if (this.temp.userType === 2 || this.temp.userType === 3) {
-        return this.departmentOptions.filter(dept => dept.parentId === 7);
-      }
-      
+      // 教职工和学生可以选择所有部门
       return this.departmentOptions;
     }
   },
   created() {
     this.getList()
     this.getRoleOptions()
-    // this.getDepartmentOptions()
   },
   methods: {
     formatCreateTime(timeArray) {
@@ -379,23 +398,21 @@ export default {
     async getRoleOptions() {
       try {
         const response = await getAllRoles()
-        console.log('Role options response:', response)
         if (response.code === 200) {
           this.roleOptions = response.data || []
         } else {
           this.roleOptions = []
           this.$message.warning(`获取角色列表失败: ${response.message || '未知错误'}`)
-          console.warn('获取角色列表失败:', response.message)
         }
       } catch (error) {
         this.roleOptions = []
-        this.$message.warning('获取角色列表失败，可能缺少必要权限')
+        this.$message.error('获取角色列表失败')
         console.error('获取角色列表失败:', error)
       }
     },
     async getDepartmentOptions() {
       try {
-        const response = await getDepartmentList()
+        const response = await getAllDepartments()
         if (response.code === 200) {
           this.departmentOptions = response.data || []
         } else {
@@ -404,6 +421,7 @@ export default {
         }
       } catch (error) {
         this.departmentOptions = []
+        console.error('获取部门列表失败:', error)
         this.$message.error('获取部门列表失败')
       }
     },
@@ -431,7 +449,7 @@ export default {
     handleSelectionChange(val) {
       this.selectedIds = (val || []).filter(item => item && item.id).map(item => item.id);
     },
-    handleCreate() {
+    async handleCreate() {
       this.dialogTitle = '新增用户'
       this.temp = {
         id: undefined,
@@ -445,11 +463,16 @@ export default {
         status: 1
       }
       this.dialogVisible = true
+      // 同时获取角色和部门列表
+      await Promise.all([
+        this.getRoleOptions(),
+        this.getDepartmentOptions()
+      ])
       this.$nextTick(() => {
         this.$refs['dataForm'].clearValidate()
       })
     },
-    handleUpdate(row) {
+    async handleUpdate(row) {
       if (!row || !row.id) {
         this.$message.warning('用户数据无效');
         return;
@@ -459,12 +482,14 @@ export default {
       this.temp = Object.assign({}, row)
       
       this.temp.userType = row.userType;
+      this.temp.departmentId = row.departmentId;  // 确保设置部门ID
       
       this.temp.roles = Array.isArray(row.roles) 
         ? row.roles.filter(role => role && typeof role === 'object' && role.id).map(role => role.id)
         : [];
         
       this.dialogVisible = true
+      await this.getDepartmentOptions()
       this.$nextTick(() => {
         if (this.$refs['dataForm']) {
           this.$refs['dataForm'].clearValidate()
@@ -538,37 +563,57 @@ export default {
         console.error('重置密码失败:', error)
       }
     },
+    async handleAssignRoles(row) {
+      this.roleForm = {
+        id: row.id,
+        username: row.username,
+        realName: row.realName,
+        userType: row.userType,
+        roleIds: Array.isArray(row.roles) 
+          ? row.roles.filter(role => role && typeof role === 'object' && role.id).map(role => role.id)
+          : []
+      }
+      this.roleDialogVisible = true
+    },
+    async submitRoleAssignment() {
+      try {
+        if (!this.roleForm.roleIds || this.roleForm.roleIds.length === 0) {
+          this.$message.warning('请至少选择一个角色')
+          return
+        }
+        
+        await updateUser({
+          id: this.roleForm.id,
+          roleIds: this.roleForm.roleIds
+        })
+        
+        this.$message.success('角色分配成功')
+        this.roleDialogVisible = false
+        this.getList()
+      } catch (error) {
+        console.error('角色分配失败:', error)
+        this.$message.error(`角色分配失败: ${error.response?.data?.message || error.message || '未知错误'}`)
+      }
+    },
     submitForm() {
       this.$refs['dataForm'].validate(async (valid) => {
         if (valid) {
           try {
-            const submitData = { ...this.temp };
-            
-            // 处理角色ID
-            if (Array.isArray(submitData.roles)) {
-              submitData.roleIds = submitData.roles;
-              delete submitData.roles;
-            }
-            
-            // 确保至少选择了一个角色
-            if (!submitData.roleIds || submitData.roleIds.length === 0) {
-              this.$message.warning('请至少选择一个角色');
-              return;
-            }
+            const submitData = { ...this.temp }
             
             if (this.temp.id) {
-              await updateUser(submitData);
-              this.$message.success('更新用户成功');
+              await updateUser(submitData)
+              this.$message.success('更新用户成功')
             } else {
-              await createUser(submitData);
-              this.$message.success('创建用户成功，初始密码请联系管理员');
+              await createUser(submitData)
+              this.$message.success('创建用户成功，初始密码请联系管理员')
             }
             
-            this.dialogVisible = false;
-            this.getList();
+            this.dialogVisible = false
+            this.getList()
           } catch (error) {
-            console.error('保存用户失败:', error);
-            this.$message.error(`保存用户失败: ${error.response?.data?.message || error.message || '未知错误'}`);
+            console.error('保存用户失败:', error)
+            this.$message.error(`保存用户失败: ${error.response?.data?.message || error.message || '未知错误'}`)
           }
         }
       })

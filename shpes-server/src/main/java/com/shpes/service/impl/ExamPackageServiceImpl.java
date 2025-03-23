@@ -148,6 +148,13 @@ public class ExamPackageServiceImpl extends ServiceImpl<ExamPackageMapper, ExamP
         }
         ExamPackageVO vo = new ExamPackageVO();
         BeanUtils.copyProperties(examPackage, vo);
+        
+        // 查询并设置套餐包含的项目列表
+        List<ExamItemVO> items = baseMapper.selectPackageItems(examPackage.getId());
+        vo.setItems(items);
+        // 设置项目数量
+        vo.setItemCount(items != null ? items.size() : 0);
+        
         return vo;
     }
 }

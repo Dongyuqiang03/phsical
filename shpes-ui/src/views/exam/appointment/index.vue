@@ -8,78 +8,125 @@
 
     <!-- 套餐选择 -->
     <div v-show="active === 0" class="step-container">
-      <el-card v-for="item in packageList" :key="item.id" class="package-card" :class="{ 'is-selected': selectedPackage && selectedPackage.id === item.id }">
+      <div v-if="packageLoading" class="loading-container">
+        <el-skeleton :rows="3" animated />
+      </div>
+      <div v-else-if="serverError" class="error-container">
+        <el-result
+          icon="error"
+          title="服务器异常"
+          :sub-title="serverErrorMessage"
+        >
+          <template #extra>
+            <el-button type="primary" @click="retryGetPackageList">重试</el-button>
+            <el-button @click="goBack">返回</el-button>
+          </template>
+        </el-result>
+      </div>
+      <div v-else-if="packageList.length === 0" class="empty-container">
+        <el-empty description="暂无可用体检套餐"></el-empty>
+      </div>
+      <el-card v-else v-for="item in packageList" :key="item.id" class="package-card" :class="{ 'is-selected': selectedPackage && selectedPackage.id === item.id }">
         <div slot="header" class="package-header">
           <span class="package-name">{{ item.name }}</span>
-          <el-tag size="small">{{ item.itemCount }}个项目</el-tag>
+          <el-tag size="small">{{ item.itemCount || 0 }}个项目</el-tag>
         </div>
         <div class="package-content">
-          <div class="package-description">{{ item.description }}</div>
+          <div class="package-description">{{ item.description || '暂无描述' }}</div>
           <div class="package-items">
-            <el-tag v-for="examItem in item.items" :key="examItem.id" size="small" class="item-tag">
+            <el-tag v-if="item.items && item.items.length > 0" v-for="examItem in item.items" :key="examItem.id" size="small" class="item-tag">
               {{ examItem.name }}
             </el-tag>
+            <span v-else>暂无项目</span>
           </div>
         </div>
         <div class="package-footer">
           <el-button type="primary" size="small" @click="selectPackage(item)">选择此套餐</el-button>
         </div>
       </el-card>
+      
+      <!-- 分页 -->
+      <div class="pagination-container">
+        <el-pagination
+          background
+          @size-change="handleSizeChange"
+          @current-change="handleCurrentChange"
+          :current-page="pageNum"
+          :page-sizes="[10, 20, 30, 50]"
+          :page-size="pageSize"
+          layout="total, sizes, prev, pager, next, jumper"
+          :total="total">
+        </el-pagination>
+      </div>
     </div>
 
     <!-- 时间选择 -->
     <div v-show="active === 1" class="step-container">
-      <div class="filter-container">
-        <el-date-picker
-          v-model="selectedDate"
-          type="date"
-          placeholder="选择日期"
-          :picker-options="pickerOptions"
-          value-format="yyyy-MM-dd"
-          style="width: 200px;"
-          @change="handleDateChange"
-        />
+      <div v-if="timeSlotServerError" class="error-container">
+        <el-result
+          icon="error"
+          title="获取时间段失败"
+          :sub-title="timeSlotErrorMessage"
+        >
+          <template #extra>
+            <el-button type="primary" @click="handleDateChange">重试</el-button>
+            <el-button @click="prev">返回</el-button>
+          </template>
+        </el-result>
       </div>
-      <el-table
-        v-loading="timeSlotLoading"
-        :data="timeSlotList"
-        border
-        style="width: 100%">
-        <el-table-column label="时间段" prop="timeSlot" width="150" />
-        <el-table-column label="科室" prop="departmentName" width="120" />
-        <el-table-column label="剩余名额" width="100" align="center">
-          <template slot-scope="{row}">
-            {{ row.capacity - row.reserved }}
-          </template>
-        </el-table-column>
-        <el-table-column label="操作" align="center" width="120">
-          <template slot-scope="{row}">
-            <el-button
-              type="primary"
-              size="mini"
-              :disabled="row.capacity <= row.reserved"
-              @click="selectTimeSlot(row)">
-              选择
-            </el-button>
-          </template>
-        </el-table-column>
-      </el-table>
+      <div v-else>
+        <div class="filter-container">
+          <el-date-picker
+            v-model="selectedDate"
+            type="date"
+            placeholder="选择日期"
+            :picker-options="pickerOptions"
+            value-format="yyyy-MM-dd"
+            style="width: 200px;"
+            @change="handleDateChange"
+          />
+        </div>
+        <el-table
+          v-loading="timeSlotLoading"
+          :data="timeSlotList"
+          border
+          style="width: 100%">
+          <el-table-column label="时间段" prop="timeSlot" width="150" />
+          <el-table-column label="科室" prop="departmentName" width="120" />
+          <el-table-column label="剩余名额" width="100" align="center">
+            <template slot-scope="{row}">
+              {{ (row.capacity || 0) - (row.reserved || 0) }}
+            </template>
+          </el-table-column>
+          <el-table-column label="操作" align="center" width="120">
+            <template slot-scope="{row}">
+              <el-button
+                type="primary"
+                size="mini"
+                :disabled="(row.capacity || 0) <= (row.reserved || 0)"
+                @click="selectTimeSlot(row)">
+                选择
+              </el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+      </div>
     </div>
 
     <!-- 预约确认 -->
     <div v-show="active === 2" class="step-container">
       <el-form ref="form" :model="form" label-width="100px" class="confirm-form">
         <el-form-item label="体检套餐">
-          <span>{{ selectedPackage.name }}</span>
+          <span>{{ selectedPackage ? selectedPackage.name : '' }}</span>
         </el-form-item>
         <el-form-item label="预约日期">
           <span>{{ selectedDate }}</span>
         </el-form-item>
         <el-form-item label="预约时间">
-          <span>{{ selectedTimeSlot.timeSlot }}</span>
+          <span>{{ selectedTimeSlot ? selectedTimeSlot.timeSlot : '' }}</span>
         </el-form-item>
         <el-form-item label="预约科室">
-          <span>{{ selectedTimeSlot.departmentName }}</span>
+          <span>{{ selectedTimeSlot ? selectedTimeSlot.departmentName : '' }}</span>
         </el-form-item>
         <el-form-item label="注意事项">
           <div class="notice-content">
@@ -102,7 +149,7 @@
 </template>
 
 <script>
-import { getAllExamPackages } from '@/api/exam/package'
+import { getExamPackageList } from '@/api/exam/package'
 import { getAvailableTimeSlots } from '@/api/exam/timeslot'
 import { createAppointment } from '@/api/exam/appointment'
 
@@ -112,11 +159,19 @@ export default {
     return {
       active: 0,
       packageList: [],
+      packageLoading: false,
+      serverError: false,
+      serverErrorMessage: '',
+      timeSlotServerError: false,
+      timeSlotErrorMessage: '',
       selectedPackage: null,
       selectedDate: '',
       selectedTimeSlot: null,
       timeSlotList: [],
       timeSlotLoading: false,
+      pageNum: 1,
+      pageSize: 10,
+      total: 0,
       pickerOptions: {
         disabledDate(time) {
           return time.getTime() < Date.now() - 8.64e7
@@ -140,30 +195,91 @@ export default {
   },
   methods: {
     async getPackageList() {
+      this.packageLoading = true
+      this.serverError = false
+      this.serverErrorMessage = ''
+      
+      // 从用户信息中获取性别，如果没有则默认不限
+      const userInfo = this.$store.getters.user || {}
+      const gender = userInfo.gender || 0
+      
       try {
-        const { data } = await getAllExamPackages()
-        this.packageList = data
+        const response = await getExamPackageList({
+          pageNum: this.pageNum,
+          pageSize: this.pageSize,
+          gender,
+          status: 1 // 只查询启用的套餐
+        })
+        
+        if (response && response.code === 200 && response.data) {
+          this.packageList = response.data.records || []
+          this.total = response.data.total || 0
+          
+          if (this.packageList.length === 0) {
+            this.$message.warning('暂无可用体检套餐')
+          }
+        } else {
+          this.packageList = []
+          this.serverError = true
+          this.serverErrorMessage = response?.message || '获取体检套餐失败'
+          console.error('获取体检套餐列表失败:', response)
+        }
       } catch (error) {
         console.error('获取体检套餐列表失败:', error)
+        this.packageList = []
+        this.serverError = true
+        this.serverErrorMessage = error?.message || '系统异常，请联系管理员'
+      } finally {
+        this.packageLoading = false
       }
+    },
+    handleCurrentChange(val) {
+      this.pageNum = val
+      this.getPackageList()
+    },
+    handleSizeChange(val) {
+      this.pageSize = val
+      this.pageNum = 1
+      this.getPackageList()
+    },
+    retryGetPackageList() {
+      this.getPackageList()
+    },
+    goBack() {
+      this.$router.push('/dashboard')
     },
     selectPackage(item) {
       this.selectedPackage = item
       this.next()
     },
     async handleDateChange() {
-      if (!this.selectedDate) return
+      if (!this.selectedDate || !this.selectedPackage) return
+      
       this.timeSlotLoading = true
+      this.timeSlotServerError = false
+      this.timeSlotErrorMessage = ''
+      
       try {
-        const { data } = await getAvailableTimeSlots({
+        const response = await getAvailableTimeSlots({
           date: this.selectedDate,
           packageId: this.selectedPackage.id
         })
-        this.timeSlotList = data
+        if (response && response.code === 200 && response.data) {
+          this.timeSlotList = response.data || []
+        } else {
+          this.timeSlotList = []
+          this.timeSlotServerError = true
+          this.timeSlotErrorMessage = response?.message || '获取可预约时间段失败'
+          console.error('获取可预约时间段失败:', response)
+        }
       } catch (error) {
         console.error('获取可预约时间段失败:', error)
+        this.timeSlotList = []
+        this.timeSlotServerError = true
+        this.timeSlotErrorMessage = '系统异常，请联系管理员'
+      } finally {
+        this.timeSlotLoading = false
       }
-      this.timeSlotLoading = false
     },
     selectTimeSlot(item) {
       this.selectedTimeSlot = item
@@ -180,15 +296,26 @@ export default {
       }
     },
     async submitAppointment() {
+      if (!this.selectedPackage || !this.selectedTimeSlot) {
+        this.$message.warning('请选择体检套餐和预约时间')
+        return
+      }
+      
       try {
-        await createAppointment({
+        const response = await createAppointment({
           packageId: this.selectedPackage.id,
           timeSlotId: this.selectedTimeSlot.id
         })
-        this.$message.success('预约成功')
-        this.$router.push('/exam/appointment/list')
+        
+        if (response && response.code === 200) {
+          this.$message.success('预约成功')
+          this.$router.push('/exam/appointment/list')
+        } else {
+          this.$message.error(response?.message || '预约失败')
+        }
       } catch (error) {
         console.error('预约失败:', error)
+        this.$message.error('预约失败: ' + (error.message || '系统异常'))
       }
     }
   }
@@ -202,6 +329,15 @@ export default {
   .step-container {
     margin: 30px 0;
     min-height: 400px;
+  }
+  
+  .loading-container,
+  .empty-container,
+  .error-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 300px;
   }
 
   .package-card {
@@ -248,19 +384,25 @@ export default {
     margin-bottom: 20px;
   }
 
+  .bottom-container {
+    margin-top: 20px;
+    text-align: center;
+  }
+  
   .confirm-form {
-    width: 500px;
+    max-width: 600px;
     margin: 0 auto;
-
+    
     .notice-content {
-      color: #666;
-      line-height: 1.8;
+      padding: 10px;
+      background-color: #f8f8f8;
+      border-radius: 4px;
     }
   }
 
-  .bottom-container {
+  .pagination-container {
+    margin-top: 20px;
     text-align: center;
-    margin-top: 30px;
   }
 }
 </style> 

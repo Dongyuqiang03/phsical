@@ -45,4 +45,10 @@ public interface ExamItemService {
      * 获取项目参考值
      */
     ExamItemVO getItemReference(Long id);
+
+    /**
+     * 获取所有可用体检项目
+     * @return 可用的体检项目列表
+     */
+    List<ExamItemVO> getAvailableItems();
 }

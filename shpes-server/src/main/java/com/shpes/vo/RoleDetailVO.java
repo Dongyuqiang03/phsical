@@ -6,7 +6,6 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
 @Data
 @ApiModel("角色详情视图对象")
@@ -15,10 +14,10 @@ public class RoleDetailVO {
     private Long id;
 
     @ApiModelProperty("角色名称")
-    private String name;
+    private String roleName;
 
     @ApiModelProperty("角色编码")
-    private String code;
+    private String roleCode;
 
     @ApiModelProperty("角色描述")
     private String description;
@@ -38,8 +37,8 @@ public class RoleDetailVO {
         }
         RoleDetailVO vo = new RoleDetailVO();
         vo.setId(role.getId());
-        vo.setName(role.getRoleName());
-        vo.setCode(role.getRoleCode());
+        vo.setRoleName(role.getRoleName());
+        vo.setRoleCode(role.getRoleCode());
         vo.setDescription(role.getDescription());
         vo.setStatus(role.getStatus());
         vo.setCreateTime(role.getCreateTime());

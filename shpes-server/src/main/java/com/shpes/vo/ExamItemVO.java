@@ -5,7 +5,6 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 /**
@@ -25,7 +24,7 @@ public class ExamItemVO {
     private String code;
     
     @ApiModelProperty("项目分类")
-    private ExamCategoryEnum category;
+    private Integer category;
     
     @ApiModelProperty("分类名称")
     private String categoryName;
@@ -36,20 +35,14 @@ public class ExamItemVO {
     @ApiModelProperty("执行科室名称")
     private String departmentName;
     
-    @ApiModelProperty("参考值下限")
-    private BigDecimal referenceMin;
+    @ApiModelProperty("参考值描述")
+    private String referenceValue;
     
-    @ApiModelProperty("参考值上限")
-    private BigDecimal referenceMax;
-    
-    @ApiModelProperty("参考值单位")
-    private String referenceUnit;
-    
-    @ApiModelProperty("参考值说明")
-    private String referenceNote;
+    @ApiModelProperty("价格（分）")
+    private Integer price;
     
     @ApiModelProperty("项目说明")
-    private String description;
+    private String remark;
     
     @ApiModelProperty("排序")
     private Integer sort;

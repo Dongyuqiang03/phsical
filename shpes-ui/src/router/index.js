@@ -28,7 +28,7 @@ export const constantRoutes = [
         path: '',
         component: () => import('../views/dashboard/index.vue'),
         name: 'Dashboard',
-        meta: { title: '首页', icon: 'dashboard' }
+        meta: { title: '首页', icon: 's-home' }
       }
     ]
   }
@@ -39,7 +39,7 @@ export const asyncRoutes = [
   {
     path: '/system',
     component: Layout,
-    meta: { title: '系统管理', icon: 'setting', permissions: ['system'] },
+    meta: { title: '系统管理', icon: 's-tools', permissions: ['system'] },
     children: [
       {
         path: '/system/user',
@@ -51,13 +51,13 @@ export const asyncRoutes = [
         path: '/system/role',
         component: () => import('../views/system/role/index.vue'),
         name: 'Role',
-        meta: { title: '角色管理', permissions: ['system:role'] }
+        meta: { title: '角色管理', icon: 's-custom', permissions: ['system:role'] }
       },
       {
         path: '/system/department',
         component: () => import('../views/system/department/index.vue'),
         name: 'Department',
-        meta: { title: '部门管理', permissions: ['system:department'] }
+        meta: { title: '部门管理', icon: 'office-building', permissions: ['system:department'] }
       }
     ]
   },
@@ -70,31 +70,37 @@ export const asyncRoutes = [
         path: 'category',
         component: () => import('../views/exam/category/index.vue'),
         name: 'ExamCategory',
-        meta: { title: '体检项目分类管理', permissions: ['exam:category'] }
+        meta: { title: '体检项目分类管理', icon: 'folder', permissions: ['exam:category'] }
       },
       {
         path: 'item',
         component: () => import('../views/exam/item/index.vue'),
         name: 'ExamItem',
-        meta: { title: '体检项目管理', permissions: ['exam:item'] }
+        meta: { title: '体检项目管理', icon: 'document', permissions: ['exam:item'] }
       },
       {
         path: 'package',
         component: () => import('../views/exam/package/index.vue'),
         name: 'ExamPackage',
-        meta: { title: '体检套餐管理', permissions: ['exam:package'] }
+        meta: { title: '体检套餐管理', icon: 'goods', permissions: ['exam:package'] }
+      },
+      {
+        path: 'timeslot',
+        component: () => import('../views/exam/timeslot/index.vue'),
+        name: 'ExamTimeSlot',
+        meta: { title: '预约时间段管理', icon: 'date', permissions: ['exam:timeslot'] }
       },
       {
         path: 'appointment',
         component: () => import('../views/exam/appointment/index.vue'),
         name: 'ExamAppointment',
-        meta: { title: '体检预约管理', permissions: ['exam:appointment'] }
+        meta: { title: '体检预约管理', icon: 'tickets', permissions: ['exam:appointment'] }
       },
       {
         path: 'result',
         component: () => import('../views/exam/result/index.vue'),
         name: 'ExamRecord',
-        meta: { title: '体检记录管理', permissions: ['exam:result'] }
+        meta: { title: '体检记录管理', icon: 'notebook-2', permissions: ['exam:result'] }
       }
     ]
   }

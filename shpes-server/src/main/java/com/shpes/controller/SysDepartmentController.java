@@ -49,19 +49,20 @@ public class SysDepartmentController {
     }
 
     @ApiOperation("更新部门")
-    @PostMapping("/update")
-    public CommonResult<Boolean> update(@Validated @RequestBody SysDepartment department) {
+    @PutMapping("/{id}")
+    public CommonResult<Boolean> update(@PathVariable Long id, @Validated @RequestBody SysDepartment department) {
+        department.setId(id);
         return CommonResult.success(departmentService.updateDepartment(department));
     }
 
     @ApiOperation("删除部门")
-    @PostMapping("/delete/{id}")
+    @DeleteMapping("/{id}")
     public CommonResult<Boolean> delete(@PathVariable Long id) {
         return CommonResult.success(departmentService.deleteDepartment(id));
     }
 
     @ApiOperation("批量更新部门状态")
-    @PostMapping("/batch-update-status")
+    @PutMapping("/batch-status")
     public CommonResult<Boolean> batchUpdateStatus(
             @ApiParam("部门ID列表") @RequestParam List<Long> ids,
             @ApiParam("状态") @RequestParam Integer status) {

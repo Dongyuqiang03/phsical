@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.util.List;
 
 /**
  * 体检项目管理控制器
@@ -82,5 +83,12 @@ public class ExamItemController {
     @RequiresPermission("exam:item")
     public CommonResult<ExamItemVO> getItemReference(@PathVariable Long id) {
         return CommonResult.success(itemService.getItemReference(id));
+    }
+
+    @ApiOperation("获取所有可用体检项目")
+    @GetMapping("/available")
+    @RequiresPermission("exam:item")
+    public CommonResult<List<ExamItemVO>> getAvailableItems() {
+        return CommonResult.success(itemService.getAvailableItems());
     }
 }

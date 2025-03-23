@@ -21,6 +21,9 @@ public class ExamPackage extends BaseEntity {
     @ApiModelProperty("套餐编码")
     private String code;
 
+    @ApiModelProperty("套餐描述")
+    private String description;
+
     @ApiModelProperty("套餐价格（分）")
     private Integer price;
 

@@ -5,7 +5,7 @@
       <el-form :inline="true" :model="listQuery" class="form-inline">
         <el-form-item>
           <el-input
-            v-model="listQuery.name"
+            v-model="listQuery.keyword"
             placeholder="项目名称"
             clearable
             @keyup.enter.native="handleFilter"
@@ -51,13 +51,22 @@
       <el-table-column label="项目编码" prop="code" width="120" />
       <el-table-column label="项目分类" width="120">
         <template slot-scope="{row}">
-          <span>{{ getCategoryName(row.categoryId) }}</span>
+          <span>{{ getCategoryName(row.category) }}</span>
         </template>
       </el-table-column>
       <el-table-column label="执行科室" prop="departmentName" width="120" />
       <el-table-column label="参考值" prop="referenceValue" show-overflow-tooltip />
-      <el-table-column label="单位" prop="unit" width="80" />
-      <el-table-column label="创建时间" prop="createTime" width="180" />
+      <el-table-column label="价格" width="100">
+        <template slot-scope="{row}">
+          <span>{{ formatPrice(row.price) }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="备注" prop="remark" show-overflow-tooltip />
+      <el-table-column label="创建时间" width="180">
+        <template slot-scope="{row}">
+          <span>{{ formatDateTime(row.createTime) }}</span>
+        </template>
+      </el-table-column>
       <el-table-column label="状态" align="center" width="100">
         <template slot-scope="{row}">
           <el-switch
@@ -80,8 +89,8 @@
     <pagination
       v-show="total>0"
       :total="total"
-      :page.sync="listQuery.page"
-      :limit.sync="listQuery.limit"
+      :page.sync="listQuery.pageNum"
+      :limit.sync="listQuery.pageSize"
       @pagination="getList"
     />
 
@@ -99,8 +108,8 @@
         <el-form-item label="项目编码" prop="code">
           <el-input v-model="temp.code" placeholder="请输入项目编码" />
         </el-form-item>
-        <el-form-item label="项目分类" prop="categoryId">
-          <el-select v-model="temp.categoryId" placeholder="请选择项目分类">
+        <el-form-item label="项目分类" prop="category">
+          <el-select v-model="temp.category" placeholder="请选择项目分类">
             <el-option label="常规检查" :value="1" />
             <el-option label="实验室检查" :value="2" />
             <el-option label="医学影像" :value="3" />
@@ -122,11 +131,19 @@
             v-model="temp.referenceValue"
             type="textarea"
             :rows="2"
-            placeholder="请输入参考值范围"
+            placeholder="请输入完整的参考值描述，包含数值和单位，例如：'90-120 mmHg'、'4.0-6.0 mmol/L'或'阴性'"
           />
         </el-form-item>
-        <el-form-item label="单位" prop="unit">
-          <el-input v-model="temp.unit" placeholder="请输入单位" />
+        <el-form-item label="价格" prop="price">
+          <el-input-number
+            v-model="temp.price"
+            :min="0"
+            :precision="0"
+            :step="100"
+            controls-position="right"
+            placeholder="请输入价格（分）"
+          />
+          <span class="price-note">单位: 分，例如: 100元 = 10000分</span>
         </el-form-item>
         <el-form-item label="备注" prop="remark">
           <el-input
@@ -148,7 +165,7 @@
 <script>
 import Pagination from '@/components/Pagination'
 import { getExamItemList, createExamItem, updateExamItem, deleteExamItem, updateExamItemStatus } from '@/api/exam/item'
-import { getAllDepartments } from '@/api/department'
+// import { getAllDepartments } from '@/api/department'
 
 export default {
   name: 'ExamItem',
@@ -159,24 +176,30 @@ export default {
       total: 0,
       listLoading: false,
       listQuery: {
-        page: 1,
-        limit: 10,
-        name: undefined,
-        categoryId: undefined,
-        departmentId: undefined
+        pageNum: 1,
+        pageSize: 10,
+        keyword: undefined
       },
-      departmentOptions: [],
+      departmentOptions: [
+        { id: 1, name: '内科' },
+        { id: 2, name: '外科' },
+        { id: 3, name: '检验科' },
+        { id: 4, name: '影像科' },
+        { id: 5, name: '心电图室' },
+        { id: 6, name: '超声科' }
+      ],
       dialogVisible: false,
       dialogTitle: '',
       temp: {
         id: undefined,
         name: '',
         code: '',
-        categoryId: undefined,
+        category: undefined,
         departmentId: undefined,
         referenceValue: '',
-        unit: '',
-        remark: ''
+        price: 0,
+        remark: '',
+        status: 1
       },
       rules: {
         name: [
@@ -185,7 +208,7 @@ export default {
         code: [
           { required: true, message: '请输入项目编码', trigger: 'blur' }
         ],
-        categoryId: [
+        category: [
           { required: true, message: '请选择项目分类', trigger: 'change' }
         ],
         departmentId: [
@@ -196,9 +219,38 @@ export default {
   },
   created() {
     this.getList()
-    this.getDepartmentOptions()
+    // this.getDepartmentOptions()
   },
   methods: {
+    formatDateTime(time) {
+      if (!time) return ''
+      
+      // 处理不同格式的日期
+      let date
+      if (Array.isArray(time)) {
+        // 处理后端返回的数组格式 [year, month, day, hour, minute, second]
+        if (time.length < 6) return ''
+        const [year, month, day, hour, minute, second] = time
+        return `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')} ${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}:${second.toString().padStart(2, '0')}`
+      } else if (typeof time === 'string') {
+        // 处理ISO格式字符串
+        date = new Date(time)
+      } else {
+        // 处理时间戳
+        date = new Date(time)
+      }
+      
+      if (isNaN(date.getTime())) return ''
+      
+      const year = date.getFullYear()
+      const month = (date.getMonth() + 1).toString().padStart(2, '0')
+      const day = date.getDate().toString().padStart(2, '0')
+      const hour = date.getHours().toString().padStart(2, '0')
+      const minute = date.getMinutes().toString().padStart(2, '0')
+      const second = date.getSeconds().toString().padStart(2, '0')
+      
+      return `${year}-${month}-${day} ${hour}:${minute}:${second}`
+    },
     getCategoryName(categoryId) {
       const categoryMap = {
         1: '常规检查',
@@ -207,6 +259,10 @@ export default {
         4: '其他检查'
       }
       return categoryMap[categoryId] || '未知分类'
+    },
+    formatPrice(price) {
+      if (price === null || price === undefined) return '0.00元';
+      return (price / 100).toFixed(2) + '元';
     },
     async getList() {
       this.listLoading = true;
@@ -229,25 +285,15 @@ export default {
         this.listLoading = false;
       }
     },
-    async getDepartmentOptions() {
-      try {
-        const { data } = await getAllDepartments()
-        this.departmentOptions = data
-      } catch (error) {
-        console.error('获取部门列表失败:', error)
-      }
-    },
     handleFilter() {
-      this.listQuery.page = 1
+      this.listQuery.pageNum = 1
       this.getList()
     },
     resetQuery() {
       this.listQuery = {
-        page: 1,
-        limit: 10,
-        name: undefined,
-        categoryId: undefined,
-        departmentId: undefined
+        pageNum: 1,
+        pageSize: 10,
+        keyword: undefined
       }
       this.getList()
     },
@@ -257,11 +303,12 @@ export default {
         id: undefined,
         name: '',
         code: '',
-        categoryId: undefined,
+        category: undefined,
         departmentId: undefined,
         referenceValue: '',
-        unit: '',
-        remark: ''
+        price: 0,
+        remark: '',
+        status: 1
       }
       this.dialogVisible = true
       this.$nextTick(() => {
@@ -277,20 +324,13 @@ export default {
       })
     },
     async handleStatusChange(row) {
-      if (!row || typeof row.id === 'undefined') {
-        this.$message.warning('项目数据无效');
-        return;
-      }
-      
       try {
         await updateExamItemStatus(row.id, row.status);
         this.$message.success('状态更新成功');
       } catch (error) {
-        console.error('更新项目状态失败:', error);
+        console.error('更新状态失败:', error);
         // 恢复原状态
-        if (row) {
-          row.status = row.status === 1 ? 0 : 1;
-        }
+        row.status = row.status === 1 ? 0 : 1;
         this.$message.error('更新状态失败');
       }
     },
@@ -319,20 +359,20 @@ export default {
       this.$refs['dataForm'].validate(async (valid) => {
         if (valid) {
           try {
-            const submitData = { ...this.temp };
+            const submitData = Object.assign({}, this.temp);
             
-            if (this.temp.id) {
+            if (this.dialogTitle === '编辑体检项目') {
               await updateExamItem(submitData);
-              this.$message.success('更新体检项目成功');
+              this.$message.success('更新项目成功');
             } else {
               await createExamItem(submitData);
-              this.$message.success('创建体检项目成功');
+              this.$message.success('创建项目成功');
             }
             
             this.dialogVisible = false;
             this.getList();
           } catch (error) {
-            console.error('保存体检项目失败:', error);
+            console.error('保存项目失败:', error);
             this.$message.error(`保存失败: ${error.response?.data?.message || error.message || '未知错误'}`);
           }
         }
@@ -352,6 +392,12 @@ export default {
 
   .action-container {
     margin-bottom: 20px;
+  }
+  
+  .price-note {
+    margin-left: 8px;
+    color: #909399;
+    font-size: 12px;
   }
 }
 </style> 

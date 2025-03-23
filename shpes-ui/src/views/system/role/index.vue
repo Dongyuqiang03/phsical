@@ -154,7 +154,7 @@
 
 <script>
 import Pagination from '@/components/Pagination'
-import { getRoleList, createRole, updateRole, deleteRole, batchDeleteRole, updateRoleStatus, getRolePermissions, updateRolePermissions, getRoleUsers, updateRoleUsers } from '@/api/system/role'
+import { getRoleList, createRole, updateRole, deleteRole, batchDeleteRole, updateRoleStatus, getRolePermissions, updateRolePermissions, getRoleUsers, updateRoleUsers } from '@/api/role'
 
 export default {
   name: 'Role',
@@ -212,7 +212,7 @@ export default {
       try {
         const response = await getRoleList(this.listQuery)
         if (response.code === 200) {
-          this.list = response.data.items || []
+          this.list = response.data.records || []
           this.total = response.data.total || 0
         } else {
           this.list = []

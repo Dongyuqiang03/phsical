@@ -21,6 +21,7 @@
     <!-- 操作按钮区域 -->
     <div class="action-container">
       <el-button type="primary" icon="el-icon-plus" @click="handleCreate">新增部门</el-button>
+      <el-button type="danger" icon="el-icon-delete" :disabled="!selectedIds.length" @click="handleBatchDelete">批量删除</el-button>
     </div>
 
     <!-- 表格区域 -->
@@ -28,15 +29,32 @@
       v-loading="listLoading"
       :data="list"
       border
-      style="width: 100%">
-      <el-table-column label="部门名称" prop="name" />
-      <el-table-column label="负责人" prop="leader" />
-      <el-table-column label="联系电话" prop="phone" />
-      <el-table-column label="创建时间" prop="createTime" width="180" />
-      <el-table-column label="操作" align="center" width="200">
+      style="width: 100%"
+      @selection-change="handleSelectionChange">
+      <el-table-column type="selection" width="55" align="center" />
+      <el-table-column label="部门名称" prop="deptName" />
+      <el-table-column label="部门编码" prop="deptCode" width="120" />
+      <el-table-column label="部门描述" prop="description" show-overflow-tooltip />
+      <el-table-column label="创建时间" width="180">
+        <template slot-scope="{row}">
+          <span>{{ formatDateTime(row.createTime) }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column label="状态" align="center" width="100">
+        <template slot-scope="{row}">
+          <el-switch
+            v-model="row.status"
+            :active-value="1"
+            :inactive-value="0"
+            @change="handleStatusChange(row)"
+          />
+        </template>
+      </el-table-column>
+      <el-table-column label="操作" align="center" width="230">
         <template slot-scope="{row}">
           <el-button type="primary" size="mini" @click="handleUpdate(row)">编辑</el-button>
           <el-button type="info" size="mini" @click="handleUsers(row)">人员</el-button>
+          <el-button type="danger" size="mini" @click="handleDelete(row)">删除</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -58,14 +76,25 @@
         :model="temp"
         label-position="right"
         label-width="100px">
-        <el-form-item label="部门名称" prop="name">
-          <el-input v-model="temp.name" placeholder="请输入部门名称" />
+        <el-form-item label="部门名称" prop="deptName">
+          <el-input v-model="temp.deptName" placeholder="请输入部门名称" />
         </el-form-item>
-        <el-form-item label="负责人" prop="leader">
-          <el-input v-model="temp.leader" placeholder="请输入负责人" />
+        <el-form-item label="部门编码" prop="deptCode">
+          <el-input v-model="temp.deptCode" placeholder="请输入部门编码" />
         </el-form-item>
-        <el-form-item label="联系电话" prop="phone">
-          <el-input v-model="temp.phone" placeholder="请输入联系电话" />
+        <el-form-item label="部门描述" prop="description">
+          <el-input
+            v-model="temp.description"
+            type="textarea"
+            :rows="3"
+            placeholder="请输入部门描述"
+          />
+        </el-form-item>
+        <el-form-item label="状态">
+          <el-radio-group v-model="temp.status">
+            <el-radio :label="1">启用</el-radio>
+            <el-radio :label="0">禁用</el-radio>
+          </el-radio-group>
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
@@ -87,24 +116,17 @@
 
 <script>
 import Pagination from '@/components/Pagination'
-import { getDepartmentList, createDepartment, updateDepartment, getDepartmentUsers } from '@/api/department'
-import { validPhone } from '@/utils/validate'
+import { getDepartmentList, createDepartment, updateDepartment, getDepartmentUsers, deleteDepartment, batchUpdateStatus } from '@/api/department'
 
 export default {
   name: 'Department',
   components: { Pagination },
   data() {
-    const validatePhone = (rule, value, callback) => {
-      if (value && !validPhone(value)) {
-        callback(new Error('请输入正确的手机号'))
-      } else {
-        callback()
-      }
-    }
     return {
       list: [],
       total: 0,
       listLoading: false,
+      selectedIds: [],
       listQuery: {
         page: 1,
         limit: 10,
@@ -115,16 +137,17 @@ export default {
       userVisible: false,
       temp: {
         id: undefined,
-        name: '',
-        leader: '',
-        phone: ''
+        deptName: '',
+        deptCode: '',
+        description: '',
+        status: 1
       },
       rules: {
-        name: [
+        deptName: [
           { required: true, message: '请输入部门名称', trigger: 'blur' }
         ],
-        phone: [
-          { validator: validatePhone, trigger: 'blur' }
+        deptCode: [
+          { required: true, message: '请输入部门编码', trigger: 'blur' }
         ]
       },
       userList: []
@@ -138,8 +161,8 @@ export default {
       this.listLoading = true
       try {
         const { data } = await getDepartmentList(this.listQuery)
-        this.list = data.items
-        this.total = data.total
+        this.list = data.records || []
+        this.total = data.total || 0
       } catch (error) {
         console.error('获取部门列表失败:', error)
       }
@@ -161,9 +184,10 @@ export default {
       this.dialogTitle = '新增部门'
       this.temp = {
         id: undefined,
-        name: '',
-        leader: '',
-        phone: ''
+        deptName: '',
+        deptCode: '',
+        description: '',
+        status: 1
       }
       this.dialogVisible = true
       this.$nextTick(() => {
@@ -177,6 +201,29 @@ export default {
       this.$nextTick(() => {
         this.$refs['dataForm'].clearValidate()
       })
+    },
+    formatDateTime(time) {
+      if (!time) return ''
+      
+      // 处理后端返回的数组格式 [year, month, day, hour, minute, second]
+      if (Array.isArray(time)) {
+        if (time.length < 6) return ''
+        const [year, month, day, hour, minute, second] = time
+        return `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')} ${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}:${second.toString().padStart(2, '0')}`
+      }
+      
+      // 处理其他格式
+      const date = new Date(time)
+      if (isNaN(date.getTime())) return ''
+      
+      const year = date.getFullYear()
+      const month = (date.getMonth() + 1).toString().padStart(2, '0')
+      const day = date.getDate().toString().padStart(2, '0')
+      const hour = date.getHours().toString().padStart(2, '0')
+      const minute = date.getMinutes().toString().padStart(2, '0')
+      const second = date.getSeconds().toString().padStart(2, '0')
+      
+      return `${year}-${month}-${day} ${hour}:${minute}:${second}`
     },
     submitForm() {
       this.$refs['dataForm'].validate(async (valid) => {
@@ -204,6 +251,74 @@ export default {
       } catch (error) {
         console.error('获取部门人员失败:', error)
       }
+    },
+    handleStatusChange(row) {
+      const statusText = row.status === 1 ? '启用' : '禁用'
+      this.$confirm(`确认要${statusText}该部门吗？`, '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(async () => {
+        try {
+          await updateDepartment({
+            ...row,
+            status: row.status
+          })
+          this.$message.success(`${statusText}成功`)
+        } catch (error) {
+          console.error(`状态修改失败:`, error)
+          // 恢复原状态
+          row.status = row.status === 1 ? 0 : 1
+        }
+      }).catch(() => {
+        // 用户取消操作，恢复原状态
+        row.status = row.status === 1 ? 0 : 1
+        this.$message.info('已取消操作')
+      })
+    },
+    handleDelete(row) {
+      this.$confirm('此操作将永久删除该部门，是否继续？', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(async () => {
+        try {
+          await deleteDepartment(row.id)
+          this.$message.success('删除成功')
+          this.getList()
+        } catch (error) {
+          console.error('删除失败:', error)
+        }
+      }).catch(() => {
+        this.$message.info('已取消删除')
+      })
+    },
+    handleSelectionChange(val) {
+      this.selectedIds = val.map(item => item.id)
+    },
+    handleBatchDelete() {
+      if (!this.selectedIds.length) {
+        this.$message.warning('请选择要删除的部门')
+        return
+      }
+      
+      this.$confirm(`确认要删除这${this.selectedIds.length}个部门吗？`, '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(async () => {
+        try {
+          // 使用 Promise.all 并行处理多个删除请求
+          await Promise.all(this.selectedIds.map(id => deleteDepartment(id)))
+          this.$message.success('批量删除成功')
+          this.getList()
+        } catch (error) {
+          console.error('批量删除失败:', error)
+          this.$message.error('批量删除失败，请重试')
+        }
+      }).catch(() => {
+        this.$message.info('已取消删除')
+      })
     }
   }
 }

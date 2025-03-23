@@ -27,17 +27,8 @@ public class ExamItem extends BaseEntity {
     @ApiModelProperty("执行科室ID")
     private Long departmentId;
 
-    @ApiModelProperty("参考值上限")
-    private String upperLimit;
-
-    @ApiModelProperty("参考值下限")
-    private String lowerLimit;
-
     @ApiModelProperty("参考值描述")
     private String referenceValue;
-
-    @ApiModelProperty("单位")
-    private String unit;
 
     @ApiModelProperty("价格（分）")
     private Integer price;

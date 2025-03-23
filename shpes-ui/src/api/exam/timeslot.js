@@ -3,7 +3,7 @@ import request from '@/utils/request'
 // 获取时间段列表
 export function getTimeSlotList(params) {
   return request({
-    url: '/api/timeslots/list',
+    url: '/api/exam/timeslots/list',
     method: 'get',
     params
   })
@@ -12,7 +12,7 @@ export function getTimeSlotList(params) {
 // 创建时间段
 export function createTimeSlot(data) {
   return request({
-    url: '/api/exam/timeslot',
+    url: '/api/exam/timeslots',
     method: 'post',
     data
   })
@@ -21,7 +21,7 @@ export function createTimeSlot(data) {
 // 更新时间段
 export function updateTimeSlot(data) {
   return request({
-    url: `/api/exam/timeslot/${data.id}`,
+    url: `/api/exam/timeslots/${data.id}`,
     method: 'put',
     data
   })
@@ -30,7 +30,7 @@ export function updateTimeSlot(data) {
 // 删除时间段
 export function deleteTimeSlot(id) {
   return request({
-    url: `/api/exam/timeslot/${id}`,
+    url: `/api/exam/timeslots/${id}`,
     method: 'delete'
   })
 }
@@ -38,7 +38,7 @@ export function deleteTimeSlot(id) {
 // 批量创建时间段
 export function batchCreateTimeSlot(data) {
   return request({
-    url: '/api/exam/timeslot/batch',
+    url: '/api/exam/timeslots/batch',
     method: 'post',
     data
   })
@@ -47,16 +47,16 @@ export function batchCreateTimeSlot(data) {
 // 更新时间段容量
 export function updateTimeSlotCapacity(id, capacity) {
   return request({
-    url: `/api/exam/timeslot/${id}/capacity`,
+    url: `/api/exam/timeslots/${id}/capacity`,
     method: 'put',
     data: { capacity }
   })
 }
 
-// 获取可预约时间段
+// 获取可用时间段
 export function getAvailableTimeSlots(params) {
   return request({
-    url: '/api/exam/timeslot/available',
+    url: '/api/exam/timeslots/available',
     method: 'get',
     params
   })

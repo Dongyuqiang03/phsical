@@ -30,7 +30,7 @@ public class ExamTimeSlotController {
 
     @ApiOperation("获取时间段列表")
     @GetMapping("/list")
-    @RequiresPermission("")
+    @RequiresPermission("exam:timeslot")
     public CommonResult<CommonPage<ExamTimeSlotVO>> getTimeSlotPage(
             @RequestParam(defaultValue = "1") Integer pageNum,
             @RequestParam(defaultValue = "10") Integer pageSize,
@@ -41,14 +41,14 @@ public class ExamTimeSlotController {
 
     @ApiOperation("获取时间段详情")
     @GetMapping("/{id}")
-    @RequiresPermission("")
+    @RequiresPermission("exam:timeslot")
     public CommonResult<ExamTimeSlotVO> getTimeSlot(@PathVariable Long id) {
         return CommonResult.success(timeSlotService.getTimeSlot(id));
     }
 
     @ApiOperation("获取可预约时间段")
     @GetMapping("/available")
-    @RequiresPermission("")
+    @RequiresPermission("exam:timeslot")
     public CommonResult<List<ExamTimeSlotVO>> getAvailableTimeSlots(
             @RequestParam Long departmentId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
@@ -57,7 +57,7 @@ public class ExamTimeSlotController {
 
     @ApiOperation("创建时间段")
     @PostMapping
-    @RequiresPermission("")
+    @RequiresPermission("exam:timeslot")
     public CommonResult<Void> createTimeSlot(@Valid @RequestBody ExamTimeSlot timeSlot) {
         timeSlotService.createTimeSlot(timeSlot);
         return CommonResult.success(null);
@@ -65,7 +65,7 @@ public class ExamTimeSlotController {
 
     @ApiOperation("更新时间段")
     @PutMapping("/{id}")
-    @RequiresPermission("")
+    @RequiresPermission("exam:timeslot")
     public CommonResult<Void> updateTimeSlot(@PathVariable Long id, @Valid @RequestBody ExamTimeSlot timeSlot) {
         timeSlot.setId(id);
         timeSlotService.updateTimeSlot(timeSlot);
@@ -74,7 +74,7 @@ public class ExamTimeSlotController {
 
     @ApiOperation("删除时间段")
     @DeleteMapping("/{id}")
-    @RequiresPermission("")
+    @RequiresPermission("exam:timeslot")
     public CommonResult<Void> deleteTimeSlot(@PathVariable Long id) {
         timeSlotService.deleteTimeSlot(id);
         return CommonResult.success(null);
@@ -82,7 +82,7 @@ public class ExamTimeSlotController {
 
     @ApiOperation("更新时间段状态")
     @PutMapping("/{id}/status")
-    @RequiresPermission("")
+    @RequiresPermission("exam:timeslot")
     public CommonResult<Void> updateTimeSlotStatus(
             @PathVariable Long id,
             @RequestParam Integer status) {

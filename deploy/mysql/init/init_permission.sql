@@ -12,10 +12,11 @@ INSERT INTO sys_permission (permission_name, permission_code, permission_type, p
 ('体检管理', 'exam', 1, NULL, '/exam', 'Layout', 'exam', 2),
 ('体检项目', 'exam:item', 1, 8, 'item', 'exam/item/index', 'item', 1),
 ('体检套餐', 'exam:package', 1, 8, 'package', 'exam/package/index', 'package', 2),
-('预约管理', 'exam:appointment', 1, 8, 'appointment', 'exam/appointment/index', 'appointment', 3),
-('体检记录', 'exam:record', 1, 8, 'record', 'exam/record/index', 'record', 4),
-('体检结果', 'exam:result', 1, 8, 'result', 'exam/result/index', 'result', 5),
-('体检项目分类', 'exam:category', 1, 8, 'category', 'exam/category/index', 'category', 6);
+('预约时间段', 'exam:timeslot', 1, 8, 'timeslot', 'exam/timeslot/index', 'time', 3),
+('预约管理', 'exam:appointment', 1, 8, 'appointment', 'exam/appointment/index', 'appointment', 4),
+('体检记录', 'exam:record', 1, 8, 'record', 'exam/record/index', 'record', 5),
+('体检结果', 'exam:result', 1, 8, 'result', 'exam/result/index', 'result', 6),
+('体检项目分类', 'exam:category', 1, 8, 'category', 'exam/category/index', 'category', 7);
 
 -- 为系统管理员角色分配所有权限
 INSERT INTO sys_role_permission (role_id, permission_id)

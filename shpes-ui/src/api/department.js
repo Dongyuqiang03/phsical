@@ -12,7 +12,7 @@ export function getDepartmentList(params) {
 // 创建部门
 export function createDepartment(data) {
   return request({
-    url: '/api/system/department',
+    url: '/api/system/department/create',
     method: 'post',
     data
   })
@@ -40,5 +40,25 @@ export function getAllDepartments() {
   return request({
     url: '/api/system/department/all',
     method: 'get'
+  })
+}
+
+// 删除部门
+export function deleteDepartment(id) {
+  return request({
+    url: `/api/system/department/${id}`,
+    method: 'delete'
+  })
+}
+
+// 批量更新部门状态
+export function batchUpdateStatus(ids, status) {
+  return request({
+    url: '/api/system/department/batch-status',
+    method: 'put',
+    params: {
+      ids,
+      status
+    }
   })
 } 

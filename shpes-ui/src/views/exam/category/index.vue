@@ -112,10 +112,34 @@
     name: 'ExamItemCategory',
     components: { Pagination },
     filters: {
-      formatDateTime(timeArray) {
-        if (!Array.isArray(timeArray) || timeArray.length < 6) return ''
-        const [year, month, day, hour, minute, second] = timeArray
-        return `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')} ${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}:${second.toString().padStart(2, '0')}`
+      formatDateTime(time) {
+        if (!time) return ''
+        
+        // 处理不同格式的日期
+        let date
+        if (Array.isArray(time)) {
+          // 处理后端返回的数组格式 [year, month, day, hour, minute, second]
+          if (time.length < 6) return ''
+          const [year, month, day, hour, minute, second] = time
+          return `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')} ${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}:${second.toString().padStart(2, '0')}`
+        } else if (typeof time === 'string') {
+          // 处理ISO格式字符串
+          date = new Date(time)
+        } else {
+          // 处理时间戳
+          date = new Date(time)
+        }
+        
+        if (isNaN(date.getTime())) return ''
+        
+        const year = date.getFullYear()
+        const month = (date.getMonth() + 1).toString().padStart(2, '0')
+        const day = date.getDate().toString().padStart(2, '0')
+        const hour = date.getHours().toString().padStart(2, '0')
+        const minute = date.getMinutes().toString().padStart(2, '0')
+        const second = date.getSeconds().toString().padStart(2, '0')
+        
+        return `${year}-${month}-${day} ${hour}:${minute}:${second}`
       }
     },
     data() {
@@ -147,9 +171,7 @@
     },
     computed: {
       pagedList() {
-        const start = (this.listQuery.pageNum - 1) * this.listQuery.pageSize
-        const end = start + this.listQuery.pageSize
-        return this.list.slice(start, end)
+        return this.list
       }
     },
     created() {
@@ -160,9 +182,9 @@
         this.listLoading = true
         try {
           const response = await getCategoryPage(this.listQuery)
-          if (response.code === 200 && Array.isArray(response.data)) {
-            this.list = response.data
-            this.total = response.data.length
+          if (response.code === 200 && response.data) {
+            this.list = response.data.records || []
+            this.total = response.data.total || this.list.length
           } else {
             this.list = []
             this.total = 0
