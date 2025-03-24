@@ -156,12 +156,12 @@
             <el-option label="学生" :value="3" />
           </el-select>
         </el-form-item>
-        <el-form-item label="部门" prop="departmentId">
+        <el-form-item label="部门" prop="deptId">
           <el-select 
-            v-model="temp.departmentId" 
+            v-model="temp.deptId" 
             placeholder="请选择部门">
             <el-option
-              v-for="item in filteredDepartmentOptions"
+              v-for="item in departmentOptions"
               :key="item.id"
               :label="item.deptName"
               :value="item.id"
@@ -290,7 +290,7 @@ export default {
         realName: '',
         userType: undefined,
         roles: [],
-        departmentId: undefined,
+        deptId: undefined,
         phone: '',
         email: '',
         status: 1
@@ -306,7 +306,7 @@ export default {
         userType: [
           { required: true, message: '请选择用户类型', trigger: 'change' }
         ],
-        departmentId: [
+        deptId: [
           { required: false, message: '请选择部门', trigger: 'change' }
         ],
         phone: [
@@ -343,14 +343,6 @@ export default {
       return this.roleOptions.filter(role => allowedRoleCodes.includes(role.roleCode));
     },
     filteredDepartmentOptions() {
-      if (!this.temp.userType) return this.departmentOptions;
-      
-      // 医护人员只能选择医疗相关部门（parentId 为 1 的部门，即校医院下属部门）
-      if (this.temp.userType === 1) {
-        return this.departmentOptions.filter(dept => dept.parentId === 1);
-      }
-      
-      // 教职工和学生可以选择所有部门
       return this.departmentOptions;
     }
   },
@@ -457,7 +449,7 @@ export default {
         realName: '',
         userType: undefined,
         roles: [],
-        departmentId: undefined,
+        deptId: undefined,
         phone: '',
         email: '',
         status: 1
@@ -479,17 +471,22 @@ export default {
       }
       
       this.dialogTitle = '编辑用户'
-      this.temp = Object.assign({}, row)
       
-      this.temp.userType = row.userType;
-      this.temp.departmentId = row.departmentId;  // 确保设置部门ID
-      
-      this.temp.roles = Array.isArray(row.roles) 
-        ? row.roles.filter(role => role && typeof role === 'object' && role.id).map(role => role.id)
-        : [];
-        
-      this.dialogVisible = true
+      // 先获取部门列表
       await this.getDepartmentOptions()
+      
+      this.temp = {
+        id: row.id,
+        username: row.username,
+        realName: row.realName,
+        userType: row.userType,
+        deptId: row.deptId,
+        phone: row.phone,
+        email: row.email,
+        status: row.status
+      }
+      
+      this.dialogVisible = true
       this.$nextTick(() => {
         if (this.$refs['dataForm']) {
           this.$refs['dataForm'].clearValidate()
@@ -636,23 +633,8 @@ export default {
       // TODO: 下载用户导入模板
     },
     handleUserTypeChange(value) {
-      // 保留已选角色和部门（不清空），只在未选择角色时设置默认角色
-      if (!this.temp.roles || this.temp.roles.length === 0) {
-        if (value === 1) {
-          const medicalRole = this.roleOptions.find(role => role.roleCode === 'ROLE_MEDICAL');
-          if (medicalRole) {
-            this.temp.roles = [medicalRole.id];
-          }
-        } else if (value === 2 || value === 3) {
-          const userRole = this.roleOptions.find(role => role.roleCode === 'ROLE_USER');
-          if (userRole) {
-            this.temp.roles = [userRole.id];
-          }
-        }
-      }
-      
-      // 更新部门必选验证规则
-      this.$set(this.rules.departmentId, 0, {
+      // 只更新部门必选验证规则
+      this.$set(this.rules.deptId, 0, {
         required: value === 1,
         message: value === 1 ? '医护人员必须选择部门' : '请选择部门',
         trigger: 'change'

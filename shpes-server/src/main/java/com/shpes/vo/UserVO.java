@@ -29,10 +29,10 @@ public class UserVO {
     private String email;
 
     @ApiModelProperty("部门ID")
-    private Long departmentId;
+    private Long deptId;
 
     @ApiModelProperty("部门名称")
-    private String departmentName;
+    private String deptName;
 
     @ApiModelProperty("用户类型")
     private Integer userType;

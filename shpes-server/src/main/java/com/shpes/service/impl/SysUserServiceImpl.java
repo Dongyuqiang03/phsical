@@ -441,7 +441,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser>imple
 
         // 设置部门名称
         if (user.getDeptId() != null) {
-            userVO.setDepartmentName(departmentService.getDepartmentNameById(user.getDeptId()));
+            userVO.setDeptName(departmentService.getDepartmentNameById(user.getDeptId()));
         }
 
         // 设置角色信息

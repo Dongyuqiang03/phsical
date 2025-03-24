@@ -41,7 +41,7 @@ public class UserDTO {
     private List<Long> roleIds;
     
     @ApiModelProperty(value = "部门ID")
-    private Long departmentId;
+    private Long deptId;
     
     @Pattern(regexp = "^1[3-9]\\d{9}$", message = "手机号格式不正确")
     @ApiModelProperty(value = "手机号")
