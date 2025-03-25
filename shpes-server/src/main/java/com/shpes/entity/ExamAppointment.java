@@ -34,10 +34,10 @@ public class ExamAppointment extends BaseEntity {
     private Long timeSlotId;
 
     @ApiModelProperty("部门ID")
-    private Long departmentId;
+    private Long deptId;
 
     @ApiModelProperty("部门名称")
-    private String departmentName;
+    private String deptName;
 
     @ApiModelProperty("预约日期")
     private LocalDate appointmentDate;

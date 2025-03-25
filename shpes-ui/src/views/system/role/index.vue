@@ -58,7 +58,6 @@
         <template slot-scope="{row}">
           <el-button type="primary" size="mini" @click="handleUpdate(row)">编辑</el-button>
           <el-button type="success" size="mini" @click="handlePermission(row)">权限设置</el-button>
-          <el-button type="info" size="mini" @click="handleUsers(row)">用户管理</el-button>
           <el-button type="danger" size="mini" @click="handleDelete(row)">删除</el-button>
         </template>
       </el-table-column>
@@ -123,38 +122,12 @@
         <el-button type="primary" @click="submitPermissions">确定</el-button>
       </div>
     </el-dialog>
-
-    <!-- 用户管理对话框 -->
-    <el-dialog title="用户管理" :visible.sync="userVisible" width="800px">
-      <div class="filter-container">
-        <el-input
-          v-model="userQuery.keyword"
-          placeholder="请输入用户名或姓名"
-          style="width: 200px;"
-          class="filter-item"
-          @keyup.enter.native="handleUserFilter"
-        />
-        <el-button class="filter-item" type="primary" icon="el-icon-search" @click="handleUserFilter">
-          搜索
-        </el-button>
-      </div>
-      <el-table :data="userList" style="width: 100%">
-        <el-table-column type="selection" width="55" align="center" />
-        <el-table-column label="用户名" prop="username" />
-        <el-table-column label="姓名" prop="realName" />
-        <el-table-column label="部门" prop="departmentName" />
-      </el-table>
-      <div slot="footer" class="dialog-footer">
-        <el-button @click="userVisible = false">取消</el-button>
-        <el-button type="primary" @click="submitUsers">确定</el-button>
-      </div>
-    </el-dialog>
   </div>
 </template>
 
 <script>
 import Pagination from '@/components/Pagination'
-import { getRoleList, createRole, updateRole, deleteRole, batchDeleteRole, updateRoleStatus, getRolePermissions, updateRolePermissions, getRoleUsers, updateRoleUsers } from '@/api/role'
+import { getRoleList, createRole, updateRole, deleteRole, batchDeleteRole, updateRoleStatus, getRolePermissions, updateRolePermissions } from '@/api/role'
 
 export default {
   name: 'Role',
@@ -174,7 +147,6 @@ export default {
       dialogVisible: false,
       dialogTitle: '',
       permissionVisible: false,
-      userVisible: false,
       temp: {
         id: undefined,
         roleName: '',
@@ -195,12 +167,7 @@ export default {
         children: 'children',
         label: 'name'
       },
-      checkedPermissions: [], // 已选权限ID
-      userList: [], // 用户列表
-      userQuery: {
-        keyword: '',
-        roleId: undefined
-      }
+      checkedPermissions: [] // 已选权限ID
     }
   },
   created() {
@@ -319,7 +286,6 @@ export default {
       })
     },
     async handlePermission(row) {
-      this.userQuery.roleId = row.id
       try {
         const { data } = await getRolePermissions(row.id)
         this.permissionData = data.permissions
@@ -333,38 +299,13 @@ export default {
       try {
         const checkedKeys = this.$refs.permissionTree.getCheckedKeys()
         const halfCheckedKeys = this.$refs.permissionTree.getHalfCheckedKeys()
-        await updateRolePermissions(this.userQuery.roleId, {
+        await updateRolePermissions(this.temp.id, {
           permissions: [...checkedKeys, ...halfCheckedKeys]
         })
         this.$message.success('权限设置成功')
         this.permissionVisible = false
       } catch (error) {
         console.error('设置角色权限失败:', error)
-      }
-    },
-    async handleUsers(row) {
-      this.userQuery.roleId = row.id
-      try {
-        const { data } = await getRoleUsers(row.id)
-        this.userList = data
-        this.userVisible = true
-      } catch (error) {
-        console.error('获取角色用户失败:', error)
-      }
-    },
-    handleUserFilter() {
-      // TODO: 根据关键字过滤用户列表
-    },
-    async submitUsers() {
-      try {
-        const selectedUsers = this.$refs.userTable.selection
-        await updateRoleUsers(this.userQuery.roleId, {
-          userIds: selectedUsers.map(user => user.id)
-        })
-        this.$message.success('用户分配成功')
-        this.userVisible = false
-      } catch (error) {
-        console.error('分配角色用户失败:', error)
       }
     }
   }

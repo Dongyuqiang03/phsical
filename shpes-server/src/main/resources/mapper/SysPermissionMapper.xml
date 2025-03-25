@@ -12,7 +12,6 @@
         <result column="path" property="path"/>
         <result column="component" property="component"/>
         <result column="icon" property="icon"/>
-        <result column="sort" property="sort"/>
         <result column="status" property="status"/>
         <result column="create_time" property="createTime"/>
         <result column="update_time" property="updateTime"/>
@@ -29,7 +28,7 @@
             FROM sys_permission p
             INNER JOIN perm_tree t ON p.parent_id = t.id
         )
-        SELECT * FROM perm_tree ORDER BY sort
+        SELECT * FROM perm_tree ORDER BY id
     </select>
 
     <!-- 权限树形结构映射 -->
@@ -42,7 +41,7 @@
         SELECT *
         FROM sys_permission
         WHERE parent_id = #{id}
-        ORDER BY sort
+        ORDER BY id
     </select>
 
     <!-- 获取用户权限列表 -->
@@ -53,7 +52,7 @@
         INNER JOIN sys_user_role ur ON rp.role_id = ur.role_id
         WHERE ur.user_id = #{userId}
         AND p.status = 1
-        ORDER BY p.sort
+        ORDER BY p.id
     </select>
 
     <!-- 获取角色权限列表 -->
@@ -63,7 +62,7 @@
         INNER JOIN sys_role_permission rp ON p.id = rp.permission_id
         WHERE rp.role_id = #{roleId}
         AND p.status = 1
-        ORDER BY p.sort
+        ORDER BY p.id
     </select>
 
     <!-- 批量更新权限状态 -->

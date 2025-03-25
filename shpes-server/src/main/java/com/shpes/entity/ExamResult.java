@@ -24,9 +24,6 @@ public class ExamResult extends BaseEntity {
     @ApiModelProperty("检查结果值")
     private String value;
 
-    @ApiModelProperty("结果单位")
-    private String unit;
-
     @ApiModelProperty("是否异常：0-正常，1-异常")
     private Integer abnormal;
 

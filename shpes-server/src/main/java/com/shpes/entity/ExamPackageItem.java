@@ -13,7 +13,7 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 @TableName("exam_package_item")
 @ApiModel("体检套餐项目关联")
-public class ExamPackageItem extends BaseEntity {
+public class ExamPackageItem extends BaseRelationEntity {
 
     @ApiModelProperty("套餐ID")
     private Long packageId;

@@ -33,9 +33,6 @@ public class ExamPackage extends BaseEntity {
     @ApiModelProperty("适用性别：0-不限，1-男，2-女")
     private Integer gender;
 
-    @ApiModelProperty("排序")
-    private Integer sort;
-
     @ApiModelProperty("状态：0-禁用，1-启用")
     private Integer status;
 

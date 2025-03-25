@@ -36,9 +36,6 @@ public class SysPermission extends BaseEntity {
     @ApiModelProperty("图标")
     private String icon;
 
-    @ApiModelProperty("排序")
-    private Integer sort;
-
     @ApiModelProperty("状态(0:禁用 1:启用)")
     private Integer status;
 }

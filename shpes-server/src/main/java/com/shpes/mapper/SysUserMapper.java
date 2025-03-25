@@ -11,12 +11,5 @@ import org.apache.ibatis.annotations.Param;
  */
 @Mapper
 public interface SysUserMapper extends BaseMapper<SysUser> {
-    
-    /**
-     * 获取用户详情（包含部门和角色信息）
-     *
-     * @param id 用户ID
-     * @return 用户详情
-     */
-    SysUserDetail getUserDetail(@Param("id") Long id);
+
 }

@@ -10,10 +10,8 @@ import java.time.LocalDateTime;
 
 @Data
 @TableName("exam_item_category")
-public class ExamItemCategory {
-    @TableId(type = IdType.AUTO)
-    private Long id;
-    
+public class ExamItemCategory extends BaseEntity {
+
     @TableField("name")
     private String name;
     
@@ -22,10 +20,4 @@ public class ExamItemCategory {
     
     @TableField("status")
     private Integer status;
-    
-    @TableField(value = "create_time", fill = FieldFill.INSERT)
-    private LocalDateTime createTime;
-    
-    @TableField(value = "update_time", fill = FieldFill.INSERT_UPDATE)
-    private LocalDateTime updateTime;
 } 

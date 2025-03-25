@@ -32,11 +32,11 @@ public class ExamRecord extends BaseEntity {
     @ApiModelProperty("套餐名称")
     private String packageName;
 
-    @ApiModelProperty("部门ID")
-    private Long departmentId;
+    @ApiModelProperty("科室 ID")
+    private Long deptId;
 
-    @ApiModelProperty("部门名称")
-    private String departmentName;
+    @ApiModelProperty(" 科室名称")
+    private String deptName;
 
     @ApiModelProperty("医生ID")
     private Long doctorId;

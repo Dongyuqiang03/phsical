@@ -67,7 +67,7 @@ public class ExamPackageServiceImpl extends ServiceImpl<ExamPackageMapper, ExamP
                     .or()
                     .eq(ExamPackage::getGender, gender));
         }
-        wrapper.orderByAsc(ExamPackage::getSort);
+        wrapper.orderByAsc(ExamPackage::getId);
 
         return list(wrapper).stream()
                 .map(this::convertToVO)

@@ -14,7 +14,6 @@
         <result column="reference_value" property="referenceValue"/>
         <result column="unit" property="unit"/>
         <result column="price" property="price"/>
-        <result column="sort" property="sort"/>
         <result column="status" property="status"/>
         <result column="remark" property="remark"/>
         <result column="create_time" property="createTime"/>

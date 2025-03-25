@@ -44,9 +44,6 @@ public class ExamItemVO {
     @ApiModelProperty("项目说明")
     private String remark;
     
-    @ApiModelProperty("排序")
-    private Integer sort;
-    
     @ApiModelProperty("状态：0-禁用，1-启用")
     private Integer status;
     

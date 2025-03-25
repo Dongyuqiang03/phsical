@@ -28,7 +28,7 @@
     LEFT JOIN sys_user u1 ON r.doctor_id = u1.id
     LEFT JOIN sys_user u2 ON r.reviewer_id = u2.id
     WHERE r.record_id = #{recordId}
-    ORDER BY i.sort
+    ORDER BY i.id
 </select>
 
 <select id="selectResultPage" resultType="com.shpes.entity.ExamResult">

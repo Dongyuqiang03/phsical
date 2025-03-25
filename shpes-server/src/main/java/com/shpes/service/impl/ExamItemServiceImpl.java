@@ -19,7 +19,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -48,7 +47,7 @@ public class ExamItemServiceImpl extends ServiceImpl<ExamItemMapper, ExamItem> i
         wrapper.like(StringUtils.isNotBlank(keyword), ExamItem::getName, keyword)
                 .or()
                 .like(StringUtils.isNotBlank(keyword), ExamItem::getCode, keyword)
-                .orderByAsc(ExamItem::getSort);
+                .orderByAsc(ExamItem::getId);
 
         // 执行分页查询
         Page<ExamItem> page = new Page<>(pageNum, pageSize);
@@ -75,7 +74,7 @@ public class ExamItemServiceImpl extends ServiceImpl<ExamItemMapper, ExamItem> i
         if (StringUtils.isBlank(item.getName())) {
             throw new ApiException(ResultCode.VALIDATE_FAILED);
         }
-        if (item.getDepartmentId() == null) {
+        if (item.getDeptId() == null) {
             throw new ApiException(ResultCode.VALIDATE_FAILED);
         }
 
@@ -85,13 +84,12 @@ public class ExamItemServiceImpl extends ServiceImpl<ExamItemMapper, ExamItem> i
         }
 
         // 检查执行科室是否存在
-        if (!isDepartmentExists(item.getDepartmentId())) {
+        if (!isDepartmentExists(item.getDeptId())) {
             throw new ApiException(ResultCode.DEPARTMENT_NOT_EXIST);
         }
 
         // 设置默认值
         item.setStatus(1); // 1-启用
-        item.setSort(0); // 默认排序值
 
         baseMapper.insert(item);
     }
@@ -108,7 +106,7 @@ public class ExamItemServiceImpl extends ServiceImpl<ExamItemMapper, ExamItem> i
         if (StringUtils.isBlank(item.getName())) {
             throw new ApiException(ResultCode.VALIDATE_FAILED);
         }
-        if (item.getDepartmentId() == null) {
+        if (item.getDeptId() == null) {
             throw new ApiException(ResultCode.VALIDATE_FAILED);
         }
 
@@ -124,7 +122,7 @@ public class ExamItemServiceImpl extends ServiceImpl<ExamItemMapper, ExamItem> i
         }
 
         // 检查执行科室是否存在
-        if (!isDepartmentExists(item.getDepartmentId())) {
+        if (!isDepartmentExists(item.getDeptId())) {
             throw new ApiException(ResultCode.DEPARTMENT_NOT_EXIST);
         }
 
@@ -239,15 +237,15 @@ public class ExamItemServiceImpl extends ServiceImpl<ExamItemMapper, ExamItem> i
         BeanUtils.copyProperties(item, vo);
 
         // 设置分类名称
-        if (item.getCategory() != null) {
-            ExamCategoryEnum category = ExamCategoryEnum.getByValue(item.getCategory());
+        if (item.getCategoryId() != null) {
+            ExamCategoryEnum category = ExamCategoryEnum.getByValue(item.getCategoryId());
             if (category != null) {
                 vo.setCategoryName(category.getLabel());
             }
         }
 
         // 获取科室信息
-        SysDepartment department = departmentMapper.selectById(item.getDepartmentId());
+        SysDepartment department = departmentMapper.selectById(item.getDeptId());
         if (department != null) {
             vo.setDepartmentName(department.getDeptName());
         }

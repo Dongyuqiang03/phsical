@@ -10,7 +10,6 @@
         <result column="price" property="price"/>
         <result column="original_price" property="originalPrice"/>
         <result column="gender" property="gender"/>
-        <result column="sort" property="sort"/>
         <result column="status" property="status"/>
         <result column="remark" property="remark"/>
         <result column="create_time" property="createTime"/>
@@ -41,7 +40,6 @@
             i.department_id,
             i.reference_value,
             i.price,
-            i.sort,
             i.status,
             i.remark,
             i.create_time,
@@ -49,7 +47,7 @@
         FROM exam_item i
         INNER JOIN exam_package_item pi ON i.id = pi.item_id
         WHERE pi.package_id = #{packageId}
-        ORDER BY i.sort
+        ORDER BY i.id
     </select>
     
     <!-- 获取套餐统计信息 -->

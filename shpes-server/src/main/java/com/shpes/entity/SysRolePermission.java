@@ -13,7 +13,7 @@ import lombok.EqualsAndHashCode;
 @EqualsAndHashCode(callSuper = true)
 @TableName("sys_role_permission")
 @ApiModel("角色权限关联")
-public class SysRolePermission extends BaseEntity {
+public class SysRolePermission extends BaseRelationEntity {
 
     @ApiModelProperty("角色ID")
     private Long roleId;

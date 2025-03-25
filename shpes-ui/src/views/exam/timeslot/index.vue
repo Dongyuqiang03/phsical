@@ -110,6 +110,7 @@
             start-placeholder="开始时间"
             end-placeholder="结束时间"
             value-format="HH:mm:ss"
+            format="HH:mm"
             style="width: 100%;"
           />
         </el-form-item>
@@ -171,6 +172,7 @@
             start-placeholder="开始时间"
             end-placeholder="结束时间"
             value-format="HH:mm:ss"
+            format="HH:mm"
             style="width: 100%;"
           />
         </el-form-item>
@@ -233,14 +235,14 @@ export default {
       temp: {
         id: undefined,
         date: '',
-        timeSlot: [],
+        timeSlot: null,
         departmentId: undefined,
         capacity: 0,
         status: 1
       },
       batchTemp: {
         dateRange: [],
-        timeSlot: [],
+        timeSlot: null,
         departmentId: undefined,
         capacity: 0,
         status: 1
@@ -317,7 +319,7 @@ export default {
       this.temp = {
         id: undefined,
         date: '',
-        timeSlot: [],
+        timeSlot: null,
         departmentId: undefined,
         capacity: 0,
         status: 1
@@ -368,7 +370,7 @@ export default {
     handleBatchCreate() {
       this.batchTemp = {
         dateRange: [],
-        timeSlot: [],
+        timeSlot: null,
         departmentId: undefined,
         capacity: 0,
         status: 1
@@ -416,4 +418,4 @@ export default {
     margin-bottom: 20px;
   }
 }
-</style> 
+</style>
