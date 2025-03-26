@@ -43,7 +43,7 @@ export function batchDeleteUser(ids) {
 export function updateUserStatus(id, status) {
   return request({
     url: `/api/system/user/${id}/status`,
-    method: 'post',
+    method: 'put',
     data: { status }
   })
 }

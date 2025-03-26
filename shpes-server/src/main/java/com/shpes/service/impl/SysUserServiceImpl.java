@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.shpes.common.api.CommonPage;
 import com.shpes.common.enums.ResultCode;
 import com.shpes.common.exception.ApiException;
+import com.shpes.common.constant.RoleConstants;
 import com.shpes.dto.UserDTO;
 import com.shpes.dto.UserQueryDTO;
 import com.shpes.entity.SysUser;
@@ -40,7 +41,7 @@ import java.util.stream.Collectors;
  * 系统用户服务实现类
  */
 @Service
-public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser>implements SysUserService {
+public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> implements SysUserService {
 
     @Autowired
     private SysUserRoleMapper userRoleMapper;
@@ -71,18 +72,18 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser>imple
             List<Long> userIds = userRoleMapper.selectList(userRoleWrapper).stream()
                     .map(SysUserRole::getUserId)
                     .collect(Collectors.toList());
-            
+
             if (userIds.isEmpty()) {
                 // 如果没有找到用户，直接返回空结果
                 return CommonPage.restPage(new ArrayList<>(), 0L, queryDTO.getPageNum(), queryDTO.getPageSize());
             }
-            
+
             wrapper.in(SysUser::getId, userIds);
         }
 
         // 执行分页查询
         Page<SysUser> page = page(new Page<>(queryDTO.getPageNum(), queryDTO.getPageSize()), wrapper);
-        
+
         // 转换为VO对象
         List<UserVO> records = page.getRecords().stream()
                 .map(this::convertToVO)
@@ -109,9 +110,9 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser>imple
         // 创建用户实体
         SysUser user = new SysUser();
         BeanUtils.copyProperties(userDTO, user);
-        
+
         // 设置密码
-        user.setPassword(org.apache.commons.lang3.StringUtils.isBlank(userDTO.getPassword())?PasswordUtils.encode(PasswordUtils.DEFAULT_PASSWORD):PasswordUtils.encode(userDTO.getPassword()));
+        user.setPassword(org.apache.commons.lang3.StringUtils.isBlank(userDTO.getPassword()) ? PasswordUtils.encode(PasswordUtils.DEFAULT_PASSWORD) : PasswordUtils.encode(userDTO.getPassword()));
         user.setStatus(1);
         user.setCreateTime(LocalDateTime.now());
         user.setUpdateTime(LocalDateTime.now());
@@ -120,7 +121,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser>imple
         save(user);
 
         // 保存用户角色关系
-        saveUserRoles(user.getId(), userDTO.getRoleIds());
+//        saveUserRoles(user.getId(), userDTO.getRoleIds());
 
         return convertToVO(user);
     }
@@ -193,54 +194,6 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser>imple
     }
 
     @Override
-    public UserVO getCurrentUser() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated()) {
-            throw new ApiException(ResultCode.UNAUTHORIZED);
-        }
-        String username = authentication.getName();
-        SysUser user = getByUsername(username);
-        if (user == null) {
-            throw new ApiException(ResultCode.USER_NOT_EXIST);
-        }
-        return convertToVO(user);
-    }
-
-    @Override
-    public UserVO updateCurrentUser(UserDTO userDTO) {
-        return updateUser(SecurityUtils.getCurrentUserId(), userDTO);
-    }
-
-    @Override
-    public List<UserVO> getUsersByDepartmentId(Long departmentId) {
-        LambdaQueryWrapper<SysUser> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(SysUser::getDeptId, departmentId)
-                .eq(SysUser::getStatus, 1);
-        return list(wrapper).stream()
-                .map(this::convertToVO)
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    public List<UserVO> getUsersByRoleId(Long roleId) {
-        // 查询角色下的所有用户ID
-        LambdaQueryWrapper<SysUserRole> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(SysUserRole::getRoleId, roleId);
-        List<Long> userIds = userRoleMapper.selectList(wrapper).stream()
-                .map(SysUserRole::getUserId)
-                .collect(Collectors.toList());
-
-        if (userIds.isEmpty()) {
-            return new ArrayList<>();
-        }
-
-        // 查询用户信息
-        return listByIds(userIds).stream()
-                .map(this::convertToVO)
-                .collect(Collectors.toList());
-    }
-
-    @Override
     public SysUser getByUsername(String username) {
         LambdaQueryWrapper<SysUser> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(SysUser::getUsername, username);
@@ -255,38 +208,12 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser>imple
     }
 
     @Override
-    public boolean checkPhoneExists(String phone) {
-        LambdaQueryWrapper<SysUser> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(SysUser::getPhone, phone);
-        return count(wrapper) > 0;
-    }
-
-    @Override
-    public boolean checkEmailExists(String email) {
-        LambdaQueryWrapper<SysUser> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(SysUser::getEmail, email);
-        return count(wrapper) > 0;
-    }
-
-    @Override
-    public boolean checkIdCardExists(String idCard) {
-        LambdaQueryWrapper<SysUser> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(SysUser::getIdCard, idCard);
-        return count(wrapper) > 0;
-    }
-    
-    @Override
     public String getUserNameById(Long userId) {
         if (userId == null) {
             return null;
         }
         SysUser user = getById(userId);
         return user != null ? user.getUsername() : null;
-    }
-
-    @Override
-    public UserVO getUserByUsername(String username) {
-        return convertToVO(getByUsername(username));
     }
 
     @Override
@@ -322,46 +249,10 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser>imple
     }
 
     @Override
-    public List<String> getUserPermissionCodes(Long userId) {
-        List<Long> roleIds = getUserRoleIds(userId);
-        if (roleIds.isEmpty()) {
-            return new ArrayList<>();
-        }
-
-        Set<String> permissionCodes = new HashSet<>();
-        roleIds.forEach(roleId -> {
-            List<String> roleCodes = roleService.getRolePermissionCodes(roleId);
-            if (roleCodes != null) {
-                permissionCodes.addAll(roleCodes);
-            }
-        });
-
-        return new ArrayList<>(permissionCodes);
-    }
-
-    @Override
-    public List<Long> getUserPermissionIds(Long userId) {
-        List<Long> roleIds = getUserRoleIds(userId);
-        if (roleIds.isEmpty()) {
-            return new ArrayList<>();
-        }
-
-        Set<Long> permissionIds = new HashSet<>();
-        roleIds.forEach(roleId -> {
-            List<Long> rolePermissions = roleService.getRolePermissionIds(roleId);
-            if (rolePermissions != null) {
-                permissionIds.addAll(rolePermissions);
-            }
-        });
-
-        return new ArrayList<>(permissionIds);
-    }
-
-    @Override
     public List<SimpleGrantedAuthority> getUserAuthorities(Long userId) {
         // 获取用户的所有权限编码
         List<String> permissionCodes = sysRolePermissionMapper.selectUserPermissionCodes(userId);
-        
+
         // 转换为Spring Security的权限对象
         return permissionCodes.stream()
                 .map(SimpleGrantedAuthority::new)

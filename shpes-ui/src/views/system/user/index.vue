@@ -36,18 +36,6 @@
             />
           </el-select>
         </el-form-item>
-        <!-- 注释掉部门下拉列表
-        <el-form-item>
-          <el-select v-model="listQuery.departmentId" placeholder="部门" clearable>
-            <el-option
-              v-for="item in departmentOptions"
-              :key="item.id"
-              :label="item.name || item.departmentName"
-              :value="item.id"
-            />
-          </el-select>
-        </el-form-item>
-        -->
         <el-form-item>
           <el-button type="primary" icon="el-icon-search" @click="handleFilter">搜索</el-button>
           <el-button icon="el-icon-refresh" @click="resetQuery">重置</el-button>
@@ -534,7 +522,10 @@ export default {
       }
       
       try {
-        await updateUserStatus(row.id, row.status)
+        await updateUser({
+          id: row.id,
+          status: row.status
+        })
         this.$message.success('状态更新成功')
       } catch (error) {
         console.error('更新用户状态失败:', error)

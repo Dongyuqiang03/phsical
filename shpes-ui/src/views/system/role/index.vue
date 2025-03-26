@@ -260,7 +260,10 @@ export default {
     },
     async handleStatusChange(row) {
       try {
-        await updateRoleStatus(row.id, row.status)
+        await updateRole({
+          id: row.id,
+          status: row.status
+        })
         this.$message.success('状态更新成功')
       } catch (error) {
         console.error('更新角色状态失败:', error)

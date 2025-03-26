@@ -27,8 +27,6 @@ public enum ResultCode implements IErrorCode {
     PERMISSION_NOT_EXIST(2002, "权限不存在"),
     ROLE_NAME_EXISTS(2003, "角色名称已存在"),
     ROLE_CODE_EXISTS(2004, "角色编码已存在"),
-    ROLE_NOT_FOUND(2005, "角色不存在"),
-    
     // 部门相关：3000-3999
     DEPARTMENT_NOT_EXIST(3000, "部门不存在"),
     DEPARTMENT_USED(3001, "部门已被使用"),

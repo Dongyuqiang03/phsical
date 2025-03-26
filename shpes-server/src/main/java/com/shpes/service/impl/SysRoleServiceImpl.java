@@ -20,6 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -69,22 +70,22 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
     @Transactional(rollbackFor = Exception.class)
     public void updateRole(SysRole role) {
         // 检查角色是否存在
-        SysRole existingRole = baseMapper.selectById(role.getId());
+        SysRole existingRole = getById(role.getId());
         if (existingRole == null) {
-            throw new ApiException(ResultCode.ROLE_NOT_FOUND);
+            throw new ApiException(ResultCode.ROLE_NOT_EXIST);
         }
-        
-        // 如果修改了角色名称，检查新名称是否已存在
-        if (!existingRole.getRoleName().equals(role.getRoleName()) && isRoleNameExists(role.getRoleName())) {
-            throw new ApiException(ResultCode.ROLE_NAME_EXISTS);
-        }
-        
-        // 如果修改了角色编码，检查新编码是否已存在
-        if (!existingRole.getRoleCode().equals(role.getRoleCode()) && isRoleCodeExists(role.getRoleCode())) {
+
+        // 检查角色编码唯一性
+        LambdaQueryWrapper<SysRole> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(SysRole::getRoleCode, role.getRoleCode())
+                .ne(SysRole::getId, role.getId());
+        if (count(wrapper) > 0) {
             throw new ApiException(ResultCode.ROLE_CODE_EXISTS);
         }
-        
-        baseMapper.updateById(role);
+
+        // 更新角色信息
+        role.setUpdateTime(LocalDateTime.now());
+        updateById(role);
     }
 
     @Override
