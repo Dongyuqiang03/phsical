@@ -2,6 +2,7 @@ package com.shpes.service;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.shpes.dto.DepartmentDTO;
 import com.shpes.entity.SysDepartment;
 import com.shpes.vo.DepartmentVO;
 
@@ -32,10 +33,10 @@ public interface SysDepartmentService extends IService<SysDepartment> {
     /**
      * 创建部门
      *
-     * @param department 部门信息
+     * @param departmentDTO 部门信息
      * @return 是否成功
      */
-    boolean createDepartment(SysDepartment department);
+    boolean createDepartment(DepartmentDTO departmentDTO);
 
     /**
      * 更新部门

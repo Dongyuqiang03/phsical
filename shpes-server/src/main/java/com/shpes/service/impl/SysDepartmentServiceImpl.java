@@ -3,6 +3,7 @@ package com.shpes.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.shpes.dto.DepartmentDTO;
 import com.shpes.entity.SysDepartment;
 import com.shpes.mapper.SysDepartmentMapper;
 import com.shpes.service.SysDepartmentService;
@@ -26,6 +27,13 @@ import java.util.stream.Collectors;
 public class SysDepartmentServiceImpl extends ServiceImpl<SysDepartmentMapper, SysDepartment> implements SysDepartmentService {
 
     private final SysDepartmentMapper departmentMapper;
+
+    @Override
+    public boolean createDepartment(DepartmentDTO departmentDTO) {
+        SysDepartment department = new SysDepartment();
+        BeanUtils.copyProperties(departmentDTO, department);
+        return this.save(department);
+    }
 
     @Override
     public Page<DepartmentVO> getDepartmentPage(Page<SysDepartment> page, String deptName, Integer status) {
@@ -52,12 +60,6 @@ public class SysDepartmentServiceImpl extends ServiceImpl<SysDepartmentMapper, S
         return departments.stream()
                 .map(this::convertToVO)
                 .collect(Collectors.toList());
-    }
-
-    @Override
-    @Transactional(rollbackFor = Exception.class)
-    public boolean createDepartment(SysDepartment department) {
-        return this.save(department);
     }
 
     @Override

@@ -150,9 +150,7 @@
         listQuery: {
           pageNum: 1,
           pageSize: 10,
-          name: undefined,
-          code: undefined,
-          status: undefined
+          name: undefined
         },
         dialogVisible: false,
         dialogTitle: '',
@@ -309,6 +307,8 @@
   <style lang="scss" scoped>
   .app-container {
     padding: 20px;
+    height: calc(100vh - 50px);
+    overflow-y: auto;
   
     .filter-container {
       margin-bottom: 20px;

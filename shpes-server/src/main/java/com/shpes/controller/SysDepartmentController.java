@@ -2,6 +2,7 @@ package com.shpes.controller;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.shpes.common.api.CommonResult;
+import com.shpes.dto.DepartmentDTO;
 import com.shpes.entity.SysDepartment;
 import com.shpes.service.SysDepartmentService;
 import com.shpes.vo.DepartmentVO;
@@ -44,8 +45,8 @@ public class SysDepartmentController {
 
     @ApiOperation("创建部门")
     @PostMapping("/create")
-    public CommonResult<Boolean> create(@Validated @RequestBody SysDepartment department) {
-        return CommonResult.success(departmentService.createDepartment(department));
+    public CommonResult<Boolean> create(@Validated @RequestBody DepartmentDTO departmentDTO) {
+        return CommonResult.success(departmentService.createDepartment(departmentDTO));
     }
 
     @ApiOperation("更新部门")
@@ -68,4 +69,4 @@ public class SysDepartmentController {
             @ApiParam("状态") @RequestParam Integer status) {
         return CommonResult.success(departmentService.batchUpdateStatus(ids, status));
     }
-} 
+}

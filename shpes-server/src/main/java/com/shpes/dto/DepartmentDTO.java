@@ -1,29 +1,31 @@
-package com.shpes.entity;
+package com.shpes.dto;
 
-import com.baomidou.mybatisplus.annotation.TableName;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
+
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 
 /**
- * 部门实体
+ * 部门DTO
  */
 @Data
-@EqualsAndHashCode(callSuper = true)
-@TableName("sys_department")
-@ApiModel("部门")
-public class SysDepartment extends BaseEntity {
+@ApiModel("部门请求参数")
+public class DepartmentDTO {
 
     @ApiModelProperty("父部门ID")
     private Long parentId;
 
+    @NotBlank(message = "部门名称不能为空")
     @ApiModelProperty("部门名称")
     private String deptName;
 
+    @NotBlank(message = "部门编码不能为空")
     @ApiModelProperty("部门编码")
     private String deptCode;
 
+    @NotNull(message = "部门类型不能为空")
     @ApiModelProperty("部门类型(1:医疗科室 2:其他部门)")
     private Integer deptType;
 
@@ -31,5 +33,5 @@ public class SysDepartment extends BaseEntity {
     private String description;
 
     @ApiModelProperty("状态：0-禁用，1-启用")
-    private Integer status;
+    private Integer status = 1;  // 默认启用
 }

@@ -33,6 +33,11 @@
       @selection-change="handleSelectionChange">
       <el-table-column type="selection" width="55" align="center" />
       <el-table-column label="部门名称" prop="deptName" />
+      <el-table-column label="部门类型" prop="deptType">
+        <template slot-scope="{row}">
+          <el-tag :type="row.deptType === 1 ? 'success' : 'info'">{{ row.deptType === 1 ? '医疗科室' : '其他部门' }}</el-tag>
+        </template>
+      </el-table-column>
       <el-table-column label="部门编码" prop="deptCode" width="120" />
       <el-table-column label="部门描述" prop="description" show-overflow-tooltip />
       <el-table-column label="创建时间" width="180">
@@ -63,8 +68,8 @@
     <pagination
       v-show="total>0"
       :total="total"
-      :page.sync="listQuery.page"
-      :limit.sync="listQuery.limit"
+      :page.sync="listQuery.pageNum"
+      :limit.sync="listQuery.pageSize"
       @pagination="getList"
     />
 
@@ -81,6 +86,12 @@
         </el-form-item>
         <el-form-item label="部门编码" prop="deptCode">
           <el-input v-model="temp.deptCode" placeholder="请输入部门编码" />
+        </el-form-item>
+        <el-form-item label="部门类型" prop="deptType">
+          <el-radio-group v-model="temp.deptType">
+            <el-radio :label="1">医疗科室</el-radio>
+            <el-radio :label="2">其他部门</el-radio>
+          </el-radio-group>
         </el-form-item>
         <el-form-item label="部门描述" prop="description">
           <el-input
@@ -128,8 +139,8 @@ export default {
       listLoading: false,
       selectedIds: [],
       listQuery: {
-        page: 1,
-        limit: 10,
+        pageNum: 1,
+        pageSize: 10,
         name: undefined
       },
       dialogVisible: false,
@@ -139,6 +150,7 @@ export default {
         id: undefined,
         deptName: '',
         deptCode: '',
+        deptType: 2,
         description: '',
         status: 1
       },
@@ -186,6 +198,7 @@ export default {
         id: undefined,
         deptName: '',
         deptCode: '',
+        deptType: 2,
         description: '',
         status: 1
       }
@@ -327,6 +340,8 @@ export default {
 <style lang="scss" scoped>
 .app-container {
   padding: 20px;
+  height: calc(100vh - 50px);
+  overflow-y: auto;
 
   .filter-container {
     margin-bottom: 20px;
@@ -336,4 +351,4 @@ export default {
     margin-bottom: 20px;
   }
 }
-</style> 
+</style>

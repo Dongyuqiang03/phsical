@@ -178,7 +178,8 @@ export default {
       listQuery: {
         pageNum: 1,
         pageSize: 10,
-        keyword: undefined
+        name: undefined,
+        code: undefined
       },
       departmentOptions: [
         { id: 1, name: '内科' },
@@ -385,6 +386,8 @@ export default {
 <style lang="scss" scoped>
 .app-container {
   padding: 20px;
+  height: calc(100vh - 50px);
+  overflow-y: auto;
 
   .filter-container {
     margin-bottom: 20px;
@@ -400,4 +403,4 @@ export default {
     font-size: 12px;
   }
 }
-</style> 
+</style>

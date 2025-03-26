@@ -455,6 +455,8 @@ export default {
 <style lang="scss" scoped>
 .app-container {
   padding: 20px;
+  height: calc(100vh - 50px);
+  overflow-y: auto;
 
   .filter-container {
     margin-bottom: 20px;
@@ -468,4 +470,4 @@ export default {
     margin-right: 10px;
   }
 }
-</style> 
+</style>

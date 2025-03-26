@@ -67,8 +67,8 @@
     <pagination
       v-show="total>0"
       :total="total"
-      :page.sync="listQuery.page"
-      :limit.sync="listQuery.limit"
+      :page.sync="listQuery.pageNum"
+      :limit.sync="listQuery.pageSize"
       @pagination="getList"
     />
 
@@ -138,8 +138,8 @@ export default {
       total: 0,
       listLoading: false,
       listQuery: {
-        page: 1,
-        limit: 10,
+        pageNum: 1,
+        pageSize: 10,
         name: undefined,
         code: undefined
       },
@@ -318,6 +318,8 @@ export default {
 <style lang="scss" scoped>
 .app-container {
   padding: 20px;
+  height: calc(100vh - 50px);
+  overflow-y: auto;
 
   .filter-container {
     margin-bottom: 20px;
@@ -331,4 +333,4 @@ export default {
     margin-right: 10px;
   }
 }
-</style> 
+</style>
