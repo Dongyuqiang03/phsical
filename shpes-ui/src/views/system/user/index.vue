@@ -56,7 +56,10 @@
       v-loading="listLoading"
       :data="list"
       border
-      style="width: 100%">
+      style="width: 100%"
+      @selection-change="handleSelectionChange"
+      row-key="id"
+      :reserve-selection="true">
       <el-table-column type="selection" width="55" align="center" />
       <el-table-column label="用户名" prop="username" />
       <el-table-column label="姓名">
@@ -114,14 +117,28 @@
       </el-table-column>
     </el-table>
 
+    <!-- Debug info -->
+    <div v-if="true" style="margin: 10px 0; color: #606266; background: #f9f9f9; padding: 8px; border-radius: 4px;">
+      <span>API返回总条数: {{ total }}</span>
+      <span style="margin-left: 15px">当前页: {{ listQuery.pageNum }}</span>
+      <span style="margin-left: 15px">每页条数: {{ listQuery.pageSize }}</span>
+      <span style="margin-left: 15px">当前记录数: {{ list.length }}</span>
+      <span style="margin-left: 15px">有效总条数: {{ effectiveTotal }}</span>
+    </div>
+
     <!-- 分页区域 -->
-    <pagination
-      v-show="total>0"
-      :total="total"
-      :page.sync="listQuery.page"
-      :limit.sync="listQuery.limit"
-      @pagination="getList"
-    />
+    <div class="user-pagination" style="text-align: right; margin-top: 15px; display: block !important; visibility: visible !important; overflow: visible !important; position: relative !important; z-index: 1000 !important; min-height: 50px;">
+      <el-pagination
+        background
+        @size-change="handleSizeChange"
+        @current-change="handleCurrentChange"
+        :current-page="listQuery.pageNum"
+        :page-sizes="[10, 20, 30, 50]"
+        :page-size="listQuery.pageSize"
+        layout="total, sizes, prev, pager, next, jumper"
+        :total="effectiveTotal > 0 ? effectiveTotal : (list.length > 0 ? 999 : 0)">
+      </el-pagination>
+    </div>
 
     <!-- 用户表单对话框 -->
     <el-dialog :title="dialogTitle" :visible.sync="dialogVisible" width="600px">
@@ -259,8 +276,8 @@ export default {
       total: 0,
       listLoading: true,
       listQuery: {
-        page: 1,
-        limit: 10,
+        pageNum: 1,
+        pageSize: 10,
         username: undefined,
         realName: undefined,
         roleId: undefined,
@@ -332,11 +349,33 @@ export default {
     },
     filteredDepartmentOptions() {
       return this.departmentOptions;
+    },
+    effectiveTotal() {
+      // Use our helper method to get correct total
+      return this.getTotalRecords();
     }
   },
   created() {
     this.getList()
     this.getRoleOptions()
+  },
+  mounted() {
+    // Add timeout to ensure DOM is fully rendered
+    setTimeout(() => {
+      const paginationEl = document.querySelector('.user-pagination');
+      if (paginationEl) {
+        console.log('Pagination element found:', paginationEl);
+        console.log('Pagination dimensions:', paginationEl.getBoundingClientRect());
+        
+        // Ensure the parent container is visible and has height
+        const parentEl = paginationEl.parentElement;
+        if (parentEl) {
+          console.log('Parent element dimensions:', parentEl.getBoundingClientRect());
+        }
+      } else {
+        console.error('Pagination element not found in DOM');
+      }
+    }, 1000);
   },
   methods: {
     formatCreateTime(timeArray) {
@@ -354,17 +393,46 @@ export default {
         return '未设置';
       }
     },
-    async getList() {
+    async getList(pagination) {
       try {
+        if (pagination) {
+          this.listQuery.pageNum = pagination.pageNum;
+          this.listQuery.pageSize = pagination.pageSize;
+        }
+        
         this.listLoading = true;
         const response = await getUserList(this.listQuery);
         
+        console.log('API Response:', response);
+        
         if (response && response.code === 200 && response.data) {
-          this.list = response.data.records;
-          this.total = response.data.total;
+          this.list = response.data.records || [];
+          
+          // 处理总记录数
+          if (response.data.total > 0) {
+            // 如果API返回的总记录数大于0，使用API返回的值
+            this.total = response.data.total;
+          } else if (this.list.length > 0) {
+            // 如果API返回总记录数为0但返回了记录，需要处理
+            if (this.listQuery.pageNum > 1) {
+              // 如果当前不是第一页，我们可以估算总记录数
+              // 假设之前页都是满的
+              this.total = (this.listQuery.pageNum - 1) * this.listQuery.pageSize + this.list.length;
+            } else {
+              // 如果是第一页，记录数就是页面上显示的记录数
+              this.total = this.list.length;
+            }
+            console.log('计算得到的总记录数:', this.total);
+          } else {
+            this.total = 0;
+          }
+          
+          console.log('List data:', this.list);
+          console.log('Total records:', this.total);
         } else {
           this.list = [];
           this.total = 0;
+          console.log('No valid data in response');
         }
       } catch (error) {
         console.error('Get user list error:', error);
@@ -406,13 +474,13 @@ export default {
       }
     },
     handleFilter() {
-      this.listQuery.page = 1
+      this.listQuery.pageNum = 1
       this.getList()
     },
     resetQuery() {
       this.listQuery = {
-        page: 1,
-        limit: 10,
+        pageNum: 1,
+        pageSize: 10,
         username: undefined,
         realName: undefined,
         roleId: undefined,
@@ -638,6 +706,30 @@ export default {
         3: '学生'
       };
       return typeMap[type] || '未知';
+    },
+    // 分页相关方法
+    handleSizeChange(val) {
+      this.listQuery.pageSize = val;
+      this.getList();
+    },
+    handleCurrentChange(val) {
+      this.listQuery.pageNum = val;
+      this.getList();
+    },
+    
+    // 获取正确的总记录数，处理后端返回的总记录数可能为0的情况
+    getTotalRecords() {
+      if (this.total > 0) {
+        return this.total;
+      }
+      
+      // 如果后端返回的总记录数为0但有数据，使用当前页面的记录数作为总数
+      if (this.list.length > 0) {
+        // 估计总记录数为当前页记录数乘以总页数
+        return this.list.length * (this.listQuery.pageNum || 1);
+      }
+      
+      return 0;
     }
   }
 }
@@ -658,5 +750,43 @@ export default {
   .upload-demo {
     text-align: center;
   }
+}
+
+.user-pagination {
+  margin-top: 20px;
+  padding: 10px;
+  background-color: #f5f7fa;
+  border-radius: 4px;
+}
+</style>
+
+<style>
+/* Global styles for pagination */
+.el-pagination {
+  display: flex !important;
+  justify-content: flex-end !important;
+  margin-top: 20px !important;
+  padding: 10px !important;
+  background-color: #f0f2f5 !important;
+  border-radius: 4px !important;
+  opacity: 1 !important;
+}
+
+.app-container .user-pagination,
+.user-pagination {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  position: relative !important;
+  z-index: 9999 !important;
+  height: auto !important;
+  min-height: 40px !important;
+  margin-bottom: 20px !important;
+}
+
+/* Ensure the container has enough height */
+.app-container {
+  min-height: 800px !important;
+  overflow: visible !important;
 }
 </style>

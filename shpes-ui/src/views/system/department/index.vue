@@ -1,77 +1,100 @@
 <template>
-  <div class="app-container">
-    <!-- 搜索区域 -->
-    <div class="filter-container">
-      <el-form :inline="true" :model="listQuery" class="form-inline">
-        <el-form-item>
-          <el-input
-            v-model="listQuery.name"
-            placeholder="部门名称"
-            clearable
-            @keyup.enter.native="handleFilter"
-          />
-        </el-form-item>
-        <el-form-item>
-          <el-button type="primary" icon="el-icon-search" @click="handleFilter">搜索</el-button>
-          <el-button icon="el-icon-refresh" @click="resetQuery">重置</el-button>
-        </el-form-item>
-      </el-form>
+  <div class="app-container" style="overflow-y: auto; max-height: 100vh;">
+    <div class="main-content" style="padding-bottom: 60px;">
+      <!-- 搜索区域 -->
+      <div class="filter-container">
+        <el-form :inline="true" :model="listQuery" class="form-inline">
+          <el-form-item>
+            <el-input
+              v-model="listQuery.name"
+              placeholder="部门名称"
+              clearable
+              @keyup.enter.native="handleFilter"
+            />
+          </el-form-item>
+          <el-form-item>
+            <el-button type="primary" icon="el-icon-search" @click="handleFilter">搜索</el-button>
+            <el-button icon="el-icon-refresh" @click="resetQuery">重置</el-button>
+          </el-form-item>
+        </el-form>
+      </div>
+
+      <!-- 操作按钮区域 -->
+      <div class="action-container">
+        <el-button type="primary" icon="el-icon-plus" @click="handleCreate">新增部门</el-button>
+        <el-button type="danger" icon="el-icon-delete" :disabled="!selectedIds.length" @click="handleBatchDelete">批量删除</el-button>
+      </div>
+
+      <!-- 表格区域 -->
+      <div class="table-container" style="overflow: auto; max-height: calc(100vh - 240px);">
+        <el-table
+          v-loading="listLoading"
+          :data="paginatedData"
+          border
+          fit
+          highlight-current-row
+          style="width: 100%;"
+          @selection-change="handleSelectionChange">
+          <el-table-column type="selection" width="55" align="center" />
+          <el-table-column label="部门名称" prop="deptName" />
+          <el-table-column label="部门类型" prop="deptType">
+            <template slot-scope="{row}">
+              <el-tag :type="row.deptType === 1 ? 'success' : 'info'">{{ row.deptType === 1 ? '医疗科室' : '其他部门' }}</el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column label="部门编码" prop="deptCode" width="120" />
+          <el-table-column label="部门描述" prop="description" show-overflow-tooltip />
+          <el-table-column label="创建时间" width="180">
+            <template slot-scope="{row}">
+              <span>{{ formatDateTime(row.createTime) }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="状态" align="center" width="100">
+            <template slot-scope="{row}">
+              <el-switch
+                v-model="row.status"
+                :active-value="1"
+                :inactive-value="0"
+                @change="handleStatusChange(row)"
+              />
+            </template>
+          </el-table-column>
+          <el-table-column label="操作" align="center" width="230">
+            <template slot-scope="{row}">
+              <el-button type="primary" size="mini" @click="handleUpdate(row)">编辑</el-button>
+              <el-button type="info" size="mini" @click="handleUsers(row)">人员</el-button>
+              <el-button type="danger" size="mini" @click="handleDelete(row)">删除</el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+      </div>
+
+      <!-- Debug info only shown in development -->
+      <div v-if="false" style="margin: 10px 0; color: #606266; background: #f9f9f9; padding: 8px; border-radius: 4px;">
+        <span>API返回总条数: {{ total }}</span>
+        <span style="margin-left: 15px">当前页: {{ page }}</span>
+        <span style="margin-left: 15px">每页条数: {{ size }}</span>
+        <span style="margin-left: 15px">当前记录数: {{ paginatedData.length }}</span>
+        <span style="margin-left: 15px">有效总条数: {{ effectiveTotal }}</span>
+      </div>
     </div>
 
-    <!-- 操作按钮区域 -->
-    <div class="action-container">
-      <el-button type="primary" icon="el-icon-plus" @click="handleCreate">新增部门</el-button>
-      <el-button type="danger" icon="el-icon-delete" :disabled="!selectedIds.length" @click="handleBatchDelete">批量删除</el-button>
+    <!-- 固定底部分页栏 -->
+    <div v-if="list.length > 0" style="position: fixed; left: 0; right: 0; bottom: 0; width: 100%; padding: 5px 0; background-color: #fff; border-top: 1px solid #ebeef5; z-index: 100;">
+      <div style="padding: 0 20px; width: 100%; display: flex; justify-content: center;">
+        <el-pagination
+          :pager-count="device === 'mobile' ? 3 : 5"
+          :current-page="page"
+          :page-sizes="[10, 20, 30, 50]"
+          :page-size="size"
+          :layout="device === 'mobile' ? 'prev, pager, next' : 'total, sizes, prev, pager, next'"
+          :total="effectiveTotal"
+          :total-pages="totalPages"
+          @size-change="handleSizeChange"
+          @current-change="handleCurrentChange"
+        />
+      </div>
     </div>
-
-    <!-- 表格区域 -->
-    <el-table
-      v-loading="listLoading"
-      :data="list"
-      border
-      style="width: 100%"
-      @selection-change="handleSelectionChange">
-      <el-table-column type="selection" width="55" align="center" />
-      <el-table-column label="部门名称" prop="deptName" />
-      <el-table-column label="部门类型" prop="deptType">
-        <template slot-scope="{row}">
-          <el-tag :type="row.deptType === 1 ? 'success' : 'info'">{{ row.deptType === 1 ? '医疗科室' : '其他部门' }}</el-tag>
-        </template>
-      </el-table-column>
-      <el-table-column label="部门编码" prop="deptCode" width="120" />
-      <el-table-column label="部门描述" prop="description" show-overflow-tooltip />
-      <el-table-column label="创建时间" width="180">
-        <template slot-scope="{row}">
-          <span>{{ formatDateTime(row.createTime) }}</span>
-        </template>
-      </el-table-column>
-      <el-table-column label="状态" align="center" width="100">
-        <template slot-scope="{row}">
-          <el-switch
-            v-model="row.status"
-            :active-value="1"
-            :inactive-value="0"
-            @change="handleStatusChange(row)"
-          />
-        </template>
-      </el-table-column>
-      <el-table-column label="操作" align="center" width="230">
-        <template slot-scope="{row}">
-          <el-button type="primary" size="mini" @click="handleUpdate(row)">编辑</el-button>
-          <el-button type="info" size="mini" @click="handleUsers(row)">人员</el-button>
-          <el-button type="danger" size="mini" @click="handleDelete(row)">删除</el-button>
-        </template>
-      </el-table-column>
-    </el-table>
-
-    <!-- 分页区域 -->
-    <pagination
-      v-show="total>0"
-      :total="total"
-      :page.sync="listQuery.pageNum"
-      :limit.sync="listQuery.pageSize"
-      @pagination="getList"
-    />
 
     <!-- 部门表单对话框 -->
     <el-dialog :title="dialogTitle" :visible.sync="dialogVisible" width="500px">
@@ -128,20 +151,22 @@
 <script>
 import Pagination from '@/components/Pagination'
 import { getDepartmentList, createDepartment, updateDepartment, getDepartmentUsers, deleteDepartment, batchUpdateStatus } from '@/api/department'
+import { mapGetters } from 'vuex'
 
 export default {
   name: 'Department',
   components: { Pagination },
   data() {
     return {
+      loading: false,
+      listLoading: false,
       list: [],
       total: 0,
-      listLoading: false,
       selectedIds: [],
       listQuery: {
+        dpName: '',
         pageNum: 1,
-        pageSize: 10,
-        name: undefined
+        pageSize: 10
       },
       dialogVisible: false,
       dialogTitle: '',
@@ -162,34 +187,65 @@ export default {
           { required: true, message: '请输入部门编码', trigger: 'blur' }
         ]
       },
-      userList: []
+      userList: [],
+      page: 1,
+      size: 10
+    }
+  },
+  computed: {
+    ...mapGetters([
+      'device'
+    ]),
+    effectiveTotal() {
+      return this.list.length;
+    },
+    totalPages() {
+      return Math.ceil(this.list.length / this.size);
+    },
+    paginatedData() {
+      const start = (this.page - 1) * this.size;
+      const end = start + this.size;
+      return this.list.slice(start, end);
     }
   },
   created() {
+    this.page = this.listQuery.pageNum
+    this.size = this.listQuery.pageSize
     this.getList()
   },
   methods: {
     async getList() {
       this.listLoading = true
       try {
-        const { data } = await getDepartmentList(this.listQuery)
-        this.list = data.records || []
-        this.total = data.total || 0
-      } catch (error) {
-        console.error('获取部门列表失败:', error)
+        // Update listQuery with current page and size
+        this.listQuery.pageNum = this.page
+        this.listQuery.pageSize = this.size
+        
+        const res = await getDepartmentList(this.listQuery)
+        if (res.code === 200) {
+          this.list = res.data.records || res.data
+          if (res.data.total) {
+            this.total = res.data.total
+          }
+        }
+      } finally {
+        this.listLoading = false
       }
-      this.listLoading = false
     },
     handleFilter() {
-      this.listQuery.page = 1
+      this.page = 1
+      this.listQuery.pageNum = 1
       this.getList()
     },
     resetQuery() {
       this.listQuery = {
-        page: 1,
-        limit: 10,
+        pageNum: 1,
+        pageSize: 10,
+        dpName: '',
         name: undefined
       }
+      this.page = 1
+      this.size = 10
       this.getList()
     },
     handleCreate() {
@@ -332,6 +388,22 @@ export default {
       }).catch(() => {
         this.$message.info('已取消删除')
       })
+    },
+    handleSizeChange(val) {
+      this.size = val;
+      this.page = 1;
+      this.getList();
+      // Fix scrolling issue when changing page size
+      this.$nextTick(() => {
+        document.documentElement.scrollTop = 0;
+        document.body.scrollTop = 0;
+        const mainContent = document.querySelector('.main-content');
+        if (mainContent) mainContent.scrollTop = 0;
+      });
+    },
+    handleCurrentChange(page) {
+      this.page = page
+      this.getList()
     }
   }
 }
@@ -340,7 +412,10 @@ export default {
 <style lang="scss" scoped>
 .app-container {
   padding: 20px;
-  height: calc(100vh - 50px);
+  margin-bottom: 40px; /* Add space for the fixed footer */
+  height: auto;
+  min-height: 100%;
+  position: relative;
   overflow-y: auto;
 
   .filter-container {
@@ -350,5 +425,123 @@ export default {
   .action-container {
     margin-bottom: 20px;
   }
+  
+  .main-content {
+    min-height: calc(100vh - 180px);
+  }
+}
+
+.fixed-footer {
+  position: fixed;
+  left: 210px;
+  right: 0;
+  bottom: 0;
+  background-color: #fff;
+  box-shadow: 0 -1px 2px rgba(0, 0, 0, 0.03);
+  padding: 3px 20px;
+  z-index: 100;
+  text-align: center;
+  width: calc(100% - 210px);
+  transition: left 0.28s, width 0.28s;
+  border-top: 1px solid #ebeef5;
+}
+
+/* Responsive styling for sidebar collapsed state */
+.hideSidebar .fixed-footer {
+  left: 54px;
+  width: calc(100% - 54px);
+  margin-left: 54px;
+}
+
+/* Mobile view */
+.mobile .fixed-footer {
+  left: 0;
+  width: 100%;
+  margin-left: 0;
+}
+</style>
+
+<style>
+/* Global styles for pagination */
+.el-pagination {
+  display: flex !important;
+  justify-content: flex-end !important;
+  padding: 10px !important;
+  background-color: transparent !important;
+  border-radius: 4px !important;
+  opacity: 1 !important;
+}
+
+.fixed-footer .el-pagination {
+  margin: 0 auto !important;
+  max-width: 800px;
+  font-size: 13px !important;
+}
+
+.fixed-footer .el-pagination button, 
+.fixed-footer .el-pagination span:not([class*=suffix]),
+.fixed-footer .el-pagination .el-select .el-input .el-input__inner {
+  font-size: 13px !important;
+  min-width: 28px !important;
+  height: 28px !important;
+  line-height: 28px !important;
+}
+
+.fixed-footer .el-pagination .el-select .el-input {
+  margin: 0 5px !important;
+}
+
+.fixed-footer .el-pagination .el-pagination__jump {
+  margin-left: 10px !important;
+}
+</style>
+
+<style>
+/* Global styles for pagination */
+.el-pagination {
+  display: flex !important;
+  justify-content: center !important;
+  padding: 8px !important;
+  background-color: transparent !important;
+  border-radius: 0 !important;
+  opacity: 0.9 !important;
+}
+
+.fixed-footer .el-pagination {
+  margin: 0 auto !important;
+  max-width: 800px;
+  font-size: 12px !important;
+}
+
+.fixed-footer .el-pagination button, 
+.fixed-footer .el-pagination span:not([class*=suffix]),
+.fixed-footer .el-pagination .el-select .el-input .el-input__inner {
+  font-size: 12px !important;
+  min-width: 24px !important;
+  height: 24px !important;
+  line-height: 24px !important;
+}
+
+.fixed-footer .el-pagination .el-select .el-input {
+  margin: 0 5px !important;
+}
+
+.fixed-footer .el-pagination .el-pagination__jump {
+  margin-left: 10px !important;
+}
+
+.fixed-footer .el-pagination .btn-prev,
+.fixed-footer .el-pagination .btn-next {
+  background-color: transparent !important;
+}
+
+.fixed-footer .el-pagination .number {
+  background-color: transparent !important;
+}
+
+.fixed-footer .el-pagination .number.active {
+  color: #409EFF !important;
+  background-color: #ecf5ff !important;
+  border-color: #b3d8ff !important;
 }
 </style>
