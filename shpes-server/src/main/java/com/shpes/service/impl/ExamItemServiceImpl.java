@@ -49,9 +49,8 @@ public class ExamItemServiceImpl extends ServiceImpl<ExamItemMapper, ExamItem> i
                 .like(StringUtils.isNotBlank(keyword), ExamItem::getCode, keyword)
                 .orderByAsc(ExamItem::getId);
 
-        // 执行分页查询
-        Page<ExamItem> page = new Page<>(pageNum, pageSize);
-        page = baseMapper.selectPage(page, wrapper);
+        // 执行分页查询，使用 IService 的 page 方法
+        Page<ExamItem> page = page(new Page<>(pageNum, pageSize), wrapper);
 
         // 转换记录列表
         List<ExamItemVO> records = page.getRecords().stream()
@@ -59,7 +58,7 @@ public class ExamItemServiceImpl extends ServiceImpl<ExamItemMapper, ExamItem> i
                 .collect(Collectors.toList());
 
         // 返回通用分页对象
-        return CommonPage.restPage(records, page.getTotal(), pageNum, pageSize);
+        return CommonPage.restPage(records, page.getTotal(), page.getCurrent(), page.getSize());
     }
 
     @Override

@@ -26,7 +26,7 @@
       </div>
 
       <!-- 表格区域 -->
-      <div class="table-container" style="overflow: auto; max-height: calc(100vh - 240px);">
+      <div class="table-container" style="overflow: auto; max-height: calc(100vh - 280px);">
         <el-table
           v-loading="listLoading"
           :data="paginatedData"
@@ -69,6 +69,21 @@
         </el-table>
       </div>
 
+      <!-- 分页组件 - 直接放在表格下方 -->
+      <div v-if="list.length > 0" class="pagination-wrapper">
+        <el-pagination
+          class="department-pagination"
+          :pager-count="device === 'mobile' ? 3 : 5"
+          :current-page="page"
+          :page-sizes="[10, 20, 30, 50]"
+          :page-size="size"
+          :layout="device === 'mobile' ? 'prev, pager, next' : 'total, sizes, prev, pager, next'"
+          :total="effectiveTotal"
+          @size-change="handleSizeChange"
+          @current-change="handleCurrentChange"
+        />
+      </div>
+
       <!-- Debug info only shown in development -->
       <div v-if="false" style="margin: 10px 0; color: #606266; background: #f9f9f9; padding: 8px; border-radius: 4px;">
         <span>API返回总条数: {{ total }}</span>
@@ -76,23 +91,6 @@
         <span style="margin-left: 15px">每页条数: {{ size }}</span>
         <span style="margin-left: 15px">当前记录数: {{ paginatedData.length }}</span>
         <span style="margin-left: 15px">有效总条数: {{ effectiveTotal }}</span>
-      </div>
-    </div>
-
-    <!-- 固定底部分页栏 -->
-    <div v-if="list.length > 0" style="position: fixed; left: 0; right: 0; bottom: 0; width: 100%; padding: 5px 0; background-color: #fff; border-top: 1px solid #ebeef5; z-index: 100;">
-      <div style="padding: 0 20px; width: 100%; display: flex; justify-content: center;">
-        <el-pagination
-          :pager-count="device === 'mobile' ? 3 : 5"
-          :current-page="page"
-          :page-sizes="[10, 20, 30, 50]"
-          :page-size="size"
-          :layout="device === 'mobile' ? 'prev, pager, next' : 'total, sizes, prev, pager, next'"
-          :total="effectiveTotal"
-          :total-pages="totalPages"
-          @size-change="handleSizeChange"
-          @current-change="handleCurrentChange"
-        />
       </div>
     </div>
 
@@ -412,7 +410,6 @@ export default {
 <style lang="scss" scoped>
 .app-container {
   padding: 20px;
-  margin-bottom: 40px; /* Add space for the fixed footer */
   height: auto;
   min-height: 100%;
   position: relative;
@@ -429,6 +426,13 @@ export default {
   .main-content {
     min-height: calc(100vh - 180px);
   }
+}
+
+.pagination-wrapper {
+  padding: 15px 0;
+  display: flex;
+  justify-content: center;
+  background-color: #fff;
 }
 
 .fixed-footer {
@@ -465,81 +469,44 @@ export default {
 /* Global styles for pagination */
 .el-pagination {
   display: flex !important;
-  justify-content: flex-end !important;
-  padding: 10px !important;
-  background-color: transparent !important;
-  border-radius: 4px !important;
-  opacity: 1 !important;
-}
-
-.fixed-footer .el-pagination {
-  margin: 0 auto !important;
-  max-width: 800px;
-  font-size: 13px !important;
-}
-
-.fixed-footer .el-pagination button, 
-.fixed-footer .el-pagination span:not([class*=suffix]),
-.fixed-footer .el-pagination .el-select .el-input .el-input__inner {
-  font-size: 13px !important;
-  min-width: 28px !important;
-  height: 28px !important;
-  line-height: 28px !important;
-}
-
-.fixed-footer .el-pagination .el-select .el-input {
-  margin: 0 5px !important;
-}
-
-.fixed-footer .el-pagination .el-pagination__jump {
-  margin-left: 10px !important;
-}
-</style>
-
-<style>
-/* Global styles for pagination */
-.el-pagination {
-  display: flex !important;
   justify-content: center !important;
   padding: 8px !important;
   background-color: transparent !important;
-  border-radius: 0 !important;
-  opacity: 0.9 !important;
-}
-
-.fixed-footer .el-pagination {
   margin: 0 auto !important;
-  max-width: 800px;
-  font-size: 12px !important;
 }
 
-.fixed-footer .el-pagination button, 
-.fixed-footer .el-pagination span:not([class*=suffix]),
-.fixed-footer .el-pagination .el-select .el-input .el-input__inner {
+.department-pagination {
+  width: 100% !important;
+  max-width: 800px !important;
+}
+
+.el-pagination button, 
+.el-pagination span:not([class*=suffix]),
+.el-pagination .el-select .el-input .el-input__inner {
   font-size: 12px !important;
   min-width: 24px !important;
   height: 24px !important;
   line-height: 24px !important;
 }
 
-.fixed-footer .el-pagination .el-select .el-input {
+.el-pagination .el-select .el-input {
   margin: 0 5px !important;
 }
 
-.fixed-footer .el-pagination .el-pagination__jump {
+.el-pagination .el-pagination__jump {
   margin-left: 10px !important;
 }
 
-.fixed-footer .el-pagination .btn-prev,
-.fixed-footer .el-pagination .btn-next {
+.el-pagination .btn-prev,
+.el-pagination .btn-next {
   background-color: transparent !important;
 }
 
-.fixed-footer .el-pagination .number {
+.el-pagination .number {
   background-color: transparent !important;
 }
 
-.fixed-footer .el-pagination .number.active {
+.el-pagination .number.active {
   color: #409EFF !important;
   background-color: #ecf5ff !important;
   border-color: #b3d8ff !important;

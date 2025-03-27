@@ -1,143 +1,148 @@
 <template>
   <div class="app-container">
-    <!-- 搜索区域 -->
-    <div class="filter-container">
-      <el-form :inline="true" :model="listQuery" class="form-inline">
-        <el-form-item>
-          <el-input
-            v-model="listQuery.username"
-            placeholder="用户名"
-            clearable
-            @keyup.enter.native="handleFilter"
-          />
-        </el-form-item>
-        <el-form-item>
-          <el-input
-            v-model="listQuery.realName"
-            placeholder="姓名"
-            clearable
-            @keyup.enter.native="handleFilter"
-          />
-        </el-form-item>
-        <el-form-item>
-          <el-select v-model="listQuery.userType" placeholder="用户类型" clearable>
-            <el-option label="医护人员" :value="1" />
-            <el-option label="教职工" :value="2" />
-            <el-option label="学生" :value="3" />
-          </el-select>
-        </el-form-item>
-        <el-form-item>
-          <el-select v-model="listQuery.roleId" placeholder="角色" clearable>
-            <el-option
-              v-for="item in roleOptions"
-              :key="item.id"
-              :label="item.roleName"
-              :value="item.id"
+    <div class="main-content" style="padding-bottom: 60px;">
+      <!-- 搜索区域 -->
+      <div class="filter-container">
+        <el-form :inline="true" :model="listQuery" class="form-inline">
+          <el-form-item>
+            <el-input
+              v-model="listQuery.username"
+              placeholder="用户名"
+              clearable
+              @keyup.enter.native="handleFilter"
             />
-          </el-select>
-        </el-form-item>
-        <el-form-item>
-          <el-button type="primary" icon="el-icon-search" @click="handleFilter">搜索</el-button>
-          <el-button icon="el-icon-refresh" @click="resetQuery">重置</el-button>
-        </el-form-item>
-      </el-form>
-    </div>
+          </el-form-item>
+          <el-form-item>
+            <el-input
+              v-model="listQuery.realName"
+              placeholder="姓名"
+              clearable
+              @keyup.enter.native="handleFilter"
+            />
+          </el-form-item>
+          <el-form-item>
+            <el-select v-model="listQuery.userType" placeholder="用户类型" clearable>
+              <el-option label="医护人员" :value="1" />
+              <el-option label="教职工" :value="2" />
+              <el-option label="学生" :value="3" />
+            </el-select>
+          </el-form-item>
+          <el-form-item>
+            <el-select v-model="listQuery.roleId" placeholder="角色" clearable>
+              <el-option
+                v-for="item in roleOptions"
+                :key="item.id"
+                :label="item.roleName"
+                :value="item.id"
+              />
+            </el-select>
+          </el-form-item>
+          <el-form-item>
+            <el-button type="primary" icon="el-icon-search" @click="handleFilter">搜索</el-button>
+            <el-button icon="el-icon-refresh" @click="resetQuery">重置</el-button>
+          </el-form-item>
+        </el-form>
+      </div>
 
-    <!-- 操作按钮区域 -->
-    <div class="action-container">
-      <el-button type="primary" icon="el-icon-plus" @click="handleCreate">新增用户</el-button>
-      <el-button type="danger" icon="el-icon-delete" :disabled="!selectedIds.length" @click="handleBatchDelete">批量删除</el-button>
-      <el-button type="success" icon="el-icon-upload2" @click="handleImport">导入</el-button>
-      <el-button type="warning" icon="el-icon-download" @click="handleExport">导出</el-button>
-    </div>
+      <!-- 操作按钮区域 -->
+      <div class="action-container">
+        <el-button type="primary" icon="el-icon-plus" @click="handleCreate">新增用户</el-button>
+        <el-button type="danger" icon="el-icon-delete" :disabled="!selectedIds.length" @click="handleBatchDelete">批量删除</el-button>
+        <el-button type="success" icon="el-icon-upload2" @click="handleImport">导入</el-button>
+        <el-button type="warning" icon="el-icon-download" @click="handleExport">导出</el-button>
+      </div>
 
-    <!-- 表格区域 -->
-    <el-table
-      v-loading="listLoading"
-      :data="list"
-      border
-      style="width: 100%"
-      @selection-change="handleSelectionChange"
-      row-key="id"
-      :reserve-selection="true">
-      <el-table-column type="selection" width="55" align="center" />
-      <el-table-column label="用户名" prop="username" />
-      <el-table-column label="姓名">
-        <template slot-scope="{row}">
-          <span>{{ row.realName || '未设置' }}</span>
-        </template>
-      </el-table-column>
-      <el-table-column label="用户类型">
-        <template slot-scope="{row}">
-          <span>{{ getUserTypeName(row.userType) }}</span>
-        </template>
-      </el-table-column>
-      <el-table-column label="角色">
-        <template slot-scope="{row}">
-          <span>{{ row.roles ? row.roles.map(role => role.roleName).join(', ') : '未设置' }}</span>
-        </template>
-      </el-table-column>
-      <el-table-column label="部门">
-        <template slot-scope="{row}">
-          <span>{{ row.deptName || '未设置' }}</span> 
-        </template>
-      </el-table-column>
-      <el-table-column label="手机号">
-        <template slot-scope="{row}">
-          <span>{{ row.phone || '未设置' }}</span>
-        </template>
-      </el-table-column>
-      <el-table-column label="邮箱">
-        <template slot-scope="{row}">
-          <span>{{ row.email || '未设置' }}</span>
-        </template>
-      </el-table-column>
-      <el-table-column label="状态" align="center">
-        <template slot-scope="{row}">
-          <el-switch
-            v-model="row.status"
-            :active-value="1"
-            :inactive-value="0"
-            @change="handleStatusChange(row)"
-          />
-        </template>
-      </el-table-column>
-      <el-table-column label="创建时间">
-        <template slot-scope="{row}">
-          <span>{{ formatCreateTime(row.createTime) }}</span>
-        </template>
-      </el-table-column>
-      <el-table-column label="操作" align="center" width="300">
-        <template slot-scope="{row}">
-          <el-button type="primary" size="mini" @click="handleUpdate(row)">编辑</el-button>
-          <el-button type="success" size="mini" @click="handleAssignRoles(row)">分配角色</el-button>
-          <el-button type="danger" size="mini" @click="handleDelete(row)">删除</el-button>
-          <el-button type="warning" size="mini" @click="handleResetPwd(row)">重置密码</el-button>
-        </template>
-      </el-table-column>
-    </el-table>
+      <!-- 表格区域 -->
+      <div class="table-container" style="overflow: auto; max-height: calc(100vh - 280px);">
+        <el-table
+          v-loading="listLoading"
+          :data="list"
+          border
+          style="width: 100%"
+          @selection-change="handleSelectionChange"
+          row-key="id"
+          :reserve-selection="true">
+          <el-table-column type="selection" width="55" align="center" />
+          <el-table-column label="用户名" prop="username" />
+          <el-table-column label="姓名">
+            <template slot-scope="{row}">
+              <span>{{ row.realName || '未设置' }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="用户类型">
+            <template slot-scope="{row}">
+              <span>{{ getUserTypeName(row.userType) }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="角色">
+            <template slot-scope="{row}">
+              <span>{{ row.roles ? row.roles.map(role => role.roleName).join(', ') : '未设置' }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="部门">
+            <template slot-scope="{row}">
+              <span>{{ row.deptName || '未设置' }}</span> 
+            </template>
+          </el-table-column>
+          <el-table-column label="手机号">
+            <template slot-scope="{row}">
+              <span>{{ row.phone || '未设置' }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="邮箱">
+            <template slot-scope="{row}">
+              <span>{{ row.email || '未设置' }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="状态" align="center">
+            <template slot-scope="{row}">
+              <el-switch
+                v-model="row.status"
+                :active-value="1"
+                :inactive-value="0"
+                @change="handleStatusChange(row)"
+              />
+            </template>
+          </el-table-column>
+          <el-table-column label="创建时间">
+            <template slot-scope="{row}">
+              <span>{{ formatCreateTime(row.createTime) }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="操作" align="center" width="300">
+            <template slot-scope="{row}">
+              <el-button type="primary" size="mini" @click="handleUpdate(row)">编辑</el-button>
+              <el-button type="success" size="mini" @click="handleAssignRoles(row)">分配角色</el-button>
+              <el-button type="danger" size="mini" @click="handleDelete(row)">删除</el-button>
+              <el-button type="warning" size="mini" @click="handleResetPwd(row)">重置密码</el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+      </div>
 
-    <!-- Debug info -->
-    <div v-if="true" style="margin: 10px 0; color: #606266; background: #f9f9f9; padding: 8px; border-radius: 4px;">
-      <span>API返回总条数: {{ total }}</span>
-      <span style="margin-left: 15px">当前页: {{ listQuery.pageNum }}</span>
-      <span style="margin-left: 15px">每页条数: {{ listQuery.pageSize }}</span>
-      <span style="margin-left: 15px">当前记录数: {{ list.length }}</span>
-      <span style="margin-left: 15px">有效总条数: {{ effectiveTotal }}</span>
-    </div>
+      <!-- 分页组件 - 直接放在表格下方 -->
+      <div v-if="list.length > 0" class="pagination-wrapper">
+        <el-pagination
+          class="department-pagination"
+          :pager-count="device === 'mobile' ? 3 : 5"
+          :current-page="listQuery.pageNum"
+          :page-sizes="[10, 20, 30, 50]"
+          :page-size="listQuery.pageSize"
+          :layout="device === 'mobile' ? 'prev, pager, next' : 'total, sizes, prev, pager, next'"
+          :total="effectiveTotal"
+          @size-change="handleSizeChange"
+          @current-change="handleCurrentChange"
+        />
+      </div>
 
-    <!-- 分页区域 -->
-    <div class="user-pagination" style="text-align: right; margin-top: 15px; display: block !important; visibility: visible !important; overflow: visible !important; position: relative !important; z-index: 1000 !important; min-height: 50px;">
-      <el-pagination
-        background
-        @size-change="handleSizeChange"
-        @current-change="handleCurrentChange"
-        :current-page="listQuery.pageNum"
-        :page-sizes="[10, 20, 30, 50]"
-        :page-size="listQuery.pageSize"
-        layout="total, sizes, prev, pager, next, jumper"
-        :total="effectiveTotal > 0 ? effectiveTotal : (list.length > 0 ? 999 : 0)">
-      </el-pagination>
+      <!-- Debug info -->
+      <div v-if="false" style="margin: 10px 0; color: #606266; background: #f9f9f9; padding: 8px; border-radius: 4px;">
+        <span>API返回总条数: {{ total }}</span>
+        <span style="margin-left: 15px">当前页: {{ listQuery.pageNum }}</span>
+        <span style="margin-left: 15px">每页条数: {{ listQuery.pageSize }}</span>
+        <span style="margin-left: 15px">当前记录数: {{ list.length }}</span>
+        <span style="margin-left: 15px">有效总条数: {{ effectiveTotal }}</span>
+      </div>
     </div>
 
     <!-- 用户表单对话框 -->
@@ -245,6 +250,7 @@ import { formatDateTime } from '@/utils/date'
 import { getUserList, createUser, updateUser, deleteUser, batchDeleteUser, updateUserStatus, resetUserPassword, exportUser } from '@/api/user'
 import { getAllRoles } from '@/api/system/role'
 import { getAllDepartments } from '@/api/department'
+import { mapGetters } from 'vuex'
 
 export default {
   name: 'User',
@@ -335,6 +341,9 @@ export default {
     }
   },
   computed: {
+    ...mapGetters([
+      'device'
+    ]),
     filteredRoleOptions() {
       if (!this.temp.userType) return this.roleOptions;
       
@@ -351,31 +360,31 @@ export default {
       return this.departmentOptions;
     },
     effectiveTotal() {
-      // Use our helper method to get correct total
-      return this.getTotalRecords();
+      // 如果API返回的total大于0，则使用API返回的total
+      if (this.total > 0) {
+        return this.total;
+      }
+      
+      // 如果API返回total为0但是有数据，则至少返回列表长度或者一个估算值
+      if (this.list.length > 0) {
+        // 如果当前不是第一页，我们可以估算总数
+        if (this.listQuery.pageNum > 1) {
+          return (this.listQuery.pageNum - 1) * this.listQuery.pageSize + this.list.length;
+        }
+        // 如果是第一页且记录不满一页，返回实际记录数
+        if (this.list.length < this.listQuery.pageSize) {
+          return this.list.length;
+        }
+        // 如果是第一页且记录数等于每页数量，返回每页数量的2倍作为估计
+        return this.list.length * 2;
+      }
+      
+      return 0;
     }
   },
   created() {
     this.getList()
     this.getRoleOptions()
-  },
-  mounted() {
-    // Add timeout to ensure DOM is fully rendered
-    setTimeout(() => {
-      const paginationEl = document.querySelector('.user-pagination');
-      if (paginationEl) {
-        console.log('Pagination element found:', paginationEl);
-        console.log('Pagination dimensions:', paginationEl.getBoundingClientRect());
-        
-        // Ensure the parent container is visible and has height
-        const parentEl = paginationEl.parentElement;
-        if (parentEl) {
-          console.log('Parent element dimensions:', parentEl.getBoundingClientRect());
-        }
-      } else {
-        console.error('Pagination element not found in DOM');
-      }
-    }, 1000);
   },
   methods: {
     formatCreateTime(timeArray) {
@@ -413,22 +422,16 @@ export default {
             // 如果API返回的总记录数大于0，使用API返回的值
             this.total = response.data.total;
           } else if (this.list.length > 0) {
-            // 如果API返回总记录数为0但返回了记录，需要处理
-            if (this.listQuery.pageNum > 1) {
-              // 如果当前不是第一页，我们可以估算总记录数
-              // 假设之前页都是满的
-              this.total = (this.listQuery.pageNum - 1) * this.listQuery.pageSize + this.list.length;
-            } else {
-              // 如果是第一页，记录数就是页面上显示的记录数
-              this.total = this.list.length;
-            }
-            console.log('计算得到的总记录数:', this.total);
+            // API返回总记录数为0但有数据时，保留total为0
+            // effectiveTotal计算属性会处理这种情况
+            this.total = 0;
           } else {
             this.total = 0;
           }
           
           console.log('List data:', this.list);
           console.log('Total records:', this.total);
+          console.log('Effective total for pagination:', this.effectiveTotal);
         } else {
           this.list = [];
           this.total = 0;
@@ -710,27 +713,25 @@ export default {
     // 分页相关方法
     handleSizeChange(val) {
       this.listQuery.pageSize = val;
+      this.listQuery.pageNum = 1;  // 切换每页条数时重置为第一页
       this.getList();
+      // 修复滚动问题
+      this.$nextTick(() => {
+        document.documentElement.scrollTop = 0;
+        document.body.scrollTop = 0;
+        const mainContent = document.querySelector('.app-container');
+        if (mainContent) mainContent.scrollTop = 0;
+      });
     },
     handleCurrentChange(val) {
       this.listQuery.pageNum = val;
       this.getList();
+      // 滚动到顶部
+      this.$nextTick(() => {
+        document.documentElement.scrollTop = 0;
+        document.body.scrollTop = 0;
+      });
     },
-    
-    // 获取正确的总记录数，处理后端返回的总记录数可能为0的情况
-    getTotalRecords() {
-      if (this.total > 0) {
-        return this.total;
-      }
-      
-      // 如果后端返回的总记录数为0但有数据，使用当前页面的记录数作为总数
-      if (this.list.length > 0) {
-        // 估计总记录数为当前页记录数乘以总页数
-        return this.list.length * (this.listQuery.pageNum || 1);
-      }
-      
-      return 0;
-    }
   }
 }
 </script>
@@ -738,6 +739,10 @@ export default {
 <style lang="scss" scoped>
 .app-container {
   padding: 20px;
+  height: auto;
+  min-height: 100%;
+  position: relative;
+  overflow-y: auto;
 
   .filter-container {
     margin-bottom: 20px;
@@ -746,17 +751,42 @@ export default {
   .action-container {
     margin-bottom: 20px;
   }
-
-  .upload-demo {
-    text-align: center;
-  }
 }
 
-.user-pagination {
-  margin-top: 20px;
-  padding: 10px;
-  background-color: #f5f7fa;
-  border-radius: 4px;
+.pagination-wrapper {
+  padding: 15px 0;
+  display: flex;
+  justify-content: center;
+  background-color: #fff;
+}
+
+.fixed-footer {
+  position: fixed;
+  left: 210px; /* Account for sidebar width */
+  right: 0;
+  bottom: 0;
+  background-color: #fff;
+  box-shadow: 0 -1px 2px rgba(0, 0, 0, 0.03);
+  padding: 3px 20px;
+  z-index: 100;
+  text-align: center;
+  width: calc(100% - 210px); /* Adjust width to account for sidebar */
+  transition: left 0.28s, width 0.28s;
+  border-top: 1px solid #ebeef5;
+}
+
+/* Responsive styling for sidebar collapsed state */
+.hideSidebar .fixed-footer {
+  left: 54px;
+  width: calc(100% - 54px);
+  margin-left: 54px;
+}
+
+/* Mobile view */
+.mobile .fixed-footer {
+  left: 0;
+  width: 100%;
+  margin-left: 0;
 }
 </style>
 
@@ -764,29 +794,53 @@ export default {
 /* Global styles for pagination */
 .el-pagination {
   display: flex !important;
-  justify-content: flex-end !important;
-  margin-top: 20px !important;
-  padding: 10px !important;
-  background-color: #f0f2f5 !important;
-  border-radius: 4px !important;
-  opacity: 1 !important;
+  justify-content: center !important;
+  padding: 8px !important;
+  background-color: transparent !important;
+  margin: 0 auto !important;
 }
 
-.app-container .user-pagination,
-.user-pagination {
-  display: block !important;
-  visibility: visible !important;
-  opacity: 1 !important;
-  position: relative !important;
-  z-index: 9999 !important;
-  height: auto !important;
-  min-height: 40px !important;
-  margin-bottom: 20px !important;
+.department-pagination {
+  width: 100% !important;
+  max-width: 800px !important;
 }
 
-/* Ensure the container has enough height */
+.el-pagination button, 
+.el-pagination span:not([class*=suffix]),
+.el-pagination .el-select .el-input .el-input__inner {
+  font-size: 12px !important;
+  min-width: 24px !important;
+  height: 24px !important;
+  line-height: 24px !important;
+}
+
+.el-pagination .el-select .el-input {
+  margin: 0 5px !important;
+}
+
+.el-pagination .el-pagination__jump {
+  margin-left: 10px !important;
+}
+
+.el-pagination .btn-prev,
+.el-pagination .btn-next {
+  background-color: transparent !important;
+}
+
+.el-pagination .number {
+  background-color: transparent !important;
+}
+
+.el-pagination .number.active {
+  color: #409EFF !important;
+  background-color: #ecf5ff !important;
+  border-color: #b3d8ff !important;
+}
+
+/* Remove unnecessary bottom padding */
 .app-container {
   min-height: 800px !important;
   overflow: visible !important;
+  padding-bottom: 20px !important;
 }
 </style>

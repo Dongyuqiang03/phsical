@@ -36,18 +36,22 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
 
     @Override
     public CommonPage<RoleDetailVO> getRolePage(Integer pageNum, Integer pageSize, String name, Integer status) {
-        Page<SysRole> page = new Page<>(pageNum, pageSize);
+        // 构建查询条件
         LambdaQueryWrapper<SysRole> wrapper = new LambdaQueryWrapper<>();
         wrapper.like(StringUtils.isNotBlank(name), SysRole::getRoleName, name)
                 .eq(status != null, SysRole::getStatus, status)
                 .orderByAsc(SysRole::getId);
-        Page<SysRole> rolePage = baseMapper.selectPage(page, wrapper);
+                
+        // 使用 IService 的 page 方法进行分页查询
+        Page<SysRole> page = page(new Page<>(pageNum, pageSize), wrapper);
         
-        List<RoleDetailVO> records = rolePage.getRecords().stream()
+        // 转换记录为VO对象
+        List<RoleDetailVO> records = page.getRecords().stream()
                 .map(RoleDetailVO::convertToVO)
                 .collect(Collectors.toList());
         
-        return CommonPage.restPage(records, rolePage.getTotal(), pageNum, pageSize);
+        // 使用CommonPage的restPage方法，返回带有正确总记录数的分页结果
+        return CommonPage.restPage(records, page.getTotal(), page.getCurrent(), page.getSize());
     }
 
     @Override

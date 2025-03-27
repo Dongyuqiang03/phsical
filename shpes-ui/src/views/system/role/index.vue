@@ -33,44 +33,52 @@
     </div>
 
     <!-- 表格区域 -->
-    <el-table
-      v-loading="listLoading"
-      :data="list"
-      border
-      style="width: 100%"
-      @selection-change="handleSelectionChange">
-      <el-table-column type="selection" width="55" align="center" />
-      <el-table-column label="角色名称" prop="roleName" />
-      <el-table-column label="角色编码" prop="roleCode" />
-      <el-table-column label="描述" prop="description" show-overflow-tooltip />
-      <el-table-column label="状态" align="center">
-        <template slot-scope="{row}">
-          <el-switch
-            v-model="row.status"
-            :active-value="1"
-            :inactive-value="0"
-            @change="handleStatusChange(row)"
-          />
-        </template>
-      </el-table-column>
-      <el-table-column label="创建时间" prop="createTime" width="180" />
-      <el-table-column label="操作" align="center" width="300">
-        <template slot-scope="{row}">
-          <el-button type="primary" size="mini" @click="handleUpdate(row)">编辑</el-button>
-          <el-button type="success" size="mini" @click="handlePermission(row)">权限设置</el-button>
-          <el-button type="danger" size="mini" @click="handleDelete(row)">删除</el-button>
-        </template>
-      </el-table-column>
-    </el-table>
+    <div class="table-container" style="overflow: auto; max-height: calc(100vh - 280px);">
+      <el-table
+        v-loading="listLoading"
+        :data="list"
+        border
+        style="width: 100%"
+        @selection-change="handleSelectionChange">
+        <el-table-column type="selection" width="55" align="center" />
+        <el-table-column label="角色名称" prop="roleName" />
+        <el-table-column label="角色编码" prop="roleCode" />
+        <el-table-column label="描述" prop="description" show-overflow-tooltip />
+        <el-table-column label="状态" align="center">
+          <template slot-scope="{row}">
+            <el-switch
+              v-model="row.status"
+              :active-value="1"
+              :inactive-value="0"
+              @change="handleStatusChange(row)"
+            />
+          </template>
+        </el-table-column>
+        <el-table-column label="创建时间" prop="createTime" width="180" />
+        <el-table-column label="操作" align="center" width="300">
+          <template slot-scope="{row}">
+            <el-button type="primary" size="mini" @click="handleUpdate(row)">编辑</el-button>
+            <el-button type="success" size="mini" @click="handlePermission(row)">权限设置</el-button>
+            <el-button type="danger" size="mini" @click="handleDelete(row)">删除</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+    </div>
 
-    <!-- 分页区域 -->
-    <pagination
-      v-show="total>0"
-      :total="total"
-      :page.sync="listQuery.pageNum"
-      :limit.sync="listQuery.pageSize"
-      @pagination="getList"
-    />
+    <!-- 分页组件 - 直接放在表格下方 -->
+    <div v-if="list.length > 0" class="pagination-wrapper">
+      <el-pagination
+        class="department-pagination"
+        :pager-count="device === 'mobile' ? 3 : 5"
+        :current-page="listQuery.pageNum"
+        :page-sizes="[10, 20, 30, 50]"
+        :page-size="listQuery.pageSize"
+        :layout="device === 'mobile' ? 'prev, pager, next' : 'total, sizes, prev, pager, next'"
+        :total="total"
+        @size-change="handleSizeChange"
+        @current-change="handleCurrentChange"
+      />
+    </div>
 
     <!-- 角色表单对话框 -->
     <el-dialog :title="dialogTitle" :visible.sync="dialogVisible" width="500px">
@@ -126,12 +134,11 @@
 </template>
 
 <script>
-import Pagination from '@/components/Pagination'
+import { mapGetters } from 'vuex'
 import { getRoleList, createRole, updateRole, deleteRole, batchDeleteRole, updateRoleStatus, getRolePermissions, updateRolePermissions } from '@/api/role'
 
 export default {
   name: 'Role',
-  components: { Pagination },
   data() {
     return {
       list: [],
@@ -170,6 +177,11 @@ export default {
       checkedPermissions: [] // 已选权限ID
     }
   },
+  computed: {
+    ...mapGetters([
+      'device'
+    ])
+  },
   created() {
     this.getList()
   },
@@ -197,13 +209,13 @@ export default {
       }
     },
     handleFilter() {
-      this.listQuery.page = 1
+      this.listQuery.pageNum = 1
       this.getList()
     },
     resetQuery() {
       this.listQuery = {
-        page: 1,
-        limit: 10,
+        pageNum: 1,
+        pageSize: 10,
         name: undefined,
         code: undefined
       }
@@ -310,6 +322,27 @@ export default {
       } catch (error) {
         console.error('设置角色权限失败:', error)
       }
+    },
+    handleSizeChange(val) {
+      this.listQuery.pageSize = val;
+      this.listQuery.pageNum = 1;  // 切换每页条数时重置为第一页
+      this.getList();
+      // 修复滚动问题
+      this.$nextTick(() => {
+        document.documentElement.scrollTop = 0;
+        document.body.scrollTop = 0;
+        const mainContent = document.querySelector('.app-container');
+        if (mainContent) mainContent.scrollTop = 0;
+      });
+    },
+    handleCurrentChange(val) {
+      this.listQuery.pageNum = val;
+      this.getList();
+      // 滚动到顶部
+      this.$nextTick(() => {
+        document.documentElement.scrollTop = 0;
+        document.body.scrollTop = 0;
+      });
     }
   }
 }
@@ -318,7 +351,9 @@ export default {
 <style lang="scss" scoped>
 .app-container {
   padding: 20px;
-  height: calc(100vh - 50px);
+  height: auto;
+  min-height: 100%;
+  position: relative;
   overflow-y: auto;
 
   .filter-container {
@@ -332,5 +367,64 @@ export default {
   .filter-item {
     margin-right: 10px;
   }
+}
+
+.table-container {
+  margin-bottom: 10px;
+}
+
+.pagination-wrapper {
+  padding: 15px 0;
+  display: flex;
+  justify-content: center;
+  background-color: #fff;
+}
+</style>
+
+<style>
+/* Global styles for pagination */
+.el-pagination {
+  display: flex !important;
+  justify-content: center !important;
+  padding: 8px !important;
+  background-color: transparent !important;
+  margin: 0 auto !important;
+}
+
+.department-pagination {
+  width: 100% !important;
+  max-width: 800px !important;
+}
+
+.el-pagination button, 
+.el-pagination span:not([class*=suffix]),
+.el-pagination .el-select .el-input .el-input__inner {
+  font-size: 12px !important;
+  min-width: 24px !important;
+  height: 24px !important;
+  line-height: 24px !important;
+}
+
+.el-pagination .el-select .el-input {
+  margin: 0 5px !important;
+}
+
+.el-pagination .el-pagination__jump {
+  margin-left: 10px !important;
+}
+
+.el-pagination .btn-prev,
+.el-pagination .btn-next {
+  background-color: transparent !important;
+}
+
+.el-pagination .number {
+  background-color: transparent !important;
+}
+
+.el-pagination .number.active {
+  color: #409EFF !important;
+  background-color: #ecf5ff !important;
+  border-color: #b3d8ff !important;
 }
 </style>
