@@ -2,6 +2,9 @@ package com.shpes.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.shpes.common.api.CommonPage;
+import com.shpes.dto.ExamTimeSlotDTO;
+import com.shpes.dto.ExamTimeSlotBatchDTO;
+import com.shpes.dto.ExamTimeSlotUpdateDTO;
 import com.shpes.entity.ExamTimeSlot;
 import com.shpes.vo.ExamTimeSlotVO;
 
@@ -16,12 +19,17 @@ public interface ExamTimeSlotService extends IService<ExamTimeSlot> {
     /**
      * 获取时间段列表
      */
-    CommonPage<ExamTimeSlotVO> getTimeSlotPage(Integer pageNum, Integer pageSize, Long departmentId, LocalDate date);
+    CommonPage<ExamTimeSlotVO> getTimeSlotPage(Integer pageNum, Integer pageSize, Long deptId, LocalDate date);
 
     /**
      * 获取可预约时间段
      */
-    List<ExamTimeSlotVO> getAvailableTimeSlots(Long departmentId, LocalDate date);
+    List<ExamTimeSlotVO> getAvailableTimeSlots(Long deptId, LocalDate date);
+
+    /**
+     * 根据日期获取可预约时间段（不依赖科室）
+     */
+    List<ExamTimeSlotVO> getAvailableTimeSlotsByDate(LocalDate date);
 
     /**
      * 根据ID获取时间段
@@ -31,22 +39,22 @@ public interface ExamTimeSlotService extends IService<ExamTimeSlot> {
     /**
      * 创建时间段
      */
-    void createTimeSlot(ExamTimeSlot timeSlot);
+    void createTimeSlot(ExamTimeSlotDTO timeSlotDTO);
+
+    /**
+     * 批量创建时间段
+     */
+    void batchCreateTimeSlot(ExamTimeSlotBatchDTO batchDTO);
 
     /**
      * 更新时间段
      */
-    void updateTimeSlot(ExamTimeSlot timeSlot);
+    void updateTimeSlot(Long id, ExamTimeSlotUpdateDTO updateDTO);
 
     /**
      * 删除时间段
      */
     void deleteTimeSlot(Long id);
-
-    /**
-     * 更新时间段状态
-     */
-    void updateStatus(Long id, Integer status);
 
     /**
      * 增加时间段预约数
@@ -57,4 +65,9 @@ public interface ExamTimeSlotService extends IService<ExamTimeSlot> {
      * 减少时间段预约数
      */
     void decrementBookedCount(Long id);
+    
+    /**
+     * 根据套餐ID和日期检查是否有可用时间段
+     */
+    boolean hasAvailableTimeSlots(Long packageId, LocalDate date);
 }

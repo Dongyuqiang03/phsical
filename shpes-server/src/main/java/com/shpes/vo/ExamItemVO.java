@@ -1,6 +1,5 @@
 package com.shpes.vo;
 
-import com.shpes.common.enums.ExamCategoryEnum;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -24,16 +23,16 @@ public class ExamItemVO {
     private String code;
     
     @ApiModelProperty("项目分类")
-    private Integer category;
+    private Integer categoryId;
     
     @ApiModelProperty("分类名称")
     private String categoryName;
     
     @ApiModelProperty("执行科室ID")
-    private Long departmentId;
+    private Long deptId;
     
     @ApiModelProperty("执行科室名称")
-    private String departmentName;
+    private String deptName;
     
     @ApiModelProperty("参考值描述")
     private String referenceValue;

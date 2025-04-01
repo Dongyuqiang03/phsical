@@ -38,6 +38,11 @@ public interface ExamAppointmentService {
     void createAppointment(ExamAppointment appointment);
 
     /**
+     * 创建预约并返回详情
+     */
+    AppointmentVO createAppointmentAndReturn(ExamAppointment appointment);
+
+    /**
      * 更新预约时间
      */
     void updateAppointmentTime(Long id, Long timeSlotId);
@@ -46,4 +51,10 @@ public interface ExamAppointmentService {
      * 获取用户的预约列表
      */
     CommonPage<AppointmentVO> getUserAppointments(Long userId, Integer pageNum, Integer pageSize);
+
+    /**
+     * 获取用户的预约列表（带过滤条件）
+     */
+    CommonPage<AppointmentVO> getUserAppointments(Long userId, Integer pageNum, Integer pageSize, 
+            LocalDate startDate, LocalDate endDate, Integer status);
 }

@@ -44,20 +44,28 @@ export function batchCreateTimeSlot(data) {
   })
 }
 
-// 更新时间段容量
-export function updateTimeSlotCapacity(id, capacity) {
-  return request({
-    url: `/api/exam/timeslots/${id}/capacity`,
-    method: 'put',
-    data: { capacity }
-  })
-}
-
-// 获取可用时间段
+// 获取可用时间段（根据科室ID和日期）
 export function getAvailableTimeSlots(params) {
   return request({
     url: '/api/exam/timeslots/available',
     method: 'get',
     params
+  })
+}
+
+// 获取可用时间段（根据套餐ID和日期）
+export function getAvailableTimeSlotsForPackage(params) {
+  return request({
+    url: '/api/exam/timeslots/available/package',
+    method: 'get',
+    params
+  })
+}
+
+// 获取时间段详情
+export function getTimeSlotDetail(id) {
+  return request({
+    url: `/api/exam/timeslots/${id}`,
+    method: 'get'
   })
 } 

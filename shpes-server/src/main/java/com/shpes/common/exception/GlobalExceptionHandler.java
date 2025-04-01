@@ -26,6 +26,9 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ApiException.class)
     public CommonResult<Void> handleApiException(ApiException e) {
         logger.error("API异常：{}", e.getMessage());
+        if (e.getErrorCode() != null) {
+            return CommonResult.failed(e.getErrorCode());
+        }
         return CommonResult.failed(e.getMessage());
     }
 

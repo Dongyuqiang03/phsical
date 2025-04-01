@@ -67,13 +67,20 @@
         </el-table-column>
       </el-table>
   
-      <pagination
-        v-show="total>0"
-        :total="total"
-        :page.sync="listQuery.pageNum"
-        :limit.sync="listQuery.pageSize"
-        @pagination="getList"
-      />
+      <!-- 分页组件 - 直接放在表格下方 -->
+      <div v-if="list.length > 0" class="pagination-wrapper">
+        <el-pagination
+          class="department-pagination"
+          :pager-count="device === 'mobile' ? 3 : 5"
+          :current-page="listQuery.pageNum"
+          :page-sizes="[10, 20, 30, 50]"
+          :page-size="listQuery.pageSize"
+          :layout="device === 'mobile' ? 'prev, pager, next' : 'total, sizes, prev, pager, next'"
+          :total="effectiveTotal"
+          @size-change="handleSizeChange"
+          @current-change="handleCurrentChange"
+        />
+      </div>
   
       <el-dialog :title="dialogTitle" :visible.sync="dialogVisible" width="500px">
         <el-form
@@ -107,6 +114,7 @@
   <script>
   import { getCategoryPage, createCategory, updateCategory, deleteCategory } from '@/api/exam/category'
   import Pagination from '@/components/Pagination'
+  import { mapGetters } from 'vuex'
   
   export default {
     name: 'ExamItemCategory',
@@ -168,8 +176,33 @@
       }
     },
     computed: {
+      ...mapGetters([
+        'device'
+      ]),
       pagedList() {
         return this.list
+      },
+      effectiveTotal() {
+        // 如果API返回的total大于0，则使用API返回的total
+        if (this.total > 0) {
+          return this.total;
+        }
+        
+        // 如果API返回total为0但是有数据，则至少返回列表长度或者一个估算值
+        if (this.list.length > 0) {
+          // 如果当前不是第一页，我们可以估算总数
+          if (this.listQuery.pageNum > 1) {
+            return (this.listQuery.pageNum - 1) * this.listQuery.pageSize + this.list.length;
+          }
+          // 如果是第一页且记录不满一页，返回实际记录数
+          if (this.list.length < this.listQuery.pageSize) {
+            return this.list.length;
+          }
+          // 如果是第一页且记录数等于每页数量，返回每页数量的2倍作为估计
+          return this.list.length * 2;
+        }
+        
+        return 0;
       }
     },
     created() {
@@ -299,7 +332,29 @@
             }
           }
         })
-      }
+      },
+      // 分页相关方法
+      handleSizeChange(val) {
+        this.listQuery.pageSize = val;
+        this.listQuery.pageNum = 1;  // 切换每页条数时重置为第一页
+        this.getList();
+        // 修复滚动问题
+        this.$nextTick(() => {
+          document.documentElement.scrollTop = 0;
+          document.body.scrollTop = 0;
+          const mainContent = document.querySelector('.app-container');
+          if (mainContent) mainContent.scrollTop = 0;
+        });
+      },
+      handleCurrentChange(val) {
+        this.listQuery.pageNum = val;
+        this.getList();
+        // 滚动到顶部
+        this.$nextTick(() => {
+          document.documentElement.scrollTop = 0;
+          document.body.scrollTop = 0;
+        });
+      },
     }
   }
   </script>
@@ -317,5 +372,12 @@
     .action-container {
       margin-bottom: 20px;
     }
+  }
+  
+  .pagination-wrapper {
+    padding: 15px 0;
+    display: flex;
+    justify-content: center;
+    background-color: #fff;
   }
   </style>

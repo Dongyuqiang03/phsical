@@ -6,6 +6,7 @@ import com.shpes.common.constant.RoleConstants;
 import com.shpes.entity.ExamAppointment;
 import com.shpes.annotation.RequiresPermission;
 import com.shpes.service.ExamAppointmentService;
+import com.shpes.utils.SecurityUtils;
 import com.shpes.vo.AppointmentVO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -29,7 +30,7 @@ public class ExamAppointmentController {
 
     @ApiOperation("获取预约列表")
     @GetMapping("/list")
-    @RequiresPermission("")
+    @RequiresPermission("exam:appointment")
     public CommonResult<CommonPage<AppointmentVO>> getAppointmentPage(
             @RequestParam(defaultValue = "1") Integer pageNum,
             @RequestParam(defaultValue = "10") Integer pageSize,
@@ -42,22 +43,27 @@ public class ExamAppointmentController {
 
     @ApiOperation("获取预约详情")
     @GetMapping("/{id}")
-    @RequiresPermission("")
+    @RequiresPermission("exam:appointment")
     public CommonResult<AppointmentVO> getAppointment(@PathVariable Long id) {
         return CommonResult.success(appointmentService.getAppointment(id));
     }
 
     @ApiOperation("创建预约")
     @PostMapping
-    @RequiresPermission("")
-    public CommonResult<Void> createAppointment(@Valid @RequestBody ExamAppointment appointment) {
-        appointmentService.createAppointment(appointment);
-        return CommonResult.success(null);
+    @RequiresPermission("exam:appointment")
+    public CommonResult<AppointmentVO> createAppointment(@Valid @RequestBody ExamAppointment appointment) {
+        // 设置当前登录用户ID
+        appointment.setUserId(SecurityUtils.getCurrentUserId());
+        
+        // 创建预约并返回预约信息
+        AppointmentVO vo = appointmentService.createAppointmentAndReturn(appointment);
+        
+        return CommonResult.success(vo);
     }
 
     @ApiOperation("取消预约")
     @PutMapping("/{id}/cancel")
-    @RequiresPermission("")
+    @RequiresPermission("exam:appointment")
     public CommonResult<Void> cancelAppointment(
             @PathVariable Long id,
             @RequestParam String reason) {
@@ -67,7 +73,7 @@ public class ExamAppointmentController {
 
     @ApiOperation("更新预约时间")
     @PutMapping("/{id}/time")
-    @RequiresPermission("")
+    @RequiresPermission("exam:appointment")
     public CommonResult<Void> updateAppointmentTime(
             @PathVariable Long id,
             @RequestParam Long timeSlotId) {
@@ -77,9 +83,22 @@ public class ExamAppointmentController {
 
     @ApiOperation("完成预约")
     @PutMapping("/{id}/complete")
-    @RequiresPermission("")
+    @RequiresPermission("exam:appointment")
     public CommonResult<Void> completeAppointment(@PathVariable Long id) {
         appointmentService.completeAppointment(id);
         return CommonResult.success(null);
+    }
+
+    @ApiOperation("获取当前用户的预约列表")
+    @GetMapping("/user")
+    @RequiresPermission("exam:appointment")
+    public CommonResult<CommonPage<AppointmentVO>> getUserAppointments(
+            @RequestParam(defaultValue = "1") Integer pageNum,
+            @RequestParam(defaultValue = "10") Integer pageSize,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            @RequestParam(required = false) Integer status) {
+        Long userId = SecurityUtils.getCurrentUserId();
+        return CommonResult.success(appointmentService.getUserAppointments(userId, pageNum, pageSize, startDate, endDate, status));
     }
 } 

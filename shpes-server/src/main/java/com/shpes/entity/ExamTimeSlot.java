@@ -19,7 +19,7 @@ import java.time.LocalTime;
 public class ExamTimeSlot extends BaseEntity {
 
     @ApiModelProperty("科室ID")
-    private Long departmentId;
+    private Long deptId;
 
     @ApiModelProperty("日期")
     private LocalDate date;

@@ -4,6 +4,7 @@
       <el-step title="选择套餐" />
       <el-step title="选择时间" />
       <el-step title="确认预约" />
+      <el-step title="预约成功" />
     </el-steps>
 
     <!-- 套餐选择 -->
@@ -91,11 +92,19 @@
           :data="timeSlotList"
           border
           style="width: 100%">
-          <el-table-column label="时间段" prop="timeSlot" width="150" />
-          <el-table-column label="科室" prop="departmentName" width="120" />
+          <el-table-column label="时间段" width="150">
+            <template slot-scope="{row}">
+              {{ formatTimeRange(row.startTime, row.endTime) }}
+            </template>
+          </el-table-column>
+          <el-table-column label="科室" width="120">
+            <template slot-scope="{row}">
+              {{ row.deptName || '未指定科室' }}
+            </template>
+          </el-table-column>
           <el-table-column label="剩余名额" width="100" align="center">
             <template slot-scope="{row}">
-              {{ (row.capacity || 0) - (row.reserved || 0) }}
+              {{ row.remainingCapacity || 0 }}
             </template>
           </el-table-column>
           <el-table-column label="操作" align="center" width="120">
@@ -103,7 +112,7 @@
               <el-button
                 type="primary"
                 size="mini"
-                :disabled="(row.capacity || 0) <= (row.reserved || 0)"
+                :disabled="(row.remainingCapacity || 0) <= 0"
                 @click="selectTimeSlot(row)">
                 选择
               </el-button>
@@ -123,10 +132,10 @@
           <span>{{ selectedDate }}</span>
         </el-form-item>
         <el-form-item label="预约时间">
-          <span>{{ selectedTimeSlot ? selectedTimeSlot.timeSlot : '' }}</span>
+          <span>{{ getTimeSlotString() }}</span>
         </el-form-item>
         <el-form-item label="预约科室">
-          <span>{{ selectedTimeSlot ? selectedTimeSlot.departmentName : '' }}</span>
+          <span>{{ getDepartmentName() }}</span>
         </el-form-item>
         <el-form-item label="注意事项">
           <div class="notice-content">
@@ -139,18 +148,46 @@
       </el-form>
     </div>
 
+    <!-- 预约成功 -->
+    <div v-show="active === 3" class="step-container">
+      <el-result
+        icon="success"
+        title="预约成功"
+        sub-title="您的体检预约已成功提交，请按时到达体检中心"
+      >
+        <template #extra>
+          <el-card class="success-info">
+            <el-descriptions title="预约信息" :column="1" border>
+              <el-descriptions-item label="预约编号">{{ appointmentInfo.appointmentNo || '生成中...' }}</el-descriptions-item>
+              <el-descriptions-item label="体检套餐">{{ selectedPackage ? selectedPackage.name : '' }}</el-descriptions-item>
+              <el-descriptions-item label="预约日期">{{ selectedDate }}</el-descriptions-item>
+              <el-descriptions-item label="预约时间">{{ getTimeSlotString() }}</el-descriptions-item>
+              <el-descriptions-item label="预约科室">{{ getDepartmentName() }}</el-descriptions-item>
+              <el-descriptions-item label="状态">
+                <el-tag type="success">待体检</el-tag>
+              </el-descriptions-item>
+            </el-descriptions>
+            <div style="margin-top: 20px; text-align: center;">
+              <el-button type="primary" @click="viewMyAppointments">查看我的预约</el-button>
+              <el-button @click="backToHome">返回首页</el-button>
+            </div>
+          </el-card>
+        </template>
+      </el-result>
+    </div>
+
     <!-- 底部按钮 -->
-    <div class="bottom-container">
+    <div class="bottom-container" v-if="active < 3">
       <el-button v-if="active > 0" @click="prev">上一步</el-button>
       <el-button v-if="active < 2" type="primary" :disabled="!canNext" @click="next">下一步</el-button>
-      <el-button v-else type="primary" @click="submitAppointment">确认预约</el-button>
+      <el-button v-else-if="active === 2" type="primary" :loading="submitLoading" @click="submitAppointment">确认预约</el-button>
     </div>
   </div>
 </template>
 
 <script>
 import { getExamPackageList } from '@/api/exam/package'
-import { getAvailableTimeSlots } from '@/api/exam/timeslot'
+import { getAvailableTimeSlots, getAvailableTimeSlotsForPackage } from '@/api/exam/timeslot'
 import { createAppointment } from '@/api/exam/appointment'
 
 export default {
@@ -177,7 +214,9 @@ export default {
           return time.getTime() < Date.now() - 8.64e7
         }
       },
-      form: {}
+      form: {},
+      submitLoading: false,
+      appointmentInfo: {} // 存储预约成功后的信息
     }
   },
   computed: {
@@ -260,7 +299,7 @@ export default {
       this.timeSlotErrorMessage = ''
       
       try {
-        const response = await getAvailableTimeSlots({
+        const response = await getAvailableTimeSlotsForPackage({
           date: this.selectedDate,
           packageId: this.selectedPackage.id
         })
@@ -301,6 +340,8 @@ export default {
         return
       }
       
+      this.submitLoading = true
+      
       try {
         const response = await createAppointment({
           packageId: this.selectedPackage.id,
@@ -308,15 +349,70 @@ export default {
         })
         
         if (response && response.code === 200) {
+          // 存储预约信息
+          this.appointmentInfo = response.data || {}
+          // 显示成功页面
+          this.active = 3
           this.$message.success('预约成功')
-          this.$router.push('/exam/appointment/list')
         } else {
           this.$message.error(response?.message || '预约失败')
         }
       } catch (error) {
         console.error('预约失败:', error)
         this.$message.error('预约失败: ' + (error.message || '系统异常'))
+      } finally {
+        this.submitLoading = false
       }
+    },
+    viewMyAppointments() {
+      this.$router.push('/exam/appointment/list')
+    },
+    backToHome() {
+      this.$router.push('/dashboard')
+    },
+    formatTimeRange(startTime, endTime) {
+      if (!startTime || !endTime) return '未设置';
+      
+      // 处理数组格式的时间
+      if (Array.isArray(startTime) && Array.isArray(endTime)) {
+        const formatTime = (timeArray) => {
+          if (timeArray.length < 3) return '';
+          return `${timeArray[0].toString().padStart(2, '0')}:${timeArray[1].toString().padStart(2, '0')}`;
+        };
+        
+        return `${formatTime(startTime)}-${formatTime(endTime)}`;
+      }
+      
+      // 处理字符串或其他格式的时间
+      try {
+        const startStr = new Date(startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const endStr = new Date(endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        return `${startStr}-${endStr}`;
+      } catch (e) {
+        console.error('时间格式化错误:', e);
+        return '时间格式错误';
+      }
+    },
+    formatDate(dateArray) {
+      if (!dateArray) return '';
+      
+      if (Array.isArray(dateArray)) {
+        if (dateArray.length < 3) return '';
+        const [year, month, day] = dateArray;
+        return `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
+      }
+      
+      return dateArray;
+    },
+    // 在确认预约页面展示时间段信息的方法
+    getTimeSlotString() {
+      if (!this.selectedTimeSlot) return '';
+      return this.formatTimeRange(this.selectedTimeSlot.startTime, this.selectedTimeSlot.endTime);
+    },
+    // 在确认预约页面展示科室信息的方法
+    getDepartmentName() {
+      if (!this.selectedTimeSlot) return '';
+      return this.selectedTimeSlot.deptName || '未指定科室';
     }
   }
 }
@@ -403,6 +499,12 @@ export default {
   .pagination-container {
     margin-top: 20px;
     text-align: center;
+  }
+
+  .success-info {
+    margin: 20px 0;
+    width: 100%;
+    max-width: 600px;
   }
 }
 </style> 

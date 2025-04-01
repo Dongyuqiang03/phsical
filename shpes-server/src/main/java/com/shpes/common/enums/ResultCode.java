@@ -11,6 +11,7 @@ public enum ResultCode implements IErrorCode {
     VALIDATE_FAILED(404, "参数检验失败"),
     UNAUTHORIZED(401, "暂未登录或token已经过期"),
     FORBIDDEN(403, "没有相关权限"),
+    PARAM_ERROR(400, "参数错误"),
     
     // 用户相关：1000-1999
     USER_NOT_EXIST(1000, "用户不存在"),
@@ -48,6 +49,9 @@ public enum ResultCode implements IErrorCode {
     TIME_SLOT_BOOKED(5007, "体检时间段已被预约"),
     TIME_SLOT_FULL(5008, "体检时间段已满"),
     TIME_SLOT_EMPTY(5009, "体检时间段无预约"),
+    TIME_SLOT_DATE_INVALID(5010, "时间段日期无效"),
+    TIME_SLOT_TIME_INVALID(5011, "时间段时间无效"),
+    TIME_SLOT_CAPACITY_INVALID(5012, "时间段容量无效"),
     
     // 体检结果相关：6000-6999
     EXAM_RECORD_NOT_EXIST(6000, "体检记录不存在"),

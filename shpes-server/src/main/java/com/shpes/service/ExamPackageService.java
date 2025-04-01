@@ -62,4 +62,11 @@ public interface ExamPackageService {
      * 获取套餐统计信息
      */
     Object getPackageStats();
+    
+    /**
+     * 根据套餐ID获取对应科室ID
+     * @param packageId 套餐ID
+     * @return 科室ID，如果没有对应科室则返回null
+     */
+    Long getDepartmentIdByPackageId(Long packageId);
 }

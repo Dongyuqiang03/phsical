@@ -4,7 +4,9 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 /**
  * 预约返回值对象
@@ -15,6 +17,9 @@ public class AppointmentVO {
     
     @ApiModelProperty("预约ID")
     private Long id;
+    
+    @ApiModelProperty("预约编号")
+    private String appointmentNo;
     
     @ApiModelProperty("用户ID")
     private Long userId;
@@ -31,10 +36,25 @@ public class AppointmentVO {
     @ApiModelProperty("时间段ID")
     private Long timeSlotId;
     
+    @ApiModelProperty("科室ID")
+    private Long deptId;
+    
+    @ApiModelProperty("科室名称")
+    private String deptName;
+    
     @ApiModelProperty("预约日期")
+    private LocalDate appointmentDate;
+    
+    @ApiModelProperty("开始时间")
+    private LocalTime startTime;
+    
+    @ApiModelProperty("结束时间")
+    private LocalTime endTime;
+    
+    @ApiModelProperty("预约时间")
     private LocalDateTime appointmentTime;
     
-    @ApiModelProperty("预约状态：0-待体检，1-已完成，2-已取消")
+    @ApiModelProperty("预约状态：0-待确认, 1-待体检，2-进行中，3-已完成，4-已取消")
     private Integer status;
     
     @ApiModelProperty("取消原因")

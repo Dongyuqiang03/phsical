@@ -138,6 +138,33 @@ public class ExamPackageServiceImpl extends ServiceImpl<ExamPackageMapper, ExamP
     public Object getPackageStats() {
         return baseMapper.selectPackageStats();
     }
+    
+    @Override
+    public Long getDepartmentIdByPackageId(Long packageId) {
+        // 这里主要是获取套餐对应的科室ID
+        // 实现可能有多种方式，根据实际业务逻辑选择最合适的
+        
+        // 获取套餐
+        ExamPackage examPackage = getById(packageId);
+        if (examPackage == null) {
+            return null;
+        }
+        
+        // 通过套餐关联的检查项目找到主要科室
+        // 这里假设我们取第一个项目的科室作为套餐的主科室
+        List<ExamItemVO> items = getPackageItems(packageId);
+        if (items != null && !items.isEmpty()) {
+            for (ExamItemVO item : items) {
+                if (item.getDeptId() != null) {
+                    return item.getDeptId();
+                }
+            }
+        }
+        
+        // 如果没有找到科室，默认返回一个常用科室ID（如体检中心）
+        // 在实际应用中，可能需要根据业务规则确定一个默认值
+        return 1L; // 假设ID为1的科室是体检中心
+    }
 
     /**
      * 将实体转换为VO

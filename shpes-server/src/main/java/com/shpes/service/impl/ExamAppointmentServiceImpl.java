@@ -10,9 +10,13 @@ import com.shpes.entity.ExamAppointment;
 import com.shpes.entity.ExamTimeSlot;
 import com.shpes.mapper.ExamAppointmentMapper;
 import com.shpes.service.ExamAppointmentService;
+import com.shpes.service.ExamPackageService;
 import com.shpes.service.ExamTimeSlotService;
+import com.shpes.service.SysDepartmentService;
 import com.shpes.service.SysUserService;
 import com.shpes.vo.AppointmentVO;
+import com.shpes.vo.ExamPackageVO;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -24,6 +28,7 @@ import java.util.stream.Collectors;
 
 @Service
 @Transactional(rollbackFor = Exception.class)
+@Slf4j
 public class ExamAppointmentServiceImpl extends ServiceImpl<ExamAppointmentMapper, ExamAppointment> implements ExamAppointmentService {
 
     @Autowired
@@ -31,6 +36,12 @@ public class ExamAppointmentServiceImpl extends ServiceImpl<ExamAppointmentMappe
     
     @Autowired
     private SysUserService userService;
+
+    @Autowired
+    private ExamPackageService packageService;
+    
+    @Autowired
+    private SysDepartmentService departmentService;
 
     @Override
     public AppointmentVO getAppointment(Long id) {
@@ -94,18 +105,53 @@ public class ExamAppointmentServiceImpl extends ServiceImpl<ExamAppointmentMappe
 
     @Override
     public void createAppointment(ExamAppointment appointment) {
+        // 调用 createAppointmentAndReturn 方法，但忽略返回值
+        createAppointmentAndReturn(appointment);
+    }
+
+    @Override
+    public AppointmentVO createAppointmentAndReturn(ExamAppointment appointment) {
+        // 检查用户ID是否已设置
+        if (appointment.getUserId() == null) {
+            throw new ApiException(ResultCode.PARAM_ERROR, "用户ID不能为空");
+        }
+        
         // 检查时间段是否存在且可用
         ExamTimeSlot timeSlot = timeSlotService.getById(appointment.getTimeSlotId());
         if (timeSlot == null) {
             throw new ApiException(ResultCode.TIME_SLOT_NOT_EXIST);
         }
         
+        // 从时间段获取科室信息
+        Long deptId = timeSlot.getDeptId();
+        String deptName = departmentService.getDepartmentNameById(deptId);
+        appointment.setDeptId(deptId);
+        appointment.setDeptName(deptName);
+        
+        // 获取套餐信息
+        if (appointment.getPackageId() != null) {
+            ExamPackageVO packageVO = packageService.getPackageById(appointment.getPackageId());
+            if (packageVO != null) {
+                appointment.setPackageName(packageVO.getName());
+            }
+        }
+        
+        // 生成预约编号: 格式为 YYYYMMDDHHmmssSSS + 随机4位数字
+        String prefix = "AP";
+        String dateStr = java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMddHHmmssSSS"));
+        String randomNum = String.format("%04d", new java.util.Random().nextInt(10000));
+        String appointmentNo = prefix + dateStr + randomNum;
+        
+        appointment.setAppointmentNo(appointmentNo);
         appointment.setStatus(1); // 设置状态为待体检
         appointment.setAppointmentDate(timeSlot.getDate());
         save(appointment);
         
         // 增加时间段的预约数
         timeSlotService.incrementBookedCount(appointment.getTimeSlotId());
+        
+        // 转换为VO并返回
+        return convertToVO(appointment);
     }
 
     @Override
@@ -147,6 +193,38 @@ public class ExamAppointmentServiceImpl extends ServiceImpl<ExamAppointmentMappe
         return CommonPage.restPage(records, page.getTotal(), page.getCurrent(), page.getSize());
     }
 
+    @Override
+    public CommonPage<AppointmentVO> getUserAppointments(Long userId, Integer pageNum, Integer pageSize, 
+            LocalDate startDate, LocalDate endDate, Integer status) {
+        LambdaQueryWrapper<ExamAppointment> wrapper = new LambdaQueryWrapper<>();
+        
+        // 用户ID为必须条件
+        wrapper.eq(ExamAppointment::getUserId, userId);
+        
+        // 添加日期过滤
+        if (startDate != null) {
+            wrapper.ge(ExamAppointment::getAppointmentDate, startDate);
+        }
+        if (endDate != null) {
+            wrapper.le(ExamAppointment::getAppointmentDate, endDate);
+        }
+        
+        // 添加状态过滤
+        if (status != null) {
+            wrapper.eq(ExamAppointment::getStatus, status);
+        }
+        
+        // 按创建时间倒序排序
+        wrapper.orderByDesc(ExamAppointment::getCreateTime);
+
+        Page<ExamAppointment> page = page(new Page<>(pageNum, pageSize), wrapper);
+        List<AppointmentVO> records = page.getRecords().stream()
+                .map(this::convertToVO)
+                .collect(Collectors.toList());
+        
+        return CommonPage.restPage(records, page.getTotal(), page.getCurrent(), page.getSize());
+    }
+
     private AppointmentVO convertToVO(ExamAppointment appointment) {
         if (appointment == null) {
             return null;
@@ -157,6 +235,35 @@ public class ExamAppointmentServiceImpl extends ServiceImpl<ExamAppointmentMappe
         // 设置用户信息
         if (appointment.getUserId() != null) {
             vo.setUserName(userService.getUserNameById(appointment.getUserId()));
+        }
+        
+        // 加载时间段详细信息
+        if (appointment.getTimeSlotId() != null) {
+            try {
+                ExamTimeSlot timeSlot = timeSlotService.getById(appointment.getTimeSlotId());
+                if (timeSlot != null) {
+                    // 设置时间段相关信息
+                    vo.setStartTime(timeSlot.getStartTime());
+                    vo.setEndTime(timeSlot.getEndTime());
+                    vo.setAppointmentDate(timeSlot.getDate());
+                    
+                    // 设置科室信息（如果未设置）
+                    if (vo.getDeptId() == null) {
+                        vo.setDeptId(timeSlot.getDeptId());
+                    }
+                    
+                    if (vo.getDeptName() == null && timeSlot.getDeptId() != null) {
+                        try {
+                            String deptName = departmentService.getDepartmentNameById(timeSlot.getDeptId());
+                            vo.setDeptName(deptName);
+                        } catch (Exception e) {
+                            log.error("获取科室名称失败，科室ID: {}", timeSlot.getDeptId(), e);
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                log.error("获取时间段信息失败，时间段ID: {}", appointment.getTimeSlotId(), e);
+            }
         }
         
         return vo;

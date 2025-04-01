@@ -65,6 +65,12 @@ function filterAsyncRoutes(routes, permissions) {
 // 检查是否有权限访问该路由
 function hasPermission(permissions, route) {
   if (route.meta && route.meta.permissions) {
+    // 添加详细日志
+    console.log('[Permission Check] Route:', route.path, 
+                'Required permissions:', route.meta.permissions,
+                'User permissions:', permissions,
+                'Has access:', route.meta.permissions.some(permission => permissions.includes(permission)))
+    
     // 如果路由需要的权限是数组中的任意一个，就允许访问
     return route.meta.permissions.some(permission => permissions.includes(permission))
   }

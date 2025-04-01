@@ -1,98 +1,117 @@
 <template>
   <div class="app-container">
-    <!-- 搜索区域 -->
-    <div class="filter-container">
-      <el-form :inline="true" :model="listQuery" class="form-inline">
-        <el-form-item>
-          <el-input
-            v-model="listQuery.keyword"
-            placeholder="项目名称"
-            clearable
-            @keyup.enter.native="handleFilter"
-          />
-        </el-form-item>
-        <el-form-item>
-          <el-select v-model="listQuery.categoryId" placeholder="项目分类" clearable>
-            <el-option label="常规检查" :value="1" />
-            <el-option label="实验室检查" :value="2" />
-            <el-option label="医学影像" :value="3" />
-            <el-option label="其他检查" :value="4" />
-          </el-select>
-        </el-form-item>
-        <el-form-item>
-          <el-select v-model="listQuery.departmentId" placeholder="执行科室" clearable>
-            <el-option
-              v-for="item in departmentOptions"
-              :key="item.id"
-              :label="item.name"
-              :value="item.id"
+    <div class="main-content" style="padding-bottom: 60px;">
+      <!-- 搜索区域 -->
+      <div class="filter-container">
+        <el-form :inline="true" :model="listQuery" class="form-inline">
+          <el-form-item>
+            <el-input
+              v-model="listQuery.keyword"
+              placeholder="项目名称"
+              clearable
+              @keyup.enter.native="handleFilter"
             />
-          </el-select>
-        </el-form-item>
-        <el-form-item>
-          <el-button type="primary" icon="el-icon-search" @click="handleFilter">搜索</el-button>
-          <el-button icon="el-icon-refresh" @click="resetQuery">重置</el-button>
-        </el-form-item>
-      </el-form>
+          </el-form-item>
+          <el-form-item>
+            <el-select v-model="listQuery.categoryId" placeholder="项目分类" clearable>
+              <el-option label="常规检查" :value="1" />
+              <el-option label="实验室检查" :value="2" />
+              <el-option label="医学影像" :value="3" />
+              <el-option label="其他检查" :value="4" />
+            </el-select>
+          </el-form-item>
+          <el-form-item>
+            <el-select v-model="listQuery.departmentId" placeholder="执行科室" clearable>
+              <el-option
+                v-for="item in departmentOptions"
+                :key="item.id"
+                :label="item.name"
+                :value="item.id"
+              />
+            </el-select>
+          </el-form-item>
+          <el-form-item>
+            <el-button type="primary" icon="el-icon-search" @click="handleFilter">搜索</el-button>
+            <el-button icon="el-icon-refresh" @click="resetQuery">重置</el-button>
+          </el-form-item>
+        </el-form>
+      </div>
+
+      <!-- 操作按钮区域 -->
+      <div class="action-container">
+        <el-button type="primary" icon="el-icon-plus" @click="handleCreate">新增项目</el-button>
+      </div>
+
+      <!-- 表格区域 -->
+      <div class="table-container" style="overflow: auto; max-height: calc(100vh - 280px);">
+        <el-table
+          v-loading="listLoading"
+          :data="list"
+          border
+          style="width: 100%">
+          <el-table-column label="项目名称" prop="name" />
+          <el-table-column label="项目编码" prop="code" width="120" />
+          <el-table-column label="项目分类" width="120">
+            <template slot-scope="{row}">
+              <span>{{ getCategoryName(row.category) }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="执行科室" prop="departmentName" width="120" />
+          <el-table-column label="参考值" prop="referenceValue" show-overflow-tooltip />
+          <el-table-column label="价格" width="100">
+            <template slot-scope="{row}">
+              <span>{{ formatPrice(row.price) }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="备注" prop="remark" show-overflow-tooltip />
+          <el-table-column label="创建时间" width="180">
+            <template slot-scope="{row}">
+              <span>{{ formatDateTime(row.createTime) }}</span>
+            </template>
+          </el-table-column>
+          <el-table-column label="状态" align="center" width="100">
+            <template slot-scope="{row}">
+              <el-switch
+                v-model="row.status"
+                :active-value="1"
+                :inactive-value="0"
+                @change="handleStatusChange(row)"
+              />
+            </template>
+          </el-table-column>
+          <el-table-column label="操作" align="center" width="200">
+            <template slot-scope="{row}">
+              <el-button type="primary" size="mini" @click="handleUpdate(row)">编辑</el-button>
+              <el-button type="danger" size="mini" @click="handleDelete(row)">删除</el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+      </div>
+
+      <!-- 分页组件 -->
+      <div v-if="list.length > 0" class="pagination-wrapper">
+        <el-pagination
+          class="department-pagination"
+          :pager-count="device === 'mobile' ? 3 : 5"
+          :current-page="listQuery.pageNum"
+          :page-sizes="[10, 20, 30, 50]"
+          :page-size="listQuery.pageSize"
+          :layout="device === 'mobile' ? 'prev, pager, next' : 'total, sizes, prev, pager, next'"
+          :total="effectiveTotal"
+          @size-change="handleSizeChange"
+          @current-change="handleCurrentChange"
+        />
+      </div>
+
+      <!-- Debug info -->
+      <div v-if="false" style="margin: 10px 0; color: #606266; background: #f9f9f9; padding: 8px; border-radius: 4px;">
+        <span>API返回总条数: {{ total }}</span>
+        <span style="margin-left: 15px">当前页: {{ listQuery.pageNum }}</span>
+        <span style="margin-left: 15px">每页条数: {{ listQuery.pageSize }}</span>
+        <span style="margin-left: 15px">当前记录数: {{ list.length }}</span>
+        <span style="margin-left: 15px">有效总条数: {{ effectiveTotal }}</span>
+      </div>
     </div>
-
-    <!-- 操作按钮区域 -->
-    <div class="action-container">
-      <el-button type="primary" icon="el-icon-plus" @click="handleCreate">新增项目</el-button>
-    </div>
-
-    <!-- 表格区域 -->
-    <el-table
-      v-loading="listLoading"
-      :data="list"
-      border
-      style="width: 100%">
-      <el-table-column label="项目名称" prop="name" />
-      <el-table-column label="项目编码" prop="code" width="120" />
-      <el-table-column label="项目分类" width="120">
-        <template slot-scope="{row}">
-          <span>{{ getCategoryName(row.category) }}</span>
-        </template>
-      </el-table-column>
-      <el-table-column label="执行科室" prop="departmentName" width="120" />
-      <el-table-column label="参考值" prop="referenceValue" show-overflow-tooltip />
-      <el-table-column label="价格" width="100">
-        <template slot-scope="{row}">
-          <span>{{ formatPrice(row.price) }}</span>
-        </template>
-      </el-table-column>
-      <el-table-column label="备注" prop="remark" show-overflow-tooltip />
-      <el-table-column label="创建时间" width="180">
-        <template slot-scope="{row}">
-          <span>{{ formatDateTime(row.createTime) }}</span>
-        </template>
-      </el-table-column>
-      <el-table-column label="状态" align="center" width="100">
-        <template slot-scope="{row}">
-          <el-switch
-            v-model="row.status"
-            :active-value="1"
-            :inactive-value="0"
-            @change="handleStatusChange(row)"
-          />
-        </template>
-      </el-table-column>
-      <el-table-column label="操作" align="center" width="200">
-        <template slot-scope="{row}">
-          <el-button type="primary" size="mini" @click="handleUpdate(row)">编辑</el-button>
-          <el-button type="danger" size="mini" @click="handleDelete(row)">删除</el-button>
-        </template>
-      </el-table-column>
-    </el-table>
-
-    <!-- 分页区域 -->
-    <pagination
-      v-show="total>0"
-      :total="total"
-      :page.sync="listQuery.pageNum"
-      :limit.sync="listQuery.pageSize"
-      @pagination="getList"
-    />
 
     <!-- 项目表单对话框 -->
     <el-dialog :title="dialogTitle" :visible.sync="dialogVisible" width="600px">
@@ -165,6 +184,7 @@
 <script>
 import Pagination from '@/components/Pagination'
 import { getExamItemList, createExamItem, updateExamItem, deleteExamItem, updateExamItemStatus } from '@/api/exam/item'
+import { mapGetters } from 'vuex'
 // import { getAllDepartments } from '@/api/department'
 
 export default {
@@ -221,6 +241,33 @@ export default {
   created() {
     this.getList()
     // this.getDepartmentOptions()
+  },
+  computed: {
+    ...mapGetters([
+      'device'
+    ]),
+    effectiveTotal() {
+      // 如果API返回的total大于0，则使用API返回的total
+      if (this.total > 0) {
+        return this.total;
+      }
+      
+      // 如果API返回total为0但是有数据，则至少返回列表长度或者一个估算值
+      if (this.list.length > 0) {
+        // 如果当前不是第一页，我们可以估算总数
+        if (this.listQuery.pageNum > 1) {
+          return (this.listQuery.pageNum - 1) * this.listQuery.pageSize + this.list.length;
+        }
+        // 如果是第一页且记录不满一页，返回实际记录数
+        if (this.list.length < this.listQuery.pageSize) {
+          return this.list.length;
+        }
+        // 如果是第一页且记录数等于每页数量，返回每页数量的2倍作为估计
+        return this.list.length * 2;
+      }
+      
+      return 0;
+    }
   },
   methods: {
     formatDateTime(time) {
@@ -378,6 +425,27 @@ export default {
           }
         }
       });
+    },
+    handleSizeChange(val) {
+      this.listQuery.pageSize = val;
+      this.listQuery.pageNum = 1;  // 切换每页条数时重置为第一页
+      this.getList();
+      // 修复滚动问题
+      this.$nextTick(() => {
+        document.documentElement.scrollTop = 0;
+        document.body.scrollTop = 0;
+        const mainContent = document.querySelector('.app-container');
+        if (mainContent) mainContent.scrollTop = 0;
+      });
+    },
+    handleCurrentChange(val) {
+      this.listQuery.pageNum = val;
+      this.getList();
+      // 滚动到顶部
+      this.$nextTick(() => {
+        document.documentElement.scrollTop = 0;
+        document.body.scrollTop = 0;
+      });
     }
   }
 }
@@ -386,7 +454,9 @@ export default {
 <style lang="scss" scoped>
 .app-container {
   padding: 20px;
-  height: calc(100vh - 50px);
+  height: auto;
+  min-height: 100%;
+  position: relative;
   overflow-y: auto;
 
   .filter-container {
@@ -402,5 +472,67 @@ export default {
     color: #909399;
     font-size: 12px;
   }
+}
+
+.pagination-wrapper {
+  padding: 15px 0;
+  display: flex;
+  justify-content: center;
+  background-color: #fff;
+}
+</style>
+
+<style>
+/* Global styles for pagination */
+.el-pagination {
+  display: flex !important;
+  justify-content: center !important;
+  padding: 8px !important;
+  background-color: transparent !important;
+  margin: 0 auto !important;
+}
+
+.department-pagination {
+  width: 100% !important;
+  max-width: 800px !important;
+}
+
+.el-pagination button, 
+.el-pagination span:not([class*=suffix]),
+.el-pagination .el-select .el-input .el-input__inner {
+  font-size: 12px !important;
+  min-width: 24px !important;
+  height: 24px !important;
+  line-height: 24px !important;
+}
+
+.el-pagination .el-select .el-input {
+  margin: 0 5px !important;
+}
+
+.el-pagination .el-pagination__jump {
+  margin-left: 10px !important;
+}
+
+.el-pagination .btn-prev,
+.el-pagination .btn-next {
+  background-color: transparent !important;
+}
+
+.el-pagination .number {
+  background-color: transparent !important;
+}
+
+.el-pagination .number.active {
+  color: #409EFF !important;
+  background-color: #ecf5ff !important;
+  border-color: #b3d8ff !important;
+}
+
+/* Remove unnecessary bottom padding */
+.app-container {
+  min-height: 800px !important;
+  overflow: visible !important;
+  padding-bottom: 20px !important;
 }
 </style>

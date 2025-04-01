@@ -162,3 +162,8 @@ export const getUserInfo = () => {
 export const getCaptcha = () => {
   return service.get('/api/auth/captcha')
 }
+
+// 刷新token
+export const refreshToken = () => {
+  return service.post('/api/auth/token/refresh')
+}
