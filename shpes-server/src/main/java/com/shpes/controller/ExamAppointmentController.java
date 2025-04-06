@@ -89,6 +89,14 @@ public class ExamAppointmentController {
         return CommonResult.success(null);
     }
 
+    @ApiOperation("开始体检（签到）")
+    @PutMapping("/{id}/start")
+    @RequiresPermission("exam:appointment")
+    public CommonResult<Void> startAppointment(@PathVariable Long id) {
+        appointmentService.startAppointment(id);
+        return CommonResult.success(null);
+    }
+
     @ApiOperation("获取当前用户的预约列表")
     @GetMapping("/user")
     @RequiresPermission("exam:appointment")

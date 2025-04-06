@@ -59,4 +59,12 @@ export function completeAppointment(id) {
     url: `/api/exam/appointments/${id}/complete`,
     method: 'put'
   })
+}
+
+// 开始体检（签到）
+export function startAppointment(id) {
+  return request({
+    url: `/api/exam/appointments/${id}/start`,
+    method: 'put'
+  })
 } 

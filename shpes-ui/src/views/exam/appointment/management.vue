@@ -69,10 +69,17 @@
           {{ formatCreateTime(row.createTime) }}
         </template>
       </el-table-column>
-      <el-table-column label="操作" align="center" width="220">
+      <el-table-column label="操作" align="center" width="300">
         <template slot-scope="{row}">
           <el-button
-            v-if="row.status === 1 || row.status === 2"
+            v-if="row.status === 1"
+            type="primary"
+            size="mini"
+            @click="handleStart(row)">
+            开始体检
+          </el-button>
+          <el-button
+            v-if="row.status === 2"
             type="success"
             size="mini"
             @click="handleComplete(row)">
@@ -86,7 +93,7 @@
             取消
           </el-button>
           <el-button
-            type="primary"
+            type="info"
             size="mini"
             @click="handleDetail(row)">
             详情
@@ -127,7 +134,7 @@
 </template>
 
 <script>
-import { getAppointmentList, cancelAppointment, completeAppointment } from '@/api/exam/appointment'
+import { getAppointmentList, cancelAppointment, completeAppointment, startAppointment } from '@/api/exam/appointment'
 import Pagination from '@/components/Pagination'
 
 export default {
@@ -276,6 +283,26 @@ export default {
           this.$message.error('操作失败: ' + (error.message || '服务器错误'))
         }
       }).catch(() => {})
+    },
+    handleStart(row) {
+      this.$confirm('确认为该用户办理签到，开始体检吗？', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(async () => {
+        try {
+          const response = await startAppointment(row.id);
+          if (response && response.code === 200) {
+            this.$message.success('签到成功，体检已开始');
+            this.getList();
+          } else {
+            this.$message.error(response?.message || '签到失败');
+          }
+        } catch (error) {
+          console.error('开始体检失败:', error);
+          this.$message.error('签到失败: ' + (error.message || '服务器错误'));
+        }
+      }).catch(() => {});
     },
     handleCancel(row) {
       this.cancelForm = {

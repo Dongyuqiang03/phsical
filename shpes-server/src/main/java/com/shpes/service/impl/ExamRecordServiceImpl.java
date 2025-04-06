@@ -9,8 +9,10 @@ import com.shpes.common.exception.ApiException;
 import com.shpes.entity.ExamRecord;
 import com.shpes.mapper.ExamRecordMapper;
 import com.shpes.service.ExamRecordService;
+import com.shpes.service.SysUserService;
 import com.shpes.vo.ExamRecordVO;
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,6 +24,9 @@ import java.util.stream.Collectors;
 
 @Service
 public class ExamRecordServiceImpl extends ServiceImpl<ExamRecordMapper, ExamRecord> implements ExamRecordService {
+
+    @Autowired
+    private SysUserService userService;
 
     @Override
     public CommonPage<ExamRecordVO> getRecordPage(Integer pageNum, Integer pageSize, Long userId, 
@@ -71,7 +76,7 @@ public class ExamRecordServiceImpl extends ServiceImpl<ExamRecordMapper, ExamRec
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ExamRecordVO createRecord(ExamRecord record) {
-        record.setStatus(0); // 设置初始状态为未开始
+        record.setStatus(1); // 设置初始状态为进行中
         record.setExamNo(generateExamNo());
         record.setCreateTime(LocalDateTime.now());
         record.setUpdateTime(LocalDateTime.now());
@@ -151,6 +156,20 @@ public class ExamRecordServiceImpl extends ServiceImpl<ExamRecordMapper, ExamRec
         }
         ExamRecordVO vo = new ExamRecordVO();
         BeanUtils.copyProperties(record, vo);
+        
+        // 补充用户姓名
+        if (record.getUserId() != null) {
+            String userName = userService.getUserNameById(record.getUserId());
+            vo.setUserName(userName);
+        }
+        
+        // 补充医生姓名（如果为空）
+        if (record.getDoctorId() != null && (record.getDoctorName() == null || record.getDoctorName().isEmpty())) {
+            String doctorName = userService.getUserNameById(record.getDoctorId());
+            record.setDoctorName(doctorName);
+            vo.setDoctorName(doctorName);
+        }
+        
         return vo;
     }
 }

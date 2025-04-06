@@ -121,17 +121,29 @@ export default {
   filters: {
     statusFilter(status) {
       const statusMap = {
-        PENDING: '待体检',
-        COMPLETED: '已完成',
-        CANCELLED: '已取消'
+        0: '待确认',
+        1: '待体检',
+        2: '进行中',
+        3: '已完成',
+        4: '已取消',
+        'PENDING': '待体检',
+        'IN_PROGRESS': '进行中',
+        'COMPLETED': '已完成',
+        'CANCELLED': '已取消'
       }
       return statusMap[status]
     },
     statusTypeFilter(status) {
       const statusMap = {
-        PENDING: 'warning',
-        COMPLETED: 'success',
-        CANCELLED: 'info'
+        0: 'info',
+        1: 'warning',
+        2: 'primary',
+        3: 'success',
+        4: 'info',
+        'PENDING': 'warning',
+        'IN_PROGRESS': 'primary',
+        'COMPLETED': 'success',
+        'CANCELLED': 'info'
       }
       return statusMap[status]
     }

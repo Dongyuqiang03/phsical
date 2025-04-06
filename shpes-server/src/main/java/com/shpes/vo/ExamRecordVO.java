@@ -13,9 +13,12 @@ import java.util.List;
 @Data
 @ApiModel(description = "体检记录返回值对象")
 public class ExamRecordVO {
-    
-    @ApiModelProperty("记录ID")
+
+    @ApiModelProperty("记录 ID")
     private Long id;
+
+    @ApiModelProperty("体检编号")
+    private String examNo;
     
     @ApiModelProperty("用户ID")
     private Long userId;

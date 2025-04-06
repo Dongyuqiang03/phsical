@@ -17,9 +17,14 @@ public interface ExamAppointmentService {
     AppointmentVO getAppointment(Long id);
 
     /**
-     * 完成预约（更新状态为进行中）
+     * 完成预约（更新状态为已完成）
      */
     void completeAppointment(Long id);
+
+    /**
+     * 开始体检（更新状态为进行中）
+     */
+    void startAppointment(Long id);
 
     /**
      * 取消预约

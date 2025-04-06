@@ -120,6 +120,20 @@ export const asyncRoutes = [
         component: () => import('../views/exam/result/index.vue'),
         name: 'ExamRecord',
         meta: { title: '体检记录管理', icon: 'notebook-2', permissions: ['exam:result'] }
+      },
+      {
+        path: 'result/input',
+        component: () => import('../views/exam/result/input.vue'),
+        name: 'ExamResultInput',
+        meta: { title: '录入体检结果', permissions: ['exam:result'] },
+        hidden: true
+      },
+      {
+        path: 'result/review',
+        component: () => import('../views/exam/result/review.vue'),
+        name: 'ExamResultReview',
+        meta: { title: '查看体检结果', permissions: ['exam:result'] },
+        hidden: true
       }
     ]
   }

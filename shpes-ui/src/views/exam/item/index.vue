@@ -14,14 +14,14 @@
           </el-form-item>
           <el-form-item>
             <el-select v-model="listQuery.categoryId" placeholder="项目分类" clearable>
-              <el-option label="常规检查" :value="1" />
-              <el-option label="实验室检查" :value="2" />
-              <el-option label="医学影像" :value="3" />
-              <el-option label="其他检查" :value="4" />
+              <el-option label="一般检查" :value="1" />
+              <el-option label="内科" :value="2" />
+              <el-option label="外科" :value="3" />
+              <el-option label="医学影像" :value="4" />
             </el-select>
           </el-form-item>
           <el-form-item>
-            <el-select v-model="listQuery.departmentId" placeholder="执行科室" clearable>
+            <el-select v-model="listQuery.deptId" placeholder="执行科室" clearable>
               <el-option
                 v-for="item in departmentOptions"
                 :key="item.id"
@@ -53,10 +53,10 @@
           <el-table-column label="项目编码" prop="code" width="120" />
           <el-table-column label="项目分类" width="120">
             <template slot-scope="{row}">
-              <span>{{ getCategoryName(row.category) }}</span>
+              <span>{{ row.categoryName }}</span>
             </template>
           </el-table-column>
-          <el-table-column label="执行科室" prop="departmentName" width="120" />
+          <el-table-column label="执行科室" prop="deptName" width="120" />
           <el-table-column label="参考值" prop="referenceValue" show-overflow-tooltip />
           <el-table-column label="价格" width="100">
             <template slot-scope="{row}">
@@ -127,16 +127,16 @@
         <el-form-item label="项目编码" prop="code">
           <el-input v-model="temp.code" placeholder="请输入项目编码" />
         </el-form-item>
-        <el-form-item label="项目分类" prop="category">
-          <el-select v-model="temp.category" placeholder="请选择项目分类">
-            <el-option label="常规检查" :value="1" />
-            <el-option label="实验室检查" :value="2" />
-            <el-option label="医学影像" :value="3" />
-            <el-option label="其他检查" :value="4" />
+        <el-form-item label="项目分类" prop="categoryId">
+          <el-select v-model="temp.categoryId" placeholder="请选择项目分类">
+            <el-option label="一般检查" :value="1" />
+            <el-option label="内科" :value="2" />
+            <el-option label="外科" :value="3" />
+            <el-option label="医学影像" :value="4" />
           </el-select>
         </el-form-item>
-        <el-form-item label="执行科室" prop="departmentId">
-          <el-select v-model="temp.departmentId" placeholder="请选择执行科室">
+        <el-form-item label="执行科室" prop="deptId">
+          <el-select v-model="temp.deptId" placeholder="请选择执行科室">
             <el-option
               v-for="item in departmentOptions"
               :key="item.id"
@@ -198,13 +198,14 @@ export default {
       listQuery: {
         pageNum: 1,
         pageSize: 10,
-        name: undefined,
-        code: undefined
+        keyword: undefined,
+        categoryId: undefined,
+        deptId: undefined
       },
       departmentOptions: [
         { id: 1, name: '内科' },
         { id: 2, name: '外科' },
-        { id: 3, name: '检验科' },
+        { id: 9, name: '检验科' },
         { id: 4, name: '影像科' },
         { id: 5, name: '心电图室' },
         { id: 6, name: '超声科' }
@@ -215,8 +216,8 @@ export default {
         id: undefined,
         name: '',
         code: '',
-        category: undefined,
-        departmentId: undefined,
+        categoryId: undefined,
+        deptId: undefined,
         referenceValue: '',
         price: 0,
         remark: '',
@@ -229,10 +230,10 @@ export default {
         code: [
           { required: true, message: '请输入项目编码', trigger: 'blur' }
         ],
-        category: [
+        categoryId: [
           { required: true, message: '请选择项目分类', trigger: 'change' }
         ],
-        departmentId: [
+        deptId: [
           { required: true, message: '请选择执行科室', trigger: 'change' }
         ]
       }
@@ -301,10 +302,10 @@ export default {
     },
     getCategoryName(categoryId) {
       const categoryMap = {
-        1: '常规检查',
-        2: '实验室检查',
-        3: '医学影像',
-        4: '其他检查'
+        1: '一般检查',
+        2: '内科',
+        3: '外科',
+        4: '医学影像'
       }
       return categoryMap[categoryId] || '未知分类'
     },
@@ -341,7 +342,9 @@ export default {
       this.listQuery = {
         pageNum: 1,
         pageSize: 10,
-        keyword: undefined
+        keyword: undefined,
+        categoryId: undefined,
+        deptId: undefined
       }
       this.getList()
     },
@@ -351,8 +354,8 @@ export default {
         id: undefined,
         name: '',
         code: '',
-        category: undefined,
-        departmentId: undefined,
+        categoryId: undefined,
+        deptId: undefined,
         referenceValue: '',
         price: 0,
         remark: '',

@@ -8,14 +8,17 @@ import com.shpes.common.enums.ResultCode;
 import com.shpes.common.exception.ApiException;
 import com.shpes.entity.ExamAppointment;
 import com.shpes.entity.ExamTimeSlot;
+import com.shpes.entity.ExamRecord;
 import com.shpes.mapper.ExamAppointmentMapper;
 import com.shpes.service.ExamAppointmentService;
 import com.shpes.service.ExamPackageService;
 import com.shpes.service.ExamTimeSlotService;
 import com.shpes.service.SysDepartmentService;
 import com.shpes.service.SysUserService;
+import com.shpes.service.ExamRecordService;
 import com.shpes.vo.AppointmentVO;
 import com.shpes.vo.ExamPackageVO;
+import com.shpes.utils.SecurityUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +26,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -43,6 +47,9 @@ public class ExamAppointmentServiceImpl extends ServiceImpl<ExamAppointmentMappe
     @Autowired
     private SysDepartmentService departmentService;
 
+    @Autowired
+    private ExamRecordService examRecordService;
+
     @Override
     public AppointmentVO getAppointment(Long id) {
         ExamAppointment appointment = getById(id);
@@ -58,8 +65,27 @@ public class ExamAppointmentServiceImpl extends ServiceImpl<ExamAppointmentMappe
         if (appointment == null) {
             throw new ApiException(ResultCode.APPOINTMENT_NOT_EXIST);
         }
+        appointment.setStatus(3); // 设置状态为已完成
+        updateById(appointment);
+    }
+
+    @Override
+    public void startAppointment(Long id) {
+        ExamAppointment appointment = getById(id);
+        if (appointment == null) {
+            throw new ApiException(ResultCode.APPOINTMENT_NOT_EXIST);
+        }
+        // 只有待体检状态才能开始体检
+        if (appointment.getStatus() != 1) {
+            throw new ApiException(ResultCode.APPOINTMENT_STATUS_INVALID, "只有待体检状态的预约才能开始体检");
+        }
+        
+        // 将预约状态更新为"进行中"
         appointment.setStatus(2); // 设置状态为进行中
         updateById(appointment);
+        
+        // 创建体检记录
+        createExamRecord(appointment);
     }
 
     @Override
@@ -72,7 +98,7 @@ public class ExamAppointmentServiceImpl extends ServiceImpl<ExamAppointmentMappe
         // 减少时间段的预约数
         timeSlotService.decrementBookedCount(appointment.getTimeSlotId());
         
-        appointment.setStatus(3); // 设置状态为已取消
+        appointment.setStatus(4); // 设置状态为已取消
         appointment.setCancelReason(reason);
         updateById(appointment);
     }
@@ -267,5 +293,35 @@ public class ExamAppointmentServiceImpl extends ServiceImpl<ExamAppointmentMappe
         }
         
         return vo;
+    }
+
+    /**
+     * 根据预约信息创建体检记录
+     */
+    private void createExamRecord(ExamAppointment appointment) {
+        try {
+            // 创建体检记录
+            ExamRecord examRecord = new ExamRecord();
+            examRecord.setAppointmentId(appointment.getId());
+            examRecord.setUserId(appointment.getUserId());
+            examRecord.setPackageId(appointment.getPackageId());
+            examRecord.setPackageName(appointment.getPackageName());
+            examRecord.setExamDate(LocalDateTime.now());
+            examRecord.setStatus(1); // 1-进行中
+            
+            // 设置医生信息（当前登录用户）
+            Long currentUserId = SecurityUtils.getCurrentUserId();
+            String currentUserName = userService.getUserNameById(currentUserId);
+            examRecord.setDoctorId(currentUserId);
+            examRecord.setDoctorName(currentUserName);
+            
+            // 保存体检记录
+            examRecordService.createRecord(examRecord);
+            
+            log.info("成功为预约ID：{}创建体检记录", appointment.getId());
+        } catch (Exception e) {
+            log.error("创建体检记录失败，预约ID：{}", appointment.getId(), e);
+            // 这里我们不抛出异常，以避免影响预约状态更新
+        }
     }
 }

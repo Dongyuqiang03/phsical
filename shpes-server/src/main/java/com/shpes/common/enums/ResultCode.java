@@ -44,6 +44,7 @@ public enum ResultCode implements IErrorCode {
     APPOINTMENT_CAPACITY_FULL(5002, "预约名额已满"),
     APPOINTMENT_TIME_INVALID(5003, "无效的预约时间"),
     APPOINTMENT_CANCEL_TIMEOUT(5004, "超出取消预约时限"),
+    APPOINTMENT_STATUS_INVALID(5013, "预约状态不允许此操作"),
     TIME_SLOT_NOT_EXIST(5005, "体检时间段不存在"),
     TIME_SLOT_EXIST(5006, "体检时间段已存在"),
     TIME_SLOT_BOOKED(5007, "体检时间段已被预约"),

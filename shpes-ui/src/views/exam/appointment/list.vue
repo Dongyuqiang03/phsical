@@ -191,9 +191,11 @@ export default {
         'PENDING': '待体检',
         'COMPLETED': '已完成',
         'CANCELLED': '已取消',
+        '0': '待确认',
         '1': '待体检',
-        '2': '已完成',
-        '0': '已取消'
+        '2': '进行中',
+        '3': '已完成',
+        '4': '已取消'
       }
       return statusMap[status] || '未知'
     },
@@ -202,9 +204,11 @@ export default {
         'PENDING': 'warning',
         'COMPLETED': 'success',
         'CANCELLED': 'info',
+        '0': 'info',
         '1': 'warning',
-        '2': 'success',
-        '0': 'info'
+        '2': 'primary',
+        '3': 'success',
+        '4': 'info'
       }
       return statusMap[status] || 'info'
     }
@@ -221,9 +225,11 @@ export default {
         status: undefined
       },
       statusOptions: [
+        { label: '待确认', value: 0 },
         { label: '待体检', value: 1 },
-        { label: '已完成', value: 2 },
-        { label: '已取消', value: 0 }
+        { label: '进行中', value: 2 },
+        { label: '已完成', value: 3 },
+        { label: '已取消', value: 4 }
       ],
       changeTimeDialog: false,
       changeTimeForm: {
@@ -318,9 +324,11 @@ export default {
     // 格式化状态码
     getStatusString(status) {
       const statusMap = {
-        1: 'PENDING',
-        2: 'COMPLETED',
-        0: 'CANCELLED'
+        0: 'PENDING_CONFIRM',
+        1: 'PENDING', 
+        2: 'IN_PROGRESS',
+        3: 'COMPLETED',
+        4: 'CANCELLED'
       }
       return statusMap[status] || 'PENDING'
     },

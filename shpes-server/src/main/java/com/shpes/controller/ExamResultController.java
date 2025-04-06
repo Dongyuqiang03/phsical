@@ -29,14 +29,14 @@ public class ExamResultController {
 
     @ApiOperation("获取体检结果列表")
     @GetMapping("/record/{recordId}")
-    @RequiresPermission("")
+    @RequiresPermission("exam:result")
     public CommonResult<List<ExamResultVO>> getResultsByRecordId(@PathVariable Long recordId) {
         return CommonResult.success(resultService.getResultsByRecordId(recordId));
     }
 
     @ApiOperation("分页查询体检结果")
     @GetMapping("/list")
-    @RequiresPermission("")
+    @RequiresPermission("exam:result")
     public CommonResult<CommonPage<ExamResultVO>> getResultPage(
             @ApiParam("页码") @RequestParam(defaultValue = "1") Integer pageNum,
             @ApiParam("每页记录数") @RequestParam(defaultValue = "10") Integer pageSize,
@@ -49,28 +49,28 @@ public class ExamResultController {
 
     @ApiOperation("获取体检结果详情")
     @GetMapping("/{id}")
-    @RequiresPermission("")
+    @RequiresPermission("exam:result")
     public CommonResult<ExamResultVO> getResult(@PathVariable Long id) {
         return CommonResult.success(resultService.getResultsByRecordId(id).get(0));
     }
 
     @ApiOperation("录入体检结果")
     @PostMapping
-    @RequiresPermission("")
+    @RequiresPermission("exam:result")
     public CommonResult<ExamResultVO> createResult(@Valid @RequestBody ExamResult result) {
         return CommonResult.success(resultService.createResult(result));
     }
 
     @ApiOperation("批量录入体检结果")
     @PostMapping("/batch")
-    @RequiresPermission("")
+    @RequiresPermission("exam:result")
     public CommonResult<List<ExamResultVO>> createResults(@Valid @RequestBody List<ExamResult> results) {
         return CommonResult.success(resultService.createResults(results));
     }
 
     @ApiOperation("更新体检结果")
     @PutMapping("/{id}")
-    @RequiresPermission("")
+    @RequiresPermission("exam:result")
     public CommonResult<ExamResultVO> updateResult(@PathVariable Long id, @Valid @RequestBody ExamResult result) {
         result.setId(id);
         return CommonResult.success(resultService.updateResult(result));
@@ -78,7 +78,7 @@ public class ExamResultController {
 
     @ApiOperation("删除体检结果")
     @DeleteMapping("/{id}")
-    @RequiresPermission("")
+    @RequiresPermission("exam:result")
     public CommonResult<Void> deleteResult(@PathVariable Long id) {
         resultService.deleteResult(id);
         return CommonResult.success(null);
@@ -86,7 +86,7 @@ public class ExamResultController {
 
     @ApiOperation("复核体检结果")
     @PutMapping("/{id}/review")
-    @RequiresPermission("")
+    @RequiresPermission("exam:result")
     public CommonResult<ExamResultVO> reviewResult(
             @PathVariable Long id,
             @RequestParam String suggestion) {
@@ -95,21 +95,21 @@ public class ExamResultController {
 
     @ApiOperation("批量复核体检结果")
     @PostMapping("/batch/review")
-    @RequiresPermission("")
+    @RequiresPermission("exam:result")
     public CommonResult<List<ExamResultVO>> reviewResults(@RequestBody List<Long> ids) {
         return CommonResult.success(resultService.reviewResults(ids));
     }
 
     @ApiOperation("导出体检报告")
     @GetMapping("/export/{recordId}")
-    @RequiresPermission("")
+    @RequiresPermission("exam:result")
     public CommonResult<String> exportReport(@PathVariable Long recordId) {
         return CommonResult.success(resultService.exportReport(recordId));
     }
 
     @ApiOperation("获取异常结果列表")
     @GetMapping("/abnormal")
-    @RequiresPermission("")
+    @RequiresPermission("exam:result")
     public CommonResult<List<ExamResultVO>> getAbnormalResults(
             @RequestParam(required = false) Long userId,
             @RequestParam(required = false) Long recordId) {

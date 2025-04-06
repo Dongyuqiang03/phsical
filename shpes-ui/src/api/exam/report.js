@@ -3,7 +3,7 @@ import request from '@/utils/request'
 // 获取体检报告详情
 export function getExamReport(id) {
   return request({
-    url: `/api/exam/report/${id}`,
+    url: `/api/exam/records/${id}`,
     method: 'get'
   })
 }
