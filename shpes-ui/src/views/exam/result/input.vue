@@ -24,56 +24,14 @@
             </el-button-group>
           </div>
           <el-descriptions :column="3" border>
-            <el-descriptions-item label="预约编号">{{ examInfo.appointmentId }}</el-descriptions-item>
-            <el-descriptions-item label="体检人">{{ examInfo.userName }}</el-descriptions-item>
-            <el-descriptions-item label="性别">{{ examInfo.gender }}</el-descriptions-item>
-            <el-descriptions-item label="年龄">{{ examInfo.age }}岁</el-descriptions-item>
-            <el-descriptions-item label="体检套餐">{{ examInfo.packageName }}</el-descriptions-item>
-            <el-descriptions-item label="体检日期">{{ examInfo.examDate }}</el-descriptions-item>
+            <el-descriptions-item label="体检编号">{{ examInfo.examNo || '暂无' }}</el-descriptions-item>
+            <el-descriptions-item label="预约编号">{{ examInfo.appointmentNo || '暂无' }}</el-descriptions-item>
+            <el-descriptions-item label="体检人">{{ examInfo.name || '未知' }}</el-descriptions-item>
+            <el-descriptions-item label="性别">{{ formatGender(examInfo.gender) }}</el-descriptions-item>
+            <el-descriptions-item label="年龄">{{ examInfo.age ? examInfo.age + '岁' : '未知' }}</el-descriptions-item>
+            <el-descriptions-item label="联系电话">{{ examInfo.phone || '未知' }}</el-descriptions-item>
+            <el-descriptions-item label="体检套餐">{{ examInfo.packageName || '未知套餐' }}</el-descriptions-item>
           </el-descriptions>
-        </el-card>
-
-        <!-- 体格检查 -->
-        <el-card class="box-card">
-          <div slot="header" class="clearfix">
-            <span>体格检查</span>
-          </div>
-          <el-form :model="physicalForm" label-width="100px">
-            <el-row :gutter="20">
-              <el-col :span="6">
-                <el-form-item label="身高(cm)">
-                  <el-input-number
-                    v-model="physicalForm.height"
-                    :min="0"
-                    :max="300"
-                    :precision="1"
-                    @change="calculateBMI"
-                  />
-                </el-form-item>
-              </el-col>
-              <el-col :span="6">
-                <el-form-item label="体重(kg)">
-                  <el-input-number
-                    v-model="physicalForm.weight"
-                    :min="0"
-                    :max="500"
-                    :precision="1"
-                    @change="calculateBMI"
-                  />
-                </el-form-item>
-              </el-col>
-              <el-col :span="6">
-                <el-form-item label="BMI">
-                  <el-input v-model="physicalForm.bmi" disabled />
-                </el-form-item>
-              </el-col>
-              <el-col :span="6">
-                <el-form-item label="血压(mmHg)">
-                  <el-input v-model="physicalForm.bloodPressure" placeholder="如：120/80" />
-                </el-form-item>
-              </el-col>
-            </el-row>
-          </el-form>
         </el-card>
 
         <!-- 检查结果 -->
@@ -156,7 +114,7 @@
 </template>
 
 <script>
-import { getExamReport, submitExamResults, submitConclusion } from '@/api/exam/report'
+import { getExamReport, getPackageItems, submitExamResults, submitConclusion } from '@/api/exam/result'
 
 export default {
   name: 'ResultInput',
@@ -165,17 +123,15 @@ export default {
       loading: false,
       examInfo: {
         appointmentId: '',
-        userName: '',
+        appointmentNo: '',
+        name: '',
         gender: '',
         age: '',
+        phone: '',
         packageName: '',
-        examDate: ''
-      },
-      physicalForm: {
-        height: '',
-        weight: '',
-        bmi: '',
-        bloodPressure: ''
+        packageId: '',
+        examDate: '',
+        examNo: ''
       },
       examItems: [],
       conclusionForm: {
@@ -262,94 +218,95 @@ export default {
     },
     
     async getExamInfo() {
-      this.loading = true
       try {
-        // 获取路由参数中的记录ID
-        const recordId = this.$route.query.id
-        if (!recordId) {
-          this.$message.error('未能获取到记录ID，请返回列表重试')
-          this.$router.push('/exam/result')
-          return
+        // 获取和校验ID
+        const recordId = this.$route.query.id;
+        this.loading = true;
+        
+        // 转换ID为数字并验证
+        const numericId = Number(recordId);
+        if (isNaN(numericId)) {
+          this.$message.error('记录ID不是有效的数字');
+          return;
         }
         
-        try {
-          // 直接使用数字ID进行查询
-          const { data } = await getExamReport(recordId)
-          this.examInfo = {
-            appointmentId: data.appointmentId,
-            userName: data.userName,
-            gender: data.gender,
-            age: data.age,
-            packageName: data.packageName,
-            examDate: data.examDate
-          }
-          this.examItems = data.examItems.map(item => ({
-            ...item,
-            result: '',
-            status: 'NORMAL',
-            analysis: ''
-          }))
-          // 如果已有结果，加载已有数据
-          if (data.results) {
-            this.loadExistingResults(data.results)
-          }
-        } catch (apiError) {
-          console.error('API请求失败:', apiError)
-          
-          if (apiError.response && apiError.response.status === 400 && 
-              apiError.response.data && apiError.response.data.message && 
-              apiError.response.data.message.includes('NumberFormatException')) {
-            // 处理数字格式错误，可能是使用了examNo而不是ID
-            this.$message.error('系统错误：请求的ID格式不正确。请使用正确的数字ID而不是体检编号。')
+        // 获取体检报告信息
+        const { data } = await getExamReport(numericId);
+        
+        if (!data) {
+          this.$message.error('未找到体检记录');
+          return;
+        }
+        
+        // 调试日志：查看后端返回的数据结构和字段
+        console.log('体检报告原始数据:', data);
+        
+        // 设置体检基本信息，与后端字段保持一致
+        this.examInfo = {
+          id: data.id || numericId,
+          examNo: data.examNo || '',            // 体检编号
+          name: data.userName || '',            // 用户姓名
+          gender: data.gender || '',            // 性别
+          age: data.age || '',                  // 年龄
+          phone: data.phone || '',              // 联系电话
+          appointmentId: data.appointmentId || 0, // 预约ID
+          appointmentNo: data.appointmentNo || '', // 预约编号
+          packageId: data.packageId || 0,       // 套餐ID
+          packageName: data.packageName || '未知套餐' // 套餐名称
+        };
+        
+        console.log('处理后的体检信息:', this.examInfo);
+        
+        // 处理体检项目
+        if (Array.isArray(data.examItems) && data.examItems.length > 0) {
+          this.examItems = data.examItems;
+        } else {
+          // API未返回体检项目，尝试获取套餐标准项目
+          if (this.examInfo.packageId) {
+            try {
+              const { data: packageItems } = await getPackageItems(this.examInfo.packageId);
+              
+              if (Array.isArray(packageItems) && packageItems.length > 0) {
+                // 转换标准项目为可用格式，使用referenceValue作为参考范围
+                this.examItems = packageItems.map(item => ({
+                  id: item.id,
+                  name: item.name,
+                  reference: item.referenceValue || '暂无参考值', // 使用referenceValue字段
+                  result: '',
+                  status: 'NORMAL',
+                  analysis: ''
+                }));
+              } else {
+                this.useDefaultExamItems();
+              }
+            } catch (error) {
+              console.error('获取套餐标准体检项目失败:', error);
+              this.useDefaultExamItems();
+            }
           } else {
-            this.$message.error('获取体检信息失败: ' + (apiError.message || '未知错误'))
+            this.useDefaultExamItems();
           }
-          
-          // 无论哪种错误，都返回列表页
-          setTimeout(() => {
-            this.$router.push('/exam/result')
-          }, 1500)
-          return
+        }
+        
+        // 加载已有的检查结果
+        if (Array.isArray(data.results) && data.results.length > 0) {
+          // 将已有结果合并到检查项目中
+          data.results.forEach(result => {
+            const item = this.examItems.find(item => item.id === result.itemId);
+            if (item) {
+              item.result = result.result || '';
+              // 确保状态值使用统一的格式
+              item.status = result.status === 'normal' ? 'NORMAL' : 
+                           (result.status === 'abnormal' ? 'ABNORMAL' : result.status || 'NORMAL');
+              item.analysis = result.analysis || '';
+            }
+          });
         }
       } catch (error) {
-        console.error('获取体检信息失败:', error)
-        this.$message.error('获取体检信息失败: ' + (error.message || '未知错误'))
-      }
-      this.loading = false
-      
-      // 数据加载完成后再次检查滚动
-      this.$nextTick(this.fixScrollIssue)
-    },
-    loadExistingResults(results) {
-      this.physicalForm = {
-        height: results.height,
-        weight: results.weight,
-        bmi: results.bmi,
-        bloodPressure: results.bloodPressure
-      }
-      this.examItems = this.examItems.map(item => {
-        const result = results.items.find(r => r.itemId === item.id)
-        if (result) {
-          return {
-            ...item,
-            result: result.result,
-            status: result.status,
-            analysis: result.analysis
-          }
-        }
-        return item
-      })
-      if (results.conclusion) {
-        this.conclusionForm = {
-          findings: results.conclusion.findings,
-          suggestion: results.conclusion.suggestion
-        }
-      }
-    },
-    calculateBMI() {
-      if (this.physicalForm.height && this.physicalForm.weight) {
-        const heightInMeters = this.physicalForm.height / 100
-        this.physicalForm.bmi = (this.physicalForm.weight / (heightInMeters * heightInMeters)).toFixed(1)
+        console.error('获取体检信息失败:', error);
+        this.$message.error('获取体检信息失败: ' + (error.message || '未知错误'));
+      } finally {
+        this.loading = false;
       }
     },
     handleResultChange(row) {
@@ -388,18 +345,46 @@ export default {
     },
     async saveResults() {
       try {
-        const data = {
-          appointmentId: this.examInfo.appointmentId,
-          physical: this.physicalForm,
-          items: this.examItems.map(item => ({
-            itemId: item.id,
-            result: item.result,
-            status: item.status,
-            analysis: item.analysis
-          }))
+        // 确保ID是有效的数字
+        const recordId = this.$route.query.id;
+        const numericId = Number(recordId);
+        if (isNaN(numericId)) {
+          this.$message.error('记录ID不是有效的数字，无法保存结果。');
+          console.error('无效的记录ID:', recordId, typeof recordId);
+          return;
         }
+        
+        // 过滤出已填写结果的项目
+        const filledItems = this.examItems.filter(item => item.result);
+        
+        if (filledItems.length === 0) {
+          this.$message.warning('请至少填写一项检查结果');
+          return;
+        }
+        
+        // 构造提交数据 - 移除physical字段，因为界面上已经没有体格检查录入项
+        const data = {
+          id: numericId, // 使用数字ID
+          appointmentId: this.examInfo.appointmentId,
+          items: filledItems.map(item => {
+            // 确保itemId是正确的格式（可能是数字ID或字符串ID，取决于后端接口）
+            const itemId = item.id;
+            return {
+              itemId: itemId,
+              itemName: item.name, // 添加项目名称，可能在服务端需要
+              result: item.result,
+              status: item.status,
+              analysis: item.analysis || ''
+            }
+          })
+        }
+        
+        console.log('正在保存体检结果，数据:', data);
         await submitExamResults(data)
         this.$message.success('检查结果保存成功')
+        
+        // 保存成功后可以刷新一下数据
+        this.getExamInfo();
       } catch (error) {
         console.error('保存检查结果失败:', error)
         this.$message.error('保存失败: ' + (error.message || '未知错误'))
@@ -407,10 +392,21 @@ export default {
     },
     async saveConclusion() {
       try {
+        // 确保ID是有效的数字
+        const recordId = this.$route.query.id;
+        const numericId = Number(recordId);
+        if (isNaN(numericId)) {
+          this.$message.error('记录ID不是有效的数字，无法提交结论。');
+          console.error('无效的记录ID:', recordId, typeof recordId);
+          return;
+        }
+        
         const data = {
-          id: this.$route.query.id, // 使用query中的id，确保它是数字类型ID
+          id: numericId, // 使用数字类型ID
           ...this.conclusionForm
         }
+        
+        console.log('正在提交体检结论，使用ID:', numericId);
         await submitConclusion(data)
         this.$message.success('体检结论提交成功')
         
@@ -418,12 +414,115 @@ export default {
         const reportPath = `/exam/report/detail`
         this.$router.push({
           path: reportPath,
-          query: { id: this.$route.query.id }
+          query: { id: numericId }
         })
       } catch (error) {
         console.error('提交体检结论失败:', error)
         this.$message.error('提交失败: ' + (error.message || '未知错误'))
       }
+    },
+    // 使用默认体检项目
+    useDefaultExamItems() {
+      this.examItems = [
+        {
+          id: 'blood_pressure',
+          name: '血压',
+          reference: '90/60-140/90mmHg',
+          result: '',
+          status: 'NORMAL',
+          analysis: ''
+        },
+        {
+          id: 'heart_rate',
+          name: '心率',
+          reference: '60-100次/分',
+          result: '',
+          status: 'NORMAL',
+          analysis: ''
+        },
+        {
+          id: 'respiratory_rate',
+          name: '呼吸频率',
+          reference: '12-20次/分',
+          result: '',
+          status: 'NORMAL',
+          analysis: ''
+        },
+        {
+          id: 'temperature',
+          name: '体温',
+          reference: '36.3-37.2℃',
+          result: '',
+          status: 'NORMAL',
+          analysis: ''
+        },
+        {
+          id: 'blood_routine',
+          name: '血常规',
+          reference: '红细胞(RBC): 4.0-5.5×10^12/L; 血红蛋白(HGB): 120-160g/L; 白细胞(WBC): 4.0-10.0×10^9/L; 血小板(PLT): 100-300×10^9/L',
+          result: '',
+          status: 'NORMAL',
+          analysis: ''
+        },
+        {
+          id: 'urine_routine',
+          name: '尿常规',
+          reference: '颜色: 淡黄色或黄色透明; 尿蛋白: 阴性; 尿糖: 阴性; 尿胆原: 阴性; pH值: 5.0-8.0; 尿比重: 1.003-1.030',
+          result: '',
+          status: 'NORMAL',
+          analysis: ''
+        },
+        {
+          id: 'liver_function',
+          name: '肝功能',
+          reference: '谷丙转氨酶(ALT): 0-40U/L; 谷草转氨酶(AST): 0-40U/L; 总胆红素(TBIL): 5.1-17.1μmol/L; 直接胆红素(DBIL): 0-6.8μmol/L',
+          result: '',
+          status: 'NORMAL',
+          analysis: ''
+        },
+        {
+          id: 'kidney_function',
+          name: '肾功能',
+          reference: '尿素氮(BUN): 2.86-7.14mmol/L; 肌酐(Cr): 44-133μmol/L; 尿酸(UA): 149-416μmol/L',
+          result: '',
+          status: 'NORMAL',
+          analysis: ''
+        },
+        {
+          id: 'blood_lipids',
+          name: '血脂',
+          reference: '总胆固醇(TC): 3.1-5.7mmol/L; 甘油三酯(TG): 0.4-1.7mmol/L; 高密度脂蛋白(HDL-C): 0.9-1.8mmol/L; 低密度脂蛋白(LDL-C): 1.9-3.1mmol/L',
+          result: '',
+          status: 'NORMAL',
+          analysis: ''
+        },
+        {
+          id: 'blood_glucose',
+          name: '血糖',
+          reference: '空腹血糖: 3.9-6.1mmol/L; 餐后2小时血糖: <7.8mmol/L',
+          result: '',
+          status: 'NORMAL',
+          analysis: ''
+        },
+        {
+          id: 'thyroid_function',
+          name: '甲状腺功能',
+          reference: 'TSH: 0.27-4.2mIU/L; FT3: 3.1-6.8pmol/L; FT4: 12-22pmol/L',
+          result: '',
+          status: 'NORMAL',
+          analysis: ''
+        }
+      ];
+    },
+    formatGender(gender) {
+      // 根据实际需求实现性别格式化逻辑
+      if (gender === 1) return '男';
+      if (gender === 2) return '女';
+      if (gender === '1') return '男';
+      if (gender === '2') return '女';
+      if (gender === 'male' || gender === 'MALE') return '男';
+      if (gender === 'female' || gender === 'FEMALE') return '女';
+      return gender || '未知';
     }
   }
 }

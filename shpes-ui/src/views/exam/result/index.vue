@@ -215,7 +215,20 @@ export default {
         this.$message.error('该记录缺少ID字段，无法进行结果录入。请联系管理员检查数据完整性。');
         return;
       }
-      this.$router.push({ path: '/exam/result/input', query: { id: row.id } });
+      
+      // 检查ID是否为有效数字
+      const numericId = Number(row.id);
+      if (isNaN(numericId)) {
+        this.$message.error('记录ID不是有效的数字，无法进行结果录入。');
+        console.error('无效的记录ID:', row.id, typeof row.id);
+        return;
+      }
+      
+      console.log('跳转到结果录入页面，使用ID:', numericId);
+      this.$router.push({ 
+        path: '/exam/result/input', 
+        query: { id: numericId } 
+      });
     },
     handleReview(row) {
       // 必须使用数字类型的主键ID进行API调用，而不是examNo
@@ -223,7 +236,20 @@ export default {
         this.$message.error('该记录缺少ID字段，无法查看详情。请联系管理员检查数据完整性。');
         return;
       }
-      this.$router.push({ path: '/exam/result/review', query: { id: row.id } });
+      
+      // 检查ID是否为有效数字
+      const numericId = Number(row.id);
+      if (isNaN(numericId)) {
+        this.$message.error('记录ID不是有效的数字，无法查看详情。');
+        console.error('无效的记录ID:', row.id, typeof row.id);
+        return;
+      }
+      
+      console.log('跳转到详情页面，使用ID:', numericId);
+      this.$router.push({ 
+        path: '/exam/result/review', 
+        query: { id: numericId } 
+      });
     },
     handleSizeChange(val) {
       this.queryParams.pageSize = val

@@ -29,7 +29,7 @@ export function getReportList(params) {
 // 录入体检结果
 export function submitExamResults(data) {
   return request({
-    url: '/api/exam/report/results',
+    url: '/api/exam/results/batch',
     method: 'post',
     data
   })
@@ -96,5 +96,13 @@ export function getDepartmentResults(params) {
     url: '/api/exam/report/department',
     method: 'get',
     params
+  })
+}
+
+// 获取体检套餐对应的标准体检项目
+export function getPackageItems(packageId) {
+  return request({
+    url: `/api/exam/packages/${packageId}/items`,
+    method: 'get'
   })
 } 

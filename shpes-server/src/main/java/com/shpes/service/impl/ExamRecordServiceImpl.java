@@ -6,11 +6,15 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.shpes.common.api.CommonPage;
 import com.shpes.common.enums.ResultCode;
 import com.shpes.common.exception.ApiException;
+import com.shpes.entity.ExamAppointment;
 import com.shpes.entity.ExamRecord;
+import com.shpes.entity.SysUser;
+import com.shpes.mapper.ExamAppointmentMapper;
 import com.shpes.mapper.ExamRecordMapper;
 import com.shpes.service.ExamRecordService;
 import com.shpes.service.SysUserService;
 import com.shpes.vo.ExamRecordVO;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -23,10 +27,14 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 public class ExamRecordServiceImpl extends ServiceImpl<ExamRecordMapper, ExamRecord> implements ExamRecordService {
 
     @Autowired
     private SysUserService userService;
+    
+    @Autowired
+    private ExamAppointmentMapper appointmentMapper;
 
     @Override
     public CommonPage<ExamRecordVO> getRecordPage(Integer pageNum, Integer pageSize, Long userId, 
@@ -151,24 +159,32 @@ public class ExamRecordServiceImpl extends ServiceImpl<ExamRecordMapper, ExamRec
      * 将实体转换为VO
      */
     private ExamRecordVO convertToVO(ExamRecord record) {
-        if (record == null) {
-            return null;
-        }
         ExamRecordVO vo = new ExamRecordVO();
         BeanUtils.copyProperties(record, vo);
         
-        // 补充用户姓名
+        // 查询并添加用户详细信息
         if (record.getUserId() != null) {
-            String userName = userService.getUserNameById(record.getUserId());
-            vo.setUserName(userName);
+            SysUser user = userService.getById(record.getUserId());
+            if (user != null) {
+                vo.setUserName(user.getRealName());
+                vo.setGender(user.getGender());
+                vo.setPhone(user.getPhone());
+            }
         }
         
-        // 补充医生姓名（如果为空）
-        if (record.getDoctorId() != null && (record.getDoctorName() == null || record.getDoctorName().isEmpty())) {
-            String doctorName = userService.getUserNameById(record.getDoctorId());
-            record.setDoctorName(doctorName);
-            vo.setDoctorName(doctorName);
+        // 获取预约编号
+        if (record.getAppointmentId() != null) {
+            try {
+                ExamAppointment appointment = appointmentMapper.selectById(record.getAppointmentId());
+                if (appointment != null) {
+                    vo.setAppointmentNo(appointment.getAppointmentNo());
+                }
+            } catch (Exception e) {
+                log.error("获取预约编号失败，预约ID: {}", record.getAppointmentId(), e);
+            }
         }
+        
+        // 其他需要处理的关联数据...
         
         return vo;
     }

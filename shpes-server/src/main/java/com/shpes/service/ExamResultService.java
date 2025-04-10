@@ -3,6 +3,7 @@ package com.shpes.service;
 import com.shpes.common.api.CommonPage;
 import com.shpes.entity.ExamResult;
 import com.shpes.vo.ExamResultVO;
+import com.shpes.dto.ExamResultBatchDTO;
 
 import java.util.List;
 
@@ -52,4 +53,11 @@ public interface ExamResultService {
      * 导出体检报告
      */
     String exportReport(Long recordId);
+
+    /**
+     * 根据批量DTO保存体检结果
+     * @param batchDTO 批量DTO
+     * @return 保存后的体检结果列表
+     */
+    List<ExamResultVO> createResultsFromBatchDTO(ExamResultBatchDTO batchDTO);
 }

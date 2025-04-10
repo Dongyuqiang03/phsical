@@ -29,6 +29,9 @@ public class ExamRecordVO {
     @ApiModelProperty("预约ID")
     private Long appointmentId;
     
+    @ApiModelProperty("预约编号")
+    private String appointmentNo;
+    
     @ApiModelProperty("体检套餐ID")
     private Long packageId;
     
@@ -70,4 +73,13 @@ public class ExamRecordVO {
     
     @ApiModelProperty("更新时间")
     private LocalDateTime updateTime;
+
+    @ApiModelProperty("用户性别")
+    private Integer gender;
+
+    @ApiModelProperty("用户年龄")
+    private Integer age;
+
+    @ApiModelProperty("联系电话")
+    private String phone;
 } 

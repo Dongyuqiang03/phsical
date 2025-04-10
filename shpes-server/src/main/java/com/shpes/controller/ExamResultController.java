@@ -3,10 +3,15 @@ package com.shpes.controller;
 import com.shpes.common.api.CommonPage;
 import com.shpes.common.api.CommonResult;
 import com.shpes.common.constant.RoleConstants;
+import com.shpes.entity.ExamRecord;
 import com.shpes.entity.ExamResult;
 import com.shpes.annotation.RequiresPermission;
+import com.shpes.service.ExamRecordService;
 import com.shpes.service.ExamResultService;
 import com.shpes.vo.ExamResultVO;
+import com.shpes.dto.ExamResultBatchDTO;
+import com.shpes.dto.ExamResultBatchDTO.ExamResultItemDTO;
+import com.shpes.utils.SecurityUtils;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -15,6 +20,9 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.ArrayList;
 
 /**
  * 体检结果管理控制器
@@ -26,6 +34,9 @@ public class ExamResultController {
 
     @Autowired
     private ExamResultService resultService;
+
+    @Autowired
+    private ExamRecordService recordService;
 
     @ApiOperation("获取体检结果列表")
     @GetMapping("/record/{recordId}")
@@ -64,8 +75,9 @@ public class ExamResultController {
     @ApiOperation("批量录入体检结果")
     @PostMapping("/batch")
     @RequiresPermission("exam:result")
-    public CommonResult<List<ExamResultVO>> createResults(@Valid @RequestBody List<ExamResult> results) {
-        return CommonResult.success(resultService.createResults(results));
+    public CommonResult<List<ExamResultVO>> createResults(@Valid @RequestBody ExamResultBatchDTO batchDTO) {
+        // 调用服务层方法处理业务逻辑
+        return CommonResult.success(resultService.createResultsFromBatchDTO(batchDTO));
     }
 
     @ApiOperation("更新体检结果")

@@ -10,6 +10,8 @@ import com.shpes.mapper.ExamResultMapper;
 import com.shpes.service.ExamResultService;
 import com.shpes.utils.SecurityUtils;
 import com.shpes.vo.ExamResultVO;
+import com.shpes.dto.ExamResultBatchDTO;
+import com.shpes.dto.ExamResultBatchDTO.ExamResultItemDTO;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.ArrayList;
 
 /**
  * 体检结果服务实现类
@@ -119,6 +122,39 @@ public class ExamResultServiceImpl extends ServiceImpl<ExamResultMapper, ExamRes
     public String exportReport(Long recordId) {
         // TODO: 实现导出报告逻辑
         return null;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public List<ExamResultVO> createResultsFromBatchDTO(ExamResultBatchDTO batchDTO) {
+        List<ExamResult> results = new ArrayList<>();
+        
+        // 将DTO转换为ExamResult列表
+        if (batchDTO.getItems() != null && !batchDTO.getItems().isEmpty()) {
+            for (ExamResultItemDTO item : batchDTO.getItems()) {
+                ExamResult result = new ExamResult();
+                result.setRecordId(batchDTO.getId());  // 设置体检记录ID
+                result.setItemId(item.getItemId());   // 设置体检项目ID
+                result.setValue(item.getResult());    // 设置检查结果值
+                
+                // 转换状态：NORMAL -> 0, ABNORMAL -> 1
+                result.setAbnormal("ABNORMAL".equals(item.getStatus()) ? 1 : 0);
+                
+                // 设置医生建议/分析
+                result.setSuggestion(item.getAnalysis());
+                
+                // 设置操作人员信息（当前登录用户）
+                result.setDoctorId(SecurityUtils.getCurrentUserId());
+                
+                // 设置状态为待复核
+                result.setStatus(1);
+                
+                results.add(result);
+            }
+        }
+        
+        // 调用现有方法批量保存结果
+        return createResults(results);
     }
 
     private ExamResultVO convertToVO(ExamResult result) {
