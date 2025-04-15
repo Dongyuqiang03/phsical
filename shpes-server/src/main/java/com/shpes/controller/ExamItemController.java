@@ -78,13 +78,6 @@ public class ExamItemController {
         return CommonResult.success(null);
     }
 
-    @ApiOperation("获取项目参考值")
-    @GetMapping("/{id}/reference")
-    @RequiresPermission("exam:item")
-    public CommonResult<ExamItemVO> getItemReference(@PathVariable Long id) {
-        return CommonResult.success(itemService.getItemReference(id));
-    }
-
     @ApiOperation("获取所有可用体检项目")
     @GetMapping("/available")
     @RequiresPermission("exam:item")

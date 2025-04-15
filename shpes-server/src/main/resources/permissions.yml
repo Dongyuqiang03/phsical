@@ -1,0 +1,10 @@
+# 体检结果权限
+- code: exam:result
+  name: 查看体检结果
+  description: 允许查看体检结果
+  roles: [admin, doctor, nurse, teacher, student]
+  
+- code: exam:record
+  name: 体检记录管理
+  description: 允许管理体检记录，包括录入、复核等
+  roles: [admin, doctor, nurse] 

@@ -60,4 +60,20 @@ public interface ExamResultService {
      * @return 保存后的体检结果列表
      */
     List<ExamResultVO> createResultsFromBatchDTO(ExamResultBatchDTO batchDTO);
+
+    /**
+     * 获取用户的体检结果（分页）
+     * @param userId 用户ID
+     * @param pageNum 页码
+     * @param pageSize 页大小
+     * @param recordId 体检记录ID
+     * @param beginDate 开始日期
+     * @param endDate 结束日期
+     * @param itemName 项目名称
+     * @param resultType 结果类型（0-正常，1-异常）
+     * @return 分页结果
+     */
+    CommonPage<ExamResultVO> getCurrentUserResults(Long userId, Integer pageNum, Integer pageSize,
+                                                 Long recordId, String beginDate, String endDate,
+                                                 String itemName, Integer resultType);
 }

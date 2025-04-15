@@ -69,8 +69,17 @@ export function completeRecord(id, data) {
   })
 }
 
+// 获取当前用户的体检记录
+export function getUserExamRecords(params) {
+  return request({
+    url: '/api/exam/records/user/current',
+    method: 'get',
+    params
+  })
+}
+
 // 导出体检报告
-export function exportReport(recordId) {
+export function exportExamReport(recordId) {
   return request({
     url: `/api/exam/results/export/${recordId}`,
     method: 'get',

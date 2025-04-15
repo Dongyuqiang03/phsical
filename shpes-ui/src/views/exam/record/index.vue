@@ -101,9 +101,10 @@ export default {
     },
     getStatusType(status) {
       const statusMap = {
-        '已完成': 'success',
-        '进行中': 'warning',
-        '未开始': 'info'
+        '待体检': 'info',
+        '进行中(未录入结果)': 'warning',
+        '进行中(已录入结果)': 'warning',
+        '已完成': 'success'
       }
       return statusMap[status] || 'info'
     },

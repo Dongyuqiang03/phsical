@@ -8,6 +8,7 @@ import com.shpes.entity.ExamResult;
 import com.shpes.annotation.RequiresPermission;
 import com.shpes.service.ExamRecordService;
 import com.shpes.service.ExamResultService;
+import com.shpes.vo.ExamRecordVO;
 import com.shpes.vo.ExamResultVO;
 import com.shpes.dto.ExamResultBatchDTO;
 import com.shpes.dto.ExamResultBatchDTO.ExamResultItemDTO;
@@ -127,4 +128,25 @@ public class ExamResultController {
             @RequestParam(required = false) Long recordId) {
         return CommonResult.success(resultService.getResultPage(1, 100, recordId, null, 1, null).getRecords());
     }
+
+    @ApiOperation("获取当前用户的体检结果")
+    @GetMapping("/user/current")
+    @RequiresPermission("exam:result")
+    public CommonResult<CommonPage<ExamResultVO>> getCurrentUserResults(
+            @ApiParam("页码") @RequestParam(defaultValue = "1") Integer pageNum,
+            @ApiParam("每页记录数") @RequestParam(defaultValue = "10") Integer pageSize,
+            @ApiParam("体检记录ID") @RequestParam(required = false) Long recordId,
+            @ApiParam("开始日期") @RequestParam(required = false) String beginDate,
+            @ApiParam("结束日期") @RequestParam(required = false) String endDate,
+            @ApiParam("项目名称") @RequestParam(required = false) String itemName,
+            @ApiParam("结果类型：0-正常，1-异常") @RequestParam(required = false) Integer resultType) {
+        
+        // 获取当前登录用户ID
+        Long userId = SecurityUtils.getCurrentUserId();
+        
+        // 调用Service查询当前用户的体检结果
+        return CommonResult.success(resultService.getCurrentUserResults(userId, pageNum, pageSize, 
+            recordId, beginDate, endDate, itemName, resultType));
+    }
+
 } 

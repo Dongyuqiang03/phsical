@@ -2,7 +2,7 @@
   <div class="app-container">
     <div class="review-container" v-loading="loading">
       <!-- 操作按钮 -->
-      <div class="operation-bar">
+      <div class="operation-bar" v-if="!isReadonlyMode">
         <el-button-group>
           <el-button
             type="success"
@@ -19,10 +19,26 @@
         </el-button-group>
       </div>
 
+      <!-- 只读模式操作栏 -->
+      <div class="operation-bar" v-if="isReadonlyMode">
+        <el-button-group>
+          <el-button
+            type="primary"
+            @click="handlePrint">
+            打印报告
+          </el-button>
+          <el-button
+            type="default"
+            @click="handleBack">
+            返回列表
+          </el-button>
+        </el-button-group>
+      </div>
+
       <!-- 基本信息 -->
       <el-card class="box-card">
         <div slot="header" class="clearfix">
-          <span>体检信息</span>
+          <span>{{ pageTitle }}</span>
           <el-tag style="float: right" :type="statusType">{{ statusText }}</el-tag>
         </div>
         <el-descriptions :column="3" border>
@@ -78,11 +94,13 @@
           <el-table-column label="审核意见" min-width="200">
             <template slot-scope="{row}">
               <el-input
+                v-if="!isReadonlyMode"
                 v-model="row.reviewComment"
                 type="textarea"
                 :rows="2"
                 placeholder="请输入审核意见（选填）"
               />
+              <div v-else class="review-comment">{{ row.reviewComment || '无' }}</div>
             </template>
           </el-table-column>
         </el-table>
@@ -100,13 +118,16 @@
           <el-form-item label="结论建议">
             <div class="conclusion-text">{{ conclusionForm.suggestion }}</div>
           </el-form-item>
-          <el-form-item label="审核意见">
+          <el-form-item label="审核意见" v-if="!isReadonlyMode">
             <el-input
               v-model="conclusionForm.reviewComment"
               type="textarea"
               :rows="3"
               placeholder="请输入审核意见"
             />
+          </el-form-item>
+          <el-form-item label="审核意见" v-else>
+            <div class="conclusion-text">{{ conclusionForm.reviewComment || '无审核意见' }}</div>
           </el-form-item>
         </el-form>
       </el-card>
@@ -151,12 +172,14 @@
 
 <script>
 import { getExamReport, reviewReport } from '@/api/exam/report'
+import { getResultsByRecordId } from '@/api/exam/result'
 
 export default {
   name: 'ResultReview',
   data() {
     return {
       loading: false,
+      mode: 'normal', // 默认为正常模式，可选值：normal(默认), readonly(只读)
       examInfo: {
         appointmentId: '',
         userName: '',
@@ -193,6 +216,14 @@ export default {
     }
   },
   computed: {
+    // 是否为只读模式
+    isReadonlyMode() {
+      return this.mode === 'readonly'
+    },
+    // 页面标题计算属性
+    pageTitle() {
+      return this.isReadonlyMode ? '查看体检结果' : '体检报告审核'
+    },
     statusType() {
       const typeMap = {
         PENDING: 'warning',
@@ -236,39 +267,158 @@ export default {
     }
   },
   created() {
+    this.initMode()
     this.getReportDetail()
   },
   methods: {
+    // 初始化页面模式
+    initMode() {
+      // 获取URL参数中的mode值
+      const mode = this.$route.query.mode
+      if (mode === 'readonly') {
+        this.mode = 'readonly'
+        console.log('当前为只读模式')
+      } else {
+        this.mode = 'normal'
+        console.log('当前为正常模式')
+      }
+    },
     async getReportDetail() {
       this.loading = true
       try {
-        const { data } = await getExamReport(this.$route.params.id)
+        // 1. 从查询参数获取记录ID
+        const recordId = this.$route.query.id;
+        if (!recordId) {
+          this.$message.error('记录ID不存在，无法获取报告信息');
+          return;
+        }
+        
+        console.log('正在获取体检记录信息，ID:', recordId);
+        
+        // 2. 使用与input.vue相同的API获取数据
+        const response = await getExamReport(recordId);
+        if (!response.data || response.code !== 200) {
+          this.$message.error('获取体检记录信息失败: ' + (response.message || '未知错误'));
+          return;
+        }
+        
+        const data = response.data;
+        console.log('体检记录信息:', data);
+        
+        // 3. 设置基本信息 - 使用与input.vue相同的字段映射逻辑
         this.examInfo = {
-          appointmentId: data.appointmentId,
-          userName: data.userName,
-          gender: data.gender,
-          age: data.age,
-          packageName: data.packageName,
-          examDate: data.examDate,
-          doctorName: data.doctorName,
-          submitTime: data.submitTime,
+          appointmentId: data.appointmentId || '',
+          userName: data.userName || data.name || '',
+          gender: data.gender || '',
+          age: data.age || '',
+          packageName: data.packageName || '',
+          examDate: data.examDate || data.createTime || '',
+          doctorName: data.doctorName || '',
+          submitTime: data.updateTime || '',
           status: data.status,
-          reviewStatus: data.reviewStatus
+          reviewStatus: data.reviewStatus || 'PENDING'
+        };
+        
+        // 4. 设置体格检查数据
+        this.physicalForm = data.physical || {
+          height: '',
+          weight: '',
+          bmi: '',
+          bloodPressure: ''
+        };
+        
+        // 5. 处理体检项目和结果 - 使用getResultsByRecordId接口获取结果数据
+        try {
+          // 调用getResultsByRecordId接口获取体检结果
+          const resultResponse = await getResultsByRecordId(recordId);
+          console.log('从后端获取的体检结果数据:', resultResponse);
+          
+          if (resultResponse.data && Array.isArray(resultResponse.data)) {
+            // 将获取到的结果转换为组件需要的格式
+            this.examItems = resultResponse.data.map(result => ({
+              id: result.id || result.itemId,
+              name: result.itemName || result.name || '未知项目',
+              reference: result.reference || '',
+              // 统一使用后端字段名，优先使用value字段，兼容旧版本的result字段
+              result: result.value || result.result || '',
+              // 统一使用后端字段名，优先使用abnormal字段，兼容旧版本的status字段
+              status: (result.abnormal === 1 || result.abnormal === '1') ? 'ABNORMAL' : 'NORMAL',
+              // 统一使用后端字段名，优先使用suggestion字段，兼容旧版本的analysis字段
+              analysis: result.suggestion || result.analysis || '',
+              reviewComment: ''
+            }));
+          } else {
+            // 如果API没有返回结果数据，尝试使用报告中的数据
+            if (Array.isArray(data.examItems) && data.examItems.length > 0) {
+              // 如果API直接返回了examItems，使用它们
+              this.examItems = data.examItems.map(item => ({
+                id: item.id || item.itemId,
+                name: item.name || item.itemName || '未知项目',
+                reference: item.reference || '',
+                result: item.result || item.value || '',
+                status: item.status || (item.abnormal === 1 ? 'ABNORMAL' : 'NORMAL'),
+                analysis: item.analysis || item.suggestion || '',
+                reviewComment: ''
+              }));
+            } else if (Array.isArray(data.results) && data.results.length > 0) {
+              // 如果API返回了results数组，转换它们
+              this.examItems = data.results.map(result => ({
+                id: result.id || result.itemId,
+                name: result.itemName || result.name || '未知项目',
+                reference: result.reference || '',
+                result: result.value || result.result || '',
+                status: result.abnormal === 1 ? 'ABNORMAL' : 'NORMAL',
+                analysis: result.suggestion || result.analysis || '',
+                reviewComment: ''
+              }));
+            } else {
+              // 如果没有结果，显示空数组
+              this.examItems = [];
+              this.$message.warning('该体检记录暂无体检结果数据');
+            }
+          }
+        } catch (error) {
+          console.error('获取体检结果数据失败:', error);
+          // 如果获取结果失败，尝试使用报告中的数据
+          if (Array.isArray(data.examItems) && data.examItems.length > 0) {
+            this.examItems = data.examItems.map(item => ({
+              id: item.id || item.itemId,
+              name: item.name || item.itemName || '未知项目',
+              reference: item.reference || '',
+              result: item.result || item.value || '',
+              status: item.status || (item.abnormal === 1 ? 'ABNORMAL' : 'NORMAL'),
+              analysis: item.analysis || item.suggestion || '',
+              reviewComment: ''
+            }));
+          } else if (Array.isArray(data.results) && data.results.length > 0) {
+            this.examItems = data.results.map(result => ({
+              id: result.id || result.itemId,
+              name: result.itemName || result.name || '未知项目',
+              reference: result.reference || '',
+              result: result.value || result.result || '',
+              status: result.abnormal === 1 ? 'ABNORMAL' : 'NORMAL',
+              analysis: result.suggestion || result.analysis || '',
+              reviewComment: ''
+            }));
+          } else {
+            this.examItems = [];
+            this.$message.warning('该体检记录暂无体检结果数据');
+          }
         }
-        this.physicalForm = data.physical
-        this.examItems = data.examItems.map(item => ({
-          ...item,
-          reviewComment: ''
-        }))
+        
+        // 6. 设置结论信息
         this.conclusionForm = {
-          findings: data.conclusion.findings,
-          suggestion: data.conclusion.suggestion,
+          findings: data.findings || data.conclusion || '',
+          suggestion: data.suggestion || '',
           reviewComment: ''
-        }
+        };
+        
       } catch (error) {
-        console.error('获取体检报告失败:', error)
+        console.error('获取体检报告失败:', error);
+        this.$message.error('获取体检报告失败: ' + (error.message || '未知错误'));
+      } finally {
+        this.loading = false;
       }
-      this.loading = false
     },
     handleApprove() {
       this.approveDialog.visible = true
@@ -321,7 +471,60 @@ export default {
       } catch (error) {
         console.error('退回失败:', error)
       }
-    }
+    },
+    // 只读模式下的打印报告方法
+    handlePrint() {
+      const recordId = this.$route.params.id || this.$route.query.id
+      if (!recordId) {
+        this.$message.error('记录ID不存在，无法打印报告');
+        return;
+      }
+      
+      this.$confirm('确定要打印该体检报告吗?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'info'
+      }).then(() => {
+        this.loading = true;
+        // 调用导出报告API
+        import('@/api/exam/record').then(({ exportExamReport }) => {
+          exportExamReport(recordId).then(response => {
+            // 处理文件下载
+            this.handleBlobDownload(response, `体检报告_${recordId}.pdf`);
+            this.$message.success('报告导出成功');
+          }).catch(error => {
+            console.error('导出报告失败:', error);
+            this.$message.error('导出报告失败: ' + (error.message || '未知错误'));
+          }).finally(() => {
+            this.loading = false;
+          });
+        });
+      }).catch(() => {
+        // 用户取消操作
+      });
+    },
+    // 返回列表方法
+    handleBack() {
+      this.$router.go(-1); // 返回上一页
+    },
+    // 处理Blob文件下载
+    handleBlobDownload(response, fileName) {
+      if (!response) {
+        this.$message.error('下载失败：响应为空');
+        return;
+      }
+      
+      // 创建Blob链接并下载
+      const blob = new Blob([response], { 
+        type: response.type || 'application/octet-stream' 
+      });
+      
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = fileName;
+      link.click();
+      URL.revokeObjectURL(link.href);
+    },
   }
 }
 </script>
@@ -359,4 +562,4 @@ export default {
   padding: 20px 0;
   text-align: center;
 }
-</style> 
+</style>

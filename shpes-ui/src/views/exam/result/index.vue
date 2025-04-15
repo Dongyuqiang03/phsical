@@ -90,17 +90,60 @@
         </el-table-column>
         <el-table-column
           label="操作"
-          width="250">
+          width="280">
           <template slot-scope="scope">
+            <!-- 待体检状态：提示未体检，不能录入结果 -->
+            <el-tooltip v-if="scope.row.status === 0" content="用户尚未体检，无法录入结果" placement="top">
+              <el-button
+                size="mini"
+                type="primary"
+                disabled>
+                录入结果
+              </el-button>
+            </el-tooltip>
+            
+            <!-- 进行中状态：可以录入结果 -->
             <el-button
+              v-if="scope.row.status === 1"
               size="mini"
               type="primary"
-              @click="handleInput(scope.row)"
-              :disabled="scope.row.status === 2">录入结果</el-button>
+              @click="handleInput(scope.row)">
+              录入结果
+            </el-button>
+            
+            <!-- 已完成状态：提供查看结果和编辑结果的选项 -->
+            <el-button
+              v-if="scope.row.status === 2"
+              size="mini"
+              type="primary"
+              @click="handleViewResult(scope.row)">
+              查看结果
+            </el-button>
+            
+            <el-button
+              v-if="scope.row.status === 2"
+              size="mini"
+              type="warning"
+              @click="handleEditResult(scope.row)">
+              编辑结果
+            </el-button>
+            
+            <!-- 查看详情按钮对所有状态都显示，但功能有所不同 -->
             <el-button
               size="mini"
               type="success"
-              @click="handleReview(scope.row)">查看详情</el-button>
+              @click="handleReview(scope.row)">
+              {{ scope.row.status === 0 ? '查看预约' : '查看详情' }}
+            </el-button>
+            
+            <!-- 已完成状态：添加打印报告按钮 -->
+            <el-button
+              v-if="scope.row.status === 2"
+              size="mini"
+              type="info"
+              @click="handlePrintReport(scope.row)">
+              打印报告
+            </el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -139,8 +182,9 @@ export default {
       },
       statusOptions: [
         { label: '待体检', value: 0 },
-        { label: '进行中', value: 1 },
-        { label: '已完成', value: 2 }
+        { label: '进行中(未录入结果)', value: 1 },
+        { label: '进行中(已录入结果)', value: 2 },
+        { label: '已完成', value: 3 }
       ]
     }
   },
@@ -246,10 +290,96 @@ export default {
       }
       
       console.log('跳转到详情页面，使用ID:', numericId);
+      // 统一使用input.vue页面，但设置为只读模式
       this.$router.push({ 
-        path: '/exam/result/review', 
-        query: { id: numericId } 
+        path: '/exam/result/input', 
+        query: { id: numericId, mode: 'readonly' } 
       });
+    },
+    handleViewResult(row) {
+      if (!this.validateRowId(row)) return;
+      
+      const numericId = Number(row.id);
+      console.log('跳转到查看结果页面，使用ID:', numericId);
+      // 跳转到只读模式的结果页面 - 使用input.vue但设置为只读模式
+      this.$router.push({ 
+        path: '/exam/result/input', 
+        query: { id: numericId, mode: 'readonly' } 
+      });
+    },
+    handleEditResult(row) {
+      if (!this.validateRowId(row)) return;
+      
+      const numericId = Number(row.id);
+      console.log('跳转到编辑结果页面，使用ID:', numericId);
+      // 跳转到结果录入页面但设置为编辑模式
+      this.$router.push({ 
+        path: '/exam/result/input', 
+        query: { id: numericId, mode: 'edit' } 
+      });
+    },
+    handlePrintReport(row) {
+      if (!this.validateRowId(row)) return;
+      
+      const numericId = Number(row.id);
+      console.log('准备打印体检报告，ID:', numericId);
+      
+      // 根据实际情况选择实现方式：
+      // 1. 导出PDF文件
+      this.$confirm('确定要导出该体检报告吗?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'info'
+      }).then(() => {
+        this.loading = true;
+        // 调用导出报告API，假设API在record.js中定义
+        import('@/api/exam/record').then(({ exportExamReport }) => {
+          exportExamReport(numericId).then(response => {
+            // 处理文件下载
+            this.handleBlobDownload(response, `体检报告_${row.examNo || numericId}.pdf`);
+            this.$message.success('报告导出成功');
+          }).catch(error => {
+            console.error('导出报告失败:', error);
+            this.$message.error('导出报告失败: ' + (error.message || '未知错误'));
+          }).finally(() => {
+            this.loading = false;
+          });
+        });
+      }).catch(() => {
+        // 用户取消操作
+      });
+    },
+    validateRowId(row) {
+      if (!row.id) {
+        this.$message.error('该记录缺少ID字段。请联系管理员检查数据完整性。');
+        return false;
+      }
+      
+      const numericId = Number(row.id);
+      if (isNaN(numericId)) {
+        this.$message.error('记录ID不是有效的数字。');
+        console.error('无效的记录ID:', row.id, typeof row.id);
+        return false;
+      }
+      
+      return true;
+    },
+    handleBlobDownload(response, fileName) {
+      if (!response) {
+        this.$message.error('下载失败：响应为空');
+        return;
+      }
+      
+      // 创建Blob链接并下载
+      const blob = new Blob([response], { 
+        type: response.type || 'application/octet-stream' 
+      });
+      
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = fileName;
+      link.click();
+      URL.revokeObjectURL(link.href);
     },
     handleSizeChange(val) {
       this.queryParams.pageSize = val
@@ -287,8 +417,9 @@ export default {
     getStatusLabel(status) {
       const statusMap = {
         0: '待体检',
-        1: '进行中',
-        2: '已完成'
+        1: '进行中(未录入结果)',
+        2: '进行中(已录入结果)',
+        3: '已完成'
       }
       return statusMap[status] || '未知'
     }
@@ -304,4 +435,4 @@ export default {
   margin-top: 20px;
   text-align: right;
 }
-</style> 
+</style>

@@ -307,7 +307,7 @@ public class ExamAppointmentServiceImpl extends ServiceImpl<ExamAppointmentMappe
             examRecord.setPackageId(appointment.getPackageId());
             examRecord.setPackageName(appointment.getPackageName());
             examRecord.setExamDate(LocalDateTime.now());
-            examRecord.setStatus(1); // 1-进行中
+            examRecord.setStatus(1); // 1-进行中(未录入结果)
             
             // 设置医生信息（当前登录用户）
             Long currentUserId = SecurityUtils.getCurrentUserId();

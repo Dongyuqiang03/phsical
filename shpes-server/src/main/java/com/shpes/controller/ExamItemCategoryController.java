@@ -35,23 +35,6 @@ public class ExamItemCategoryController {
         return CommonResult.success(categoryService.getCategoryPage(pageNum, pageSize, name, code, status));
     }
 
-    @ApiOperation("获取所有分类")
-    @GetMapping("/all")
-    @RequiresPermission("exam:category")
-    public CommonResult<List<ExamItemCategoryVO>> getAllCategories() {
-        List<ExamItemCategoryVO> categories = categoryService.getAllCategories();
-        return CommonResult.success(categories);
-    }
-
-    @ApiOperation("获取指定分类")
-    @GetMapping("/{id}")
-    @RequiresPermission("exam:category")
-    public CommonResult<ExamItemCategoryVO> getCategoryById(
-            @ApiParam(value = "分类ID", required = true) @PathVariable Long id) {
-        ExamItemCategoryVO category = categoryService.getCategoryById(id);
-        return category != null ? CommonResult.success(category) : CommonResult.failed("分类不存在");
-    }
-
     @ApiOperation("创建分类")
     @PostMapping
     @RequiresPermission("exam:category")

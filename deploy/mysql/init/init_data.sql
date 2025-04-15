@@ -133,3 +133,6 @@ SELECT 2, id FROM sys_permission WHERE permission_code LIKE 'exam%';
 -- 为普通用户分配必要的菜单权限
 INSERT INTO sys_role_permission (role_id, permission_id)
 SELECT 3, id FROM sys_permission WHERE permission_code IN ('exam:item', 'exam:category','exam:appointment');
+
+alter table exam_record
+    modify status tinyint default 0 not null comment '状态(0:待体检 1-进行中(未录入结果) 2-进行中(已录入结果) 3-已完成';

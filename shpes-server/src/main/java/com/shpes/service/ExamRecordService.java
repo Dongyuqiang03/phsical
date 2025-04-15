@@ -23,11 +23,29 @@ public interface ExamRecordService {
      * 获取体检记录详情
      */
     ExamRecordVO getRecordById(Long id);
-
+    
     /**
-     * 获取用户体检记录列表
+     * 获取用户的体检记录列表（不分页）
+     *
+     * @param userId 用户ID
+     * @return 体检记录列表
      */
     List<ExamRecordVO> getUserRecords(Long userId);
+
+    /**
+     * 获取用户的体检记录（分页）
+     *
+     * @param userId      用户ID
+     * @param pageNum     页码
+     * @param pageSize    页大小
+     * @param beginDate   开始日期
+     * @param endDate     结束日期
+     * @param packageName 套餐名称
+     * @param status      状态
+     * @return 分页结果
+     */
+    CommonPage<ExamRecordVO> getUserRecords(Long userId, Integer pageNum, Integer pageSize,
+                                         String beginDate, String endDate, String packageName, String status);
 
     /**
      * 创建体检记录

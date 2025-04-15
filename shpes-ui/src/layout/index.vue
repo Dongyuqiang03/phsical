@@ -83,6 +83,24 @@ export default {
   },
   created() {
     console.log('Layout mounted, routes:', this.permission_routes)
+    console.log('当前用户权限:', this.$store.state.user.permissions)
+    console.log('当前用户角色:', this.$store.state.user.roles)
+  },
+  mounted() {
+    // 添加额外调试信息
+    console.log('权限路由详情:', this.permission_routes.map(route => {
+      return {
+        path: route.path,
+        title: route.meta?.title,
+        permissions: route.meta?.permissions,
+        children: route.children?.map(child => ({
+          path: child.path,
+          title: child.meta?.title,
+          permissions: child.meta?.permissions,
+          hidden: child.hidden
+        }))
+      }
+    }));
   },
   methods: {
     toggleSideBar() {

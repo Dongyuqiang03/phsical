@@ -59,24 +59,6 @@ public class ExamItemCategoryServiceImpl extends ServiceImpl<ExamItemCategoryMap
     }
 
     @Override
-    public List<ExamItemCategoryVO> getAllCategories() {
-        // 查询所有启用的分类
-        LambdaQueryWrapper<ExamItemCategory> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(ExamItemCategory::getStatus, 1)
-                   .orderByDesc(ExamItemCategory::getCreateTime);
-        
-        return this.list(queryWrapper).stream()
-                .map(this::convertToVO)
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    public ExamItemCategoryVO getCategoryById(Long id) {
-        ExamItemCategory category = this.getById(id);
-        return category != null ? convertToVO(category) : null;
-    }
-
-    @Override
     public boolean createCategory(ExamItemCategoryVO categoryVO) {
         // 检查编码是否已存在
         if (isCodeExists(categoryVO.getCode())) {
@@ -141,8 +123,8 @@ public class ExamItemCategoryServiceImpl extends ServiceImpl<ExamItemCategoryMap
         if (vo == null) {
             return null;
         }
-        ExamItemCategory entity = new ExamItemCategory();
-        BeanUtils.copyProperties(vo, entity);
-        return entity;
+        ExamItemCategory category = new ExamItemCategory();
+        BeanUtils.copyProperties(vo, category);
+        return category;
     }
 } 

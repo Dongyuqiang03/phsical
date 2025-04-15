@@ -8,7 +8,6 @@
         <result column="record_id" property="recordId"/>
         <result column="item_id" property="itemId"/>
         <result column="value" property="value"/>
-        <result column="unit" property="unit"/>
         <result column="abnormal" property="abnormal"/>
         <result column="suggestion" property="suggestion"/>
         <result column="doctor_id" property="doctorId"/>
@@ -19,9 +18,8 @@
         <result column="update_time" property="updateTime"/>
     </resultMap>
 
-  <select id="selectResultsByRecordId" resultType="com.shpes.vo.ExamResultVO">
-    SELECT r.*, i.name as item_name, i.code as item_code, i.unit,
-           i.lower_limit, i.upper_limit,
+  <select id="selectResultsByRecordId" resultMap="BaseResultMap">
+    SELECT r.*, i.name as item_name, i.code as item_code,
            u1.real_name as doctor_name, u2.real_name as reviewer_name
     FROM exam_result r
     LEFT JOIN exam_item i ON r.item_id = i.id

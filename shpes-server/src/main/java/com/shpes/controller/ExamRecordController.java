@@ -6,9 +6,11 @@ import com.shpes.common.constant.RoleConstants;
 import com.shpes.entity.ExamRecord;
 import com.shpes.annotation.RequiresPermission;
 import com.shpes.service.ExamRecordService;
+import com.shpes.utils.SecurityUtils;
 import com.shpes.vo.ExamRecordVO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
@@ -112,5 +114,24 @@ public class ExamRecordController {
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
         return CommonResult.success(recordService.getCompletionStats(startDate, endDate));
+    }
+
+    @ApiOperation("获取当前用户的体检记录")
+    @GetMapping("/user/current")
+    @RequiresPermission("exam:result")
+    public CommonResult<CommonPage<ExamRecordVO>> getCurrentUserRecords(
+        @ApiParam("页码") @RequestParam(defaultValue = "1") Integer pageNum,
+        @ApiParam("每页记录数") @RequestParam(defaultValue = "10") Integer pageSize,
+        @ApiParam("开始日期") @RequestParam(required = false) String beginDate,
+        @ApiParam("结束日期") @RequestParam(required = false) String endDate,
+        @ApiParam("套餐名称") @RequestParam(required = false) String packageName,
+        @ApiParam("状态") @RequestParam(required = false) String status) {
+        
+        // 获取当前登录用户ID
+        Long userId = SecurityUtils.getCurrentUserId();
+        
+        // 调用Service查询当前用户的体检记录
+        return CommonResult.success(recordService.getUserRecords(userId, pageNum, pageSize, 
+            beginDate, endDate, packageName, status));
     }
 } 

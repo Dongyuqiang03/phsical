@@ -129,14 +129,6 @@ public class ExamItemServiceImpl extends ServiceImpl<ExamItemMapper, ExamItem> i
     }
 
     @Override
-    public ExamItemVO getItemReference(Long id) {
-        // 获取项目
-        ExamItem item = getItem(id);
-        // 转换为VO
-        return convertToVO(item);
-    }
-
-    @Override
     public void updateStatus(Long id, Integer status) {
         // 参数验证
         if (id == null) {
@@ -207,34 +199,40 @@ public class ExamItemServiceImpl extends ServiceImpl<ExamItemMapper, ExamItem> i
      * 检查项目编码是否已存在
      */
     private boolean isItemCodeExists(String code) {
-        return baseMapper.selectCount(new LambdaQueryWrapper<ExamItem>()
-                .eq(ExamItem::getCode, code)) > 0;
+        LambdaQueryWrapper<ExamItem> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(ExamItem::getCode, code);
+        return baseMapper.selectCount(wrapper) > 0;
     }
 
     /**
-     * 检查科室是否存在
+     * 检查执行科室是否存在
      */
     private boolean isDepartmentExists(Long departmentId) {
+        if (departmentId == null) {
+            return false;
+        }
         return departmentMapper.selectById(departmentId) != null;
     }
 
     /**
      * 检查项目是否被使用
      */
-    private boolean isItemUsed(Long id) {
-        // TODO: 实现检查项目是否被使用的逻辑
-        // 1. 检查是否被套餐使用
-        // 2. 检查是否被体检记录使用
+    private boolean isItemUsed(Long itemId) {
+        // TODO: 根据实际业务逻辑，检查项目是否被使用
         return false;
     }
 
     /**
-     * 将ExamItem转为ExamItemVO
+     * 将实体转换为VO
      */
     private ExamItemVO convertToVO(ExamItem item) {
+        if (item == null) {
+            return null;
+        }
+        
         ExamItemVO vo = new ExamItemVO();
         BeanUtils.copyProperties(item, vo);
-
+        
         // 设置分类名称
         if (item.getCategoryId() != null) {
             ExamCategoryEnum category = ExamCategoryEnum.getByValue(item.getCategoryId());
@@ -242,13 +240,15 @@ public class ExamItemServiceImpl extends ServiceImpl<ExamItemMapper, ExamItem> i
                 vo.setCategoryName(category.getLabel());
             }
         }
-
-        // 获取科室信息
-        SysDepartment department = departmentMapper.selectById(item.getDeptId());
-        if (department != null) {
-            vo.setDeptName(department.getDeptName());
+        
+        // 设置科室名称
+        if (item.getDeptId() != null) {
+            SysDepartment department = departmentMapper.selectById(item.getDeptId());
+            if (department != null) {
+                vo.setDeptName(department.getDeptName());
+            }
         }
-
+        
         return vo;
     }
 }

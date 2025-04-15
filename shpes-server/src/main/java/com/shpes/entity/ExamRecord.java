@@ -47,7 +47,7 @@ public class ExamRecord extends BaseEntity {
     @ApiModelProperty("医生建议")
     private String suggestion;
 
-    @ApiModelProperty("状态（0-待体检，1-进行中，2-已完成）")
+    @ApiModelProperty("状态（0-待体检，1-进行中(未录入结果)，2-进行中(已录入结果)，3-已完成）")
     private Integer status;
 
     @ApiModelProperty("完成时间")

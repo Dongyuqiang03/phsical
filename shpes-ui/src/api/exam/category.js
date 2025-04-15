@@ -8,20 +8,6 @@ export function getCategoryPage(params) {
   })
 }
 
-export function getAllCategories() {
-  return request({
-    url: '/api/exam/category/all',
-    method: 'get'
-  })
-}
-
-export function getCategoryById(id) {
-  return request({
-    url: `/api/exam/category/${id}`,
-    method: 'get'
-  })
-}
-
 export function createCategory(data) {
   return request({
     url: '/api/exam/category',
