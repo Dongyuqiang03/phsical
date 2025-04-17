@@ -55,8 +55,8 @@
             <span>检查结果</span>
           </div>
           <el-table :data="examItems" border>
-            <el-table-column label="项目名称" prop="name" min-width="150" />
-            <el-table-column label="参考范围" prop="reference" min-width="150" show-overflow-tooltip />
+            <el-table-column label="项目名称" prop="itemName" min-width="150" />
+            <el-table-column label="参考范围" prop="referenceValue" min-width="150" show-overflow-tooltip />
             <el-table-column label="检查结果" min-width="200">
               <template slot-scope="{row}">
                 <!-- 只读模式下显示纯文本 -->
@@ -172,6 +172,7 @@
 
 <script>
 import { getExamReport, getPackageItems, submitExamResults, updateExamResults, submitConclusion, getResultsByRecordId } from '@/api/exam/result'
+import { getRecordDetail } from '@/api/exam/record'
 
 export default {
   name: 'ResultInput',
@@ -339,111 +340,47 @@ export default {
           return;
         }
 
-        // 获取体检报告信息
-        const {data} = await getExamReport(numericId);
+        // 获取体检记录详情
+        const { data } = await getRecordDetail(numericId);
 
         if (!data) {
           this.$message.error('未找到体检记录');
           return;
         }
 
-        // 调试日志：查看后端返回的数据结构和字段
-        console.log('体检报告原始数据:', data);
-
-        // 设置体检基本信息，与后端字段保持一致
+        // 设置体检基本信息
         this.examInfo = {
           id: data.id || numericId,
-          examNo: data.examNo || '',            // 体检编号
-          name: data.userName || '',            // 用户姓名
-          gender: data.gender || '',            // 性别
-          age: data.age || '',                  // 年龄
-          phone: data.phone || '',              // 联系电话
-          appointmentId: data.appointmentId || 0, // 预约ID
-          appointmentNo: data.appointmentNo || '', // 预约编号
-          packageId: data.packageId || 0,       // 套餐ID
-          packageName: data.packageName || '未知套餐' // 套餐名称
+          examNo: data.examNo || '',
+          name: data.userName || '',
+          gender: data.gender || '',
+          age: data.age || '',
+          phone: data.phone || '',
+          appointmentId: data.appointmentId || 0,
+          appointmentNo: data.appointmentNo || '',
+          packageId: data.packageId || 0,
+          packageName: data.packageName || '未知套餐'
         };
 
-        console.log('处理后的体检信息:', this.examInfo);
-
-        // 处理体检项目
-        if (Array.isArray(data.examItems) && data.examItems.length > 0) {
-          this.examItems = data.examItems;
-        } else {
-          // API未返回体检项目，尝试获取套餐标准项目
-          if (this.examInfo.packageId) {
-            try {
-              const {data: packageItems} = await getPackageItems(this.examInfo.packageId);
-
-              if (Array.isArray(packageItems) && packageItems.length > 0) {
-                // 转换标准项目为可用格式，使用referenceValue作为参考范围
-                this.examItems = packageItems.map(item => ({
-                  id: item.id,
-                  name: item.name,
-                  reference: item.referenceValue || '暂无参考值', // 使用referenceValue字段
-                  result: '',
-                  status: 'NORMAL',
-                  analysis: ''
-                }));
-              } else {
-                this.useDefaultExamItems();
-              }
-            } catch (error) {
-              console.error('获取套餐标准体检项目失败:', error);
-              this.useDefaultExamItems();
-            }
-          } else {
-            this.useDefaultExamItems();
-          }
+        // 设置体检项目和结果
+        if (Array.isArray(data.results)) {
+          this.examItems = data.results.map(item => ({
+            id: item.itemId,
+            itemName: item.itemName || '',
+            referenceValue: item.referenceValue || '暂无参考值',
+            result: item.value || '',
+            status: item.abnormal === 1 ? 'ABNORMAL' : 'NORMAL',
+            analysis: item.analysis || ''
+          }));
         }
 
-        // 加载已有的检查结果 - 使用getResultsByRecordId接口获取详细结果
-        try {
-          const resultResponse = await getResultsByRecordId(numericId);
-          console.log('从后端获取的体检结果数据:', resultResponse);
+        // 设置体检结论
+        this.conclusionForm = {
+          mainFindings: data.mainFindings || '',
+          conclusion: data.conclusion || '',
+          suggestion: data.suggestion || ''
+        };
 
-          if (resultResponse.data && Array.isArray(resultResponse.data) && resultResponse.data.length > 0) {
-            // 将获取到的结果合并到检查项目中
-            resultResponse.data.forEach(result => {
-              const item = this.examItems.find(item => item.id === (result.itemId || result.id));
-              if (item) {
-                // 统一使用后端字段名，优先使用value字段，兼容旧版本的result字段
-                item.result = result.value || result.result || '';
-                // 统一使用后端字段名，优先使用abnormal字段，兼容旧版本的status字段
-                item.status = (result.abnormal === 1 || result.abnormal === '1') ? 'ABNORMAL' : 'NORMAL';
-                // 统一使用后端字段名，优先使用suggestion字段，兼容旧版本的analysis字段
-                item.analysis = result.suggestion || result.analysis || '';
-              }
-            });
-          } else if (Array.isArray(data.results) && data.results.length > 0) {
-            // 如果API没有返回结果数据，尝试使用报告中的数据
-            data.results.forEach(result => {
-              const item = this.examItems.find(item => item.id === result.itemId);
-              if (item) {
-                item.result = result.result || '';
-                // 确保状态值使用统一的格式
-                item.status = result.status === 'normal' ? 'NORMAL' :
-                    (result.status === 'abnormal' ? 'ABNORMAL' : result.status || 'NORMAL');
-                item.analysis = result.analysis || '';
-              }
-            });
-          }
-        } catch (error) {
-          console.error('获取体检结果数据失败:', error);
-          // 如果获取结果失败，尝试使用报告中的数据
-          if (Array.isArray(data.results) && data.results.length > 0) {
-            data.results.forEach(result => {
-              const item = this.examItems.find(item => item.id === result.itemId);
-              if (item) {
-                item.result = result.result || '';
-                // 确保状态值使用统一的格式
-                item.status = result.status === 'normal' ? 'NORMAL' :
-                    (result.status === 'abnormal' ? 'ABNORMAL' : result.status || 'NORMAL');
-                item.analysis = result.analysis || '';
-              }
-            });
-          }
-        }
       } catch (error) {
         console.error('获取体检信息失败:', error);
         this.$message.error('获取体检信息失败: ' + (error.message || '未知错误'));

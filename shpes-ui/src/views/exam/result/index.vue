@@ -410,11 +410,25 @@ export default {
 </script>
 
 <style scoped>
+.app-container {
+  padding: 20px;
+  height: calc(100vh - 50px);
+  overflow-y: auto;
+}
+
+.box-card {
+  width: 100%;
+  margin: 0 auto;
+}
+
 .filter-container {
   margin-bottom: 20px;
 }
+
 .pagination-container {
   margin-top: 20px;
   text-align: right;
+  background-color: #fff;
+  padding: 15px 0;
 }
 </style>

@@ -30,7 +30,7 @@ public class ExamResultVO {
     private String value;
 
     @ApiModelProperty("参考值")
-    private String reference;
+    private String referenceValue;
 
     @ApiModelProperty("是否异常：0-正常，1-异常 - 对应实体类的abnormal字段")
     private Integer abnormal;
@@ -62,15 +62,13 @@ public class ExamResultVO {
     public static ExamResultVO toExamResultVO(ExamResult result) {
 
         ExamResultVO vo = new ExamResultVO();
-        // 手动映射字段，确保与数据库实体字段一致
         vo.setId(result.getId());
         vo.setRecordId(result.getRecordId());
         vo.setItemId(result.getItemId());
-        // 将value映射为前端使用的result
+        vo.setItemName(result.getItemName());
+        vo.setReferenceValue(result.getReferenceValue());
         vo.setValue(result.getValue());
-        // 将abnormal映射为前端使用的status
         vo.setAbnormal(result.getAbnormal());
-        // 将suggestion映射为前端使用的analysis
         vo.setAnalysis(result.getAnalysis());
         vo.setDoctorId(result.getDoctorId());
         vo.setReviewerId(result.getReviewerId());

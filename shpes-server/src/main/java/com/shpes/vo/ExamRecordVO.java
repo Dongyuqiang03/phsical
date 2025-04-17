@@ -41,8 +41,11 @@ public class ExamRecordVO {
     @ApiModelProperty("体检结论")
     private String  conclusion;
     
-    @ApiModelProperty("体检建议")
+    @ApiModelProperty("医生建议")
     private String suggestion;
+
+    @ApiModelProperty("主要发现")
+    private String mainFindings;
     
     @ApiModelProperty("体检状态：0-未开始，1-进行中，2-已完成")
     private Integer status;

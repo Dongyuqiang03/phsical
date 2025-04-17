@@ -9,7 +9,7 @@
         <result column="item_id" property="itemId"/>
         <result column="value" property="value"/>
         <result column="abnormal" property="abnormal"/>
-        <result column="suggestion" property="suggestion"/>
+        <result column="analysis" property="analysis"/>
         <result column="doctor_id" property="doctorId"/>
         <result column="reviewer_id" property="reviewerId"/>
         <result column="status" property="status"/>
@@ -18,8 +18,16 @@
         <result column="update_time" property="updateTime"/>
     </resultMap>
 
-  <select id="selectResultsByRecordId" resultMap="BaseResultMap">
-    SELECT r.*, i.name as item_name, i.code as item_code,
+    <resultMap id="DetailResultMap" type="com.shpes.vo.ExamResultDetailVO" extends="BaseResultMap">
+        <result column="item_name" property="itemName"/>
+        <result column="item_code" property="itemCode"/>
+        <result column="reference_value" property="referenceValue"/>
+        <result column="doctor_name" property="doctorName"/>
+        <result column="reviewer_name" property="reviewerName"/>
+    </resultMap>
+
+  <select id="selectResultsByRecordId" resultMap="DetailResultMap">
+    SELECT r.*, i.name as item_name, i.code as item_code,i.reference_value,
            u1.real_name as doctor_name, u2.real_name as reviewer_name
     FROM exam_result r
     LEFT JOIN exam_item i ON r.item_id = i.id
@@ -29,7 +37,7 @@
     ORDER BY i.id
 </select>
 
-<select id="selectResultPage" resultType="com.shpes.entity.ExamResult">
+<select id="selectResultPage" resultMap="DetailResultMap">
     SELECT r.*, i.name as item_name, i.code as item_code
     FROM exam_result r
     LEFT JOIN exam_item i ON r.item_id = i.id
