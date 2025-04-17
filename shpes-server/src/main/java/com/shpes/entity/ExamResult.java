@@ -27,8 +27,8 @@ public class ExamResult extends BaseEntity {
     @ApiModelProperty("是否异常：0-正常，1-异常")
     private Integer abnormal;
 
-    @ApiModelProperty("医生建议")
-    private String suggestion;
+    @ApiModelProperty("异常分析")
+    private String analysis;
 
     @ApiModelProperty("检查医生ID")
     private Long doctorId;

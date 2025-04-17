@@ -111,15 +111,7 @@
               录入结果
             </el-button>
             
-            <!-- 已完成状态：提供查看结果和编辑结果的选项 -->
-            <el-button
-              v-if="scope.row.status === 2"
-              size="mini"
-              type="primary"
-              @click="handleViewResult(scope.row)">
-              查看结果
-            </el-button>
-            
+            <!-- 已完成状态：提供编辑结果的选项 -->
             <el-button
               v-if="scope.row.status === 2"
               size="mini"
@@ -296,17 +288,7 @@ export default {
         query: { id: numericId, mode: 'readonly' } 
       });
     },
-    handleViewResult(row) {
-      if (!this.validateRowId(row)) return;
-      
-      const numericId = Number(row.id);
-      console.log('跳转到查看结果页面，使用ID:', numericId);
-      // 跳转到只读模式的结果页面 - 使用input.vue但设置为只读模式
-      this.$router.push({ 
-        path: '/exam/result/input', 
-        query: { id: numericId, mode: 'readonly' } 
-      });
-    },
+
     handleEditResult(row) {
       if (!this.validateRowId(row)) return;
       

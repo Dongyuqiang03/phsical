@@ -252,6 +252,7 @@ CREATE TABLE exam_record
     doctor_id       BIGINT COMMENT '医生ID',
     doctor_name     VARCHAR(50) COMMENT '医生姓名',
     exam_date       DATETIME     NOT NULL COMMENT '体检日期',
+    main_findings   TEXT COMMENT '主要发现',
     conclusion      TEXT COMMENT '体检结论',
     suggestion      TEXT COMMENT '医生建议',
     status          TINYINT      NOT NULL DEFAULT 0 COMMENT '状态(0:待体检 1:进行中 2:已完成)',

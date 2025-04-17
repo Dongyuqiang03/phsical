@@ -136,3 +136,8 @@ SELECT 3, id FROM sys_permission WHERE permission_code IN ('exam:item', 'exam:ca
 
 alter table exam_record
     modify status tinyint default 0 not null comment '状态(0:待体检 1-进行中(未录入结果) 2-进行中(已录入结果) 3-已完成';
+alter table exam_record
+    add main_findings TEXT null comment '主要发现';
+
+alter table exam_result
+    change suggestion analysis text null comment '异常分析';

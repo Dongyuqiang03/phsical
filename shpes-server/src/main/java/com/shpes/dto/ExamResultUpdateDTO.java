@@ -7,11 +7,11 @@ import lombok.Data;
 import java.util.List;
 
 /**
- * 体检结果批量保存DTO
+ * 体检结果更新DTO
  */
 @Data
-@ApiModel("体检结果批量保存请求")
-public class ExamResultBatchDTO {
+@ApiModel("体检结果更新请求")
+public class ExamResultUpdateDTO {
 
     @ApiModelProperty("体检记录ID")
     private Long id;
@@ -20,7 +20,7 @@ public class ExamResultBatchDTO {
     private Long appointmentId;
 
     @ApiModelProperty("体检项目结果列表")
-    private List<ExamResultItemDTO> items;
+    private List<ExamResultItemUpdateDTO> items;
 
     @ApiModelProperty("体检结论")
     private String conclusion;
@@ -36,13 +36,10 @@ public class ExamResultBatchDTO {
      */
     @Data
     @ApiModel("体检结果项")
-    public static class ExamResultItemDTO {
+    public static class ExamResultItemUpdateDTO {
         
-        @ApiModelProperty("体检项目ID")
-        private Long itemId;
-        
-        @ApiModelProperty("体检项目名称")
-        private String itemName;
+        @ApiModelProperty("体检结果主键 ID")
+        private Long id;
         
         @ApiModelProperty("检查结果")
         private String result;
@@ -53,4 +50,4 @@ public class ExamResultBatchDTO {
         @ApiModelProperty("异常分析")
         private String analysis;
     }
-} 
+}

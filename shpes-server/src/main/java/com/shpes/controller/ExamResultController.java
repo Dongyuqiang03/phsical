@@ -3,6 +3,7 @@ package com.shpes.controller;
 import com.shpes.common.api.CommonPage;
 import com.shpes.common.api.CommonResult;
 import com.shpes.common.constant.RoleConstants;
+import com.shpes.dto.ExamResultUpdateDTO;
 import com.shpes.entity.ExamRecord;
 import com.shpes.entity.ExamResult;
 import com.shpes.annotation.RequiresPermission;
@@ -35,9 +36,6 @@ public class ExamResultController {
 
     @Autowired
     private ExamResultService resultService;
-
-    @Autowired
-    private ExamRecordService recordService;
 
     @ApiOperation("获取体检结果列表")
     @GetMapping("/record/{recordId}")
@@ -87,6 +85,13 @@ public class ExamResultController {
     public CommonResult<ExamResultVO> updateResult(@PathVariable Long id, @Valid @RequestBody ExamResult result) {
         result.setId(id);
         return CommonResult.success(resultService.updateResult(result));
+    }
+
+    @ApiOperation("批量更新体检结果")
+    @PostMapping("/batch/update")
+    @RequiresPermission("exam:result")
+    public CommonResult<List<ExamResultVO>> updateResults(@Valid @RequestBody ExamResultUpdateDTO batchDTO) {
+        return CommonResult.success(resultService.updateResultsFromBatchDTO(batchDTO));
     }
 
     @ApiOperation("删除体检结果")
@@ -149,4 +154,4 @@ public class ExamResultController {
             recordId, beginDate, endDate, itemName, resultType));
     }
 
-} 
+}

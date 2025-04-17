@@ -38,8 +38,8 @@ public class ExamRecordVO {
     @ApiModelProperty("体检套餐名称")
     private String packageName;
     
-    @ApiModelProperty("体检总结")
-    private String summary;
+    @ApiModelProperty("体检结论")
+    private String  conclusion;
     
     @ApiModelProperty("体检建议")
     private String suggestion;

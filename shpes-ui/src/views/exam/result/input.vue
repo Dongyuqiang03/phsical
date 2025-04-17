@@ -9,18 +9,17 @@
             <!-- 编辑模式下显示保存按钮 -->
             <el-button-group style="float: right" v-if="!isReadonlyMode">
               <el-button
+                type="default"
+                size="small"
+                @click="handleBack">
+                返回列表
+              </el-button>
+              <el-button
                 type="primary"
                 size="small"
                 :disabled="!canSubmit"
                 @click="handleSubmitResults">
-                {{ isEditMode ? '保存修改' : '保存结果' }}
-              </el-button>
-              <el-button
-                type="success"
-                size="small"
-                :disabled="!canSubmitConclusion"
-                @click="handleSubmitConclusion">
-                {{ isEditMode ? '更新结论' : '提交结论' }}
+                {{ isEditMode ? '保存体检信息' : '提交体检信息' }}
               </el-button>
             </el-button-group>
             <!-- 只读模式下显示返回按钮 -->
@@ -111,21 +110,35 @@
             <el-form-item label="主要发现">
               <!-- 只读模式下显示纯文本 -->
               <div v-if="isReadonlyMode" class="conclusion-text">
-                {{ conclusionForm.findings || '暂无主要发现' }}
+                {{ conclusionForm.mainFindings || '暂无主要发现' }}
               </div>
               <!-- 编辑模式下显示输入框 -->
               <el-input
                 v-else
-                v-model="conclusionForm.findings"
+                v-model="conclusionForm.mainFindings"
                 type="textarea"
                 :rows="3"
                 placeholder="请输入体检主要发现"
               />
             </el-form-item>
-            <el-form-item label="结论建议">
+            <el-form-item label="体检结论">
               <!-- 只读模式下显示纯文本 -->
               <div v-if="isReadonlyMode" class="conclusion-text">
-                {{ conclusionForm.suggestion || '暂无结论建议' }}
+                {{ conclusionForm.conclusion || '暂无体检结论' }}
+              </div>
+              <!-- 编辑模式下显示输入框 -->
+              <el-input
+                v-else
+                v-model="conclusionForm.conclusion"
+                type="textarea"
+                :rows="3"
+                placeholder="请输入体检结论"
+              />
+            </el-form-item>
+            <el-form-item label="医生建议">
+              <!-- 只读模式下显示纯文本 -->
+              <div v-if="isReadonlyMode" class="conclusion-text">
+                {{ conclusionForm.suggestion || '暂无医生建议' }}
               </div>
               <!-- 编辑模式下显示输入框 -->
               <el-input
@@ -133,7 +146,7 @@
                 v-model="conclusionForm.suggestion"
                 type="textarea"
                 :rows="3"
-                placeholder="请输入结论建议"
+                placeholder="请输入医生建议"
               />
             </el-form-item>
           </el-form>
@@ -158,7 +171,7 @@
 </template>
 
 <script>
-import { getExamReport, getPackageItems, submitExamResults, submitConclusion, getResultsByRecordId } from '@/api/exam/result'
+import { getExamReport, getPackageItems, submitExamResults, updateExamResults, submitConclusion, getResultsByRecordId } from '@/api/exam/result'
 
 export default {
   name: 'ResultInput',
@@ -181,7 +194,8 @@ export default {
       },
       examItems: [],
       conclusionForm: {
-        findings: '',
+        mainFindings: '',
+        conclusion: '',
         suggestion: ''
       },
       submitDialog: {
@@ -195,12 +209,23 @@ export default {
     canSubmit() {
       // 只读模式下不允许提交
       if (this.isReadonlyMode) return false
-      return this.examItems.some(item => item.result)
+      // 编辑模式下只要有任意改动就允许提交
+      if (this.isEditMode) {
+        return this.examItems.some(item => item.result) || 
+               this.conclusionForm.mainFindings || 
+               this.conclusionForm.conclusion || 
+               this.conclusionForm.suggestion
+      }
+      // 新建模式下需要同时检查结果和结论是否已填写
+      return this.examItems.some(item => item.result) && 
+             this.conclusionForm.mainFindings && 
+             this.conclusionForm.conclusion && 
+             this.conclusionForm.suggestion
     },
     canSubmitConclusion() {
       // 只读模式下不允许提交
       if (this.isReadonlyMode) return false
-      return this.conclusionForm.findings && this.conclusionForm.suggestion
+      return this.conclusionForm.mainFindings && this.conclusionForm.conclusion && this.conclusionForm.suggestion
     },
     // 编辑模式的计算属性
     isEditMode() {
@@ -448,21 +473,16 @@ export default {
     handleSubmitConclusion() {
       this.submitDialog = {
         visible: true,
-        message: '确认提交体检结论吗？提交后将生成正式体检报告。',
+        message: '确认提交体检信息吗？',
         type: 'conclusion'
       }
     },
     async confirmSubmit() {
-      if (this.submitDialog.type === 'results') {
-        await this.saveResults()
-      } else {
-        await this.saveConclusion()
-      }
+      await this.saveResults()
       this.submitDialog.visible = false
     },
     async saveResults() {
       try {
-        // 确保ID是有效的数字
         const recordId = this.$route.query.id;
         const numericId = Number(recordId);
         if (isNaN(numericId)) {
@@ -471,7 +491,6 @@ export default {
           return;
         }
 
-        // 过滤出已填写结果的项目
         const filledItems = this.examItems.filter(item => item.result);
 
         if (filledItems.length === 0) {
@@ -479,34 +498,57 @@ export default {
           return;
         }
 
-        // 构造提交数据 - 移除physical字段，因为界面上已经没有体格检查录入项
-        const data = {
-          id: numericId, // 使用数字ID
-          appointmentId: this.examInfo.appointmentId,
-          items: filledItems.map(item => {
-            // 确保itemId是正确的格式（可能是数字ID或字符串ID，取决于后端接口）
-            const itemId = item.id;
-            return {
-              itemId: itemId,
-              itemName: item.name, // 添加项目名称，可能在服务端需要
-              // 使用与后端实体一致的字段名
-              value: item.result, // 对应ExamResult.value
-              abnormal: item.status === 'ABNORMAL' ? 1 : 0, // 对应ExamResult.abnormal
-              suggestion: item.analysis || '' // 对应ExamResult.suggestion
-            }
-          })
+        if (this.isEditMode) {
+          await this.updateResults(numericId, filledItems);
+        } else {
+          await this.createResults(filledItems);
         }
 
-        console.log(`正在${this.isEditMode ? '更新' : '保存'}体检结果，数据:`, data);
-        await submitExamResults(data)
-        this.$message.success(`检查结果${this.isEditMode ? '更新' : '保存'}成功`)
-
-        // 保存成功后可以刷新一下数据
         this.getExamInfo();
       } catch (error) {
-        console.error(`${this.isEditMode ? '更新' : '保存'}检查结果失败:`, error)
-        this.$message.error(`${this.isEditMode ? '更新' : '保存'}失败: ` + (error.message || '未知错误'))
+        console.error(`${this.isEditMode ? '更新' : '保存'}检查结果失败:`, error);
+        this.$message.error(`${this.isEditMode ? '更新' : '保存'}失败: ` + (error.message || '未知错误'));
       }
+    },
+
+    async createResults(filledItems) {
+      const data = {
+        appointmentId: this.examInfo.appointmentId,
+        items: filledItems.map(item => ({
+          itemId: Number(item.id),
+          itemName: item.name,
+          result: item.result,
+          status: item.status === 'ABNORMAL' ? 'ABNORMAL' : 'NORMAL',
+          analysis: item.analysis || ''
+        })),
+        conclusion: this.conclusionForm.conclusion || '',
+        mainFindings: this.conclusionForm.mainFindings || '',
+        suggestion: this.conclusionForm.suggestion || ''
+      };
+
+      console.log('正在保存体检结果，数据:', data);
+      await submitExamResults(data);
+      this.$message.success('检查结果保存成功');
+    },
+
+    async updateResults(numericId, filledItems) {
+      const data = {
+        id: numericId,
+        appointmentId: this.examInfo.appointmentId,
+        items: filledItems.map(item => ({
+          id: Number(item.id),
+          result: item.result,
+          status: item.status,
+          analysis: item.analysis || ''
+        })),
+        conclusion: this.conclusionForm.conclusion || '',
+        mainFindings: this.conclusionForm.mainFindings || '',
+        suggestion: this.conclusionForm.suggestion || ''
+      };
+
+      console.log('正在更新体检结果，数据:', data);
+      await updateExamResults(data);
+      this.$message.success('检查结果更新成功');
     },
     async saveConclusion() {
       try {
@@ -659,7 +701,7 @@ export default {
     },
     // 返回列表方法
     handleBack() {
-      this.$router.push('/exam/result');
+      this.$router.push('/exam/result')
     },
     // 打印报告方法
     handlePrint() {

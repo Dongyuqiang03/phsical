@@ -61,10 +61,19 @@ export function createResults(data) {
   })
 }
 
-// 提交体检结果 (添加这个函数来修复错误)
+// 提交体检结果
 export function submitExamResults(data) {
   return request({
     url: '/api/exam/results/batch',
+    method: 'post',
+    data
+  })
+}
+
+// 批量更新体检结果
+export function updateExamResults(data) {
+  return request({
+    url: '/api/exam/results/batch/update',
     method: 'post',
     data
   })
@@ -171,4 +180,4 @@ export function getPackageItems(packageId) {
     url: `/api/exam/packages/${packageId}/items`,
     method: 'get'
   })
-} 
+}

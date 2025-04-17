@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.shpes.common.api.CommonPage;
 import com.shpes.common.enums.ResultCode;
 import com.shpes.common.exception.ApiException;
+import com.shpes.dto.ExamResultUpdateDTO;
 import com.shpes.entity.ExamRecord;
 import com.shpes.entity.ExamResult;
 import com.shpes.mapper.ExamResultMapper;
@@ -15,7 +16,6 @@ import com.shpes.vo.ExamRecordVO;
 import com.shpes.vo.ExamResultVO;
 import com.shpes.dto.ExamResultBatchDTO;
 import com.shpes.dto.ExamResultBatchDTO.ExamResultItemDTO;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -106,7 +106,7 @@ public class ExamResultServiceImpl extends ServiceImpl<ExamResultMapper, ExamRes
         
         // 设置复核信息
         result.setReviewerId(SecurityUtils.getCurrentUserId());
-        result.setSuggestion(suggestion);
+        result.setAnalysis(suggestion);
         result.setStatus(2);  // 设置为已复核状态
         result.setUpdateTime(LocalDateTime.now());
         updateById(result);
@@ -139,6 +139,61 @@ public class ExamResultServiceImpl extends ServiceImpl<ExamResultMapper, ExamRes
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    public List<ExamResultVO> updateResultsFromBatchDTO(ExamResultUpdateDTO batchDTO) {
+        List<ExamResult> results = new ArrayList<>();
+        
+        // 将DTO转换为ExamResult列表并更新
+        if (batchDTO.getItems() != null && !batchDTO.getItems().isEmpty()) {
+            for (ExamResultUpdateDTO.ExamResultItemUpdateDTO item : batchDTO.getItems()) {
+                // 获取现有结果
+                ExamResult result = getById(item.getId());
+                if (result == null) {
+                    throw new ApiException(ResultCode.EXAM_RESULT_NOT_EXIST);
+                }
+                
+                // 更新结果信息
+                result.setValue(item.getResult());    // 更新检查结果值
+                result.setAbnormal("ABNORMAL".equals(item.getStatus()) ? 1 : 0);  // 更新状态
+                result.setAnalysis(item.getAnalysis());  // 更新医生建议/分析
+                result.setUpdateTime(LocalDateTime.now());
+                
+                // 更新到数据库
+                updateById(result);
+                results.add(result);
+            }
+        }
+        
+        // 更新体检记录表中的相关字段
+        if (!results.isEmpty() && results.get(0).getRecordId() != null) {
+            try {
+                Long recordId = results.get(0).getRecordId();
+                
+                // 获取当前记录
+                ExamRecordVO recordVO = examRecordService.getRecordById(recordId);
+                if (recordVO != null) {
+                    // 创建新的记录对象，设置需要更新的字段
+                    ExamRecord updateRecord = new ExamRecord();
+                    updateRecord.setId(recordId);
+                    updateRecord.setSuggestion(batchDTO.getSuggestion());  // 更新医生建议
+                    updateRecord.setConclusion(batchDTO.getConclusion());  // 更新体检结论
+                    updateRecord.setMainFindings(batchDTO.getMainFindings());  // 更新主要发现
+                    updateRecord.setUpdateTime(LocalDateTime.now());
+                    
+                    // 更新记录
+                    examRecordService.updateRecord(updateRecord);
+                    log.info("已更新体检记录相关信息，记录ID: {}", recordId);
+                }
+            } catch (Exception e) {
+                log.error("更新体检记录失败", e);
+                throw new ApiException(ResultCode.FAILED);
+            }
+        }
+        
+        return convertToVOList(results);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
     public List<ExamResultVO> createResultsFromBatchDTO(ExamResultBatchDTO batchDTO) {
         List<ExamResult> results = new ArrayList<>();
         
@@ -154,7 +209,7 @@ public class ExamResultServiceImpl extends ServiceImpl<ExamResultMapper, ExamRes
                 result.setAbnormal("ABNORMAL".equals(item.getStatus()) ? 1 : 0);
                 
                 // 设置医生建议/分析
-                result.setSuggestion(item.getAnalysis());
+                result.setAnalysis(item.getAnalysis());
                 
                 // 设置操作人员信息（当前登录用户）
                 result.setDoctorId(SecurityUtils.getCurrentUserId());
@@ -177,9 +232,18 @@ public class ExamResultServiceImpl extends ServiceImpl<ExamResultMapper, ExamRes
                 // 获取当前记录
                 ExamRecordVO recordVO = examRecordService.getRecordById(recordId);
                 if (recordVO != null) {
-                    // 更新状态为"进行中(已录入结果)" (status=2)
-                    examRecordService.updateStatus(recordId, 2);
-                    log.info("已更新体检记录状态为已录入结果，记录ID: {}", recordId);
+                    // 创建新的记录对象，设置需要更新的字段
+                    ExamRecord updateRecord = new ExamRecord();
+                    updateRecord.setId(recordId);
+                    updateRecord.setStatus(2);  // 更新状态为"进行中(已录入结果)"
+                    updateRecord.setSuggestion(batchDTO.getSuggestion());  // 更新医生建议
+                    updateRecord.setConclusion(batchDTO.getConclusion());  // 更新体检结论
+                    updateRecord.setMainFindings(batchDTO.getMainFindings());  // 更新主要发现
+                    updateRecord.setUpdateTime(LocalDateTime.now());
+                    
+                    // 更新记录
+                    examRecordService.updateRecord(updateRecord);
+                    log.info("已更新体检记录状态及相关信息，记录ID: {}", recordId);
                 }
             } catch (Exception e) {
                 log.error("更新体检记录状态失败", e);
@@ -267,7 +331,7 @@ public class ExamResultServiceImpl extends ServiceImpl<ExamResultMapper, ExamRes
         // 将abnormal映射为前端使用的status
         vo.setAbnormal(result.getAbnormal());
         // 将suggestion映射为前端使用的analysis
-        vo.setSuggestion(result.getSuggestion());
+        vo.setAnalysis(result.getAnalysis());
         vo.setDoctorId(result.getDoctorId());
         vo.setReviewerId(result.getReviewerId());
         vo.setStatus(result.getStatus());

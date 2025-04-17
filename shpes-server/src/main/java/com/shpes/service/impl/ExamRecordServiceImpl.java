@@ -9,12 +9,15 @@ import com.shpes.common.enums.ResultCode;
 import com.shpes.common.exception.ApiException;
 import com.shpes.entity.ExamAppointment;
 import com.shpes.entity.ExamRecord;
+import com.shpes.entity.ExamResult;
 import com.shpes.entity.SysUser;
 import com.shpes.mapper.ExamAppointmentMapper;
 import com.shpes.mapper.ExamRecordMapper;
+import com.shpes.mapper.ExamResultMapper;
 import com.shpes.service.ExamRecordService;
 import com.shpes.service.SysUserService;
 import com.shpes.vo.ExamRecordVO;
+import com.shpes.vo.ExamResultVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +25,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
+import javax.annotation.Resource;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -32,11 +36,12 @@ import java.util.stream.Collectors;
 @Slf4j
 public class ExamRecordServiceImpl extends ServiceImpl<ExamRecordMapper, ExamRecord> implements ExamRecordService {
 
-    @Autowired
+    @Resource
     private SysUserService userService;
-    
-    @Autowired
+    @Resource
     private ExamAppointmentMapper appointmentMapper;
+    @Resource
+    private ExamResultMapper examResultMapper;
 
     @Override
     public CommonPage<ExamRecordVO> getRecordPage(Integer pageNum, Integer pageSize, Long userId, 
@@ -231,8 +236,10 @@ public class ExamRecordServiceImpl extends ServiceImpl<ExamRecordMapper, ExamRec
             }
         }
         
-        // 其他需要处理的关联数据...
-        
+        // 查询体检记录对应的体检结果列表
+        List<ExamResult> examResults = examResultMapper.selectResultsByRecordId(record.getId());
+        List<ExamResultVO> collect = examResults.stream().map(ExamResultVO::toExamResultVO).collect(Collectors.toList());
+        vo.setResults(collect);
         return vo;
     }
 }

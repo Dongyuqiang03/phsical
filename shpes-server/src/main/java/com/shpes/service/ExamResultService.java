@@ -1,6 +1,7 @@
 package com.shpes.service;
 
 import com.shpes.common.api.CommonPage;
+import com.shpes.dto.ExamResultUpdateDTO;
 import com.shpes.entity.ExamResult;
 import com.shpes.vo.ExamResultVO;
 import com.shpes.dto.ExamResultBatchDTO;
@@ -60,6 +61,13 @@ public interface ExamResultService {
      * @return 保存后的体检结果列表
      */
     List<ExamResultVO> createResultsFromBatchDTO(ExamResultBatchDTO batchDTO);
+
+    /**
+     * 根据批量DTO更新体检结果
+     * @param batchDTO 批量DTO
+     * @return 更新后的体检结果列表
+     */
+    List<ExamResultVO> updateResultsFromBatchDTO(ExamResultUpdateDTO batchDTO);
 
     /**
      * 获取用户的体检结果（分页）
