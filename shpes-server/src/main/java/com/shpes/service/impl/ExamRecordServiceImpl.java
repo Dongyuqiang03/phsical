@@ -9,15 +9,16 @@ import com.shpes.common.enums.ResultCode;
 import com.shpes.common.exception.ApiException;
 import com.shpes.entity.ExamAppointment;
 import com.shpes.entity.ExamRecord;
-import com.shpes.entity.ExamResult;
 import com.shpes.entity.SysUser;
 import com.shpes.mapper.ExamAppointmentMapper;
 import com.shpes.mapper.ExamRecordMapper;
 import com.shpes.mapper.ExamResultMapper;
 import com.shpes.service.ExamRecordService;
 import com.shpes.service.SysUserService;
+import com.shpes.vo.ExamRecordDetailVO;
+import com.shpes.vo.ExamRecordPageVO;
 import com.shpes.vo.ExamRecordVO;
-import com.shpes.vo.ExamResultVO;
+import com.shpes.vo.ExamResultDetailVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,10 +43,12 @@ public class ExamRecordServiceImpl extends ServiceImpl<ExamRecordMapper, ExamRec
     private ExamAppointmentMapper appointmentMapper;
     @Resource
     private ExamResultMapper examResultMapper;
+    @Autowired
+    private ExamRecordMapper examRecordMapper;
 
     @Override
-    public CommonPage<ExamRecordVO> getRecordPage(Integer pageNum, Integer pageSize, Long userId, 
-            Integer status, LocalDate startDate, LocalDate endDate) {
+    public CommonPage<ExamRecordPageVO> getRecordPage(Integer pageNum, Integer pageSize, Long userId,
+                                                     Integer status, LocalDate startDate, LocalDate endDate) {
         LambdaQueryWrapper<ExamRecord> wrapper = new LambdaQueryWrapper<>();
         if (userId != null) {
             wrapper.eq(ExamRecord::getUserId, userId);
@@ -62,20 +65,53 @@ public class ExamRecordServiceImpl extends ServiceImpl<ExamRecordMapper, ExamRec
         wrapper.orderByDesc(ExamRecord::getCreateTime);
 
         Page<ExamRecord> page = page(new Page<>(pageNum, pageSize), wrapper);
-        List<ExamRecordVO> records = page.getRecords().stream()
-                .map(this::convertToVO)
+        // 在 getRecordPage 和其他使用 ExamRecordPageVO 的方法中修改转换逻辑
+        List<ExamRecordPageVO> records = page.getRecords().stream()
+                .map(record -> {
+                    ExamRecordPageVO vo = ExamRecordPageVO.fromEntity(record);
+                    if (record.getUserId() != null) {
+                        SysUser user = userService.getById(record.getUserId());
+                        vo.fillUserInfo(user);
+                    }
+                    return vo;
+                })
                 .collect(Collectors.toList());
-        
+
         return CommonPage.restPage(records, page.getTotal(), page.getCurrent(), page.getSize());
     }
 
     @Override
-    public ExamRecordVO getRecordById(Long id) {
-        ExamRecord record = getById(id);
-        if (record == null) {
-            throw new ApiException(ResultCode.EXAM_RECORD_NOT_EXIST);
+    public CommonPage<ExamRecordPageVO> getUserRecords(Long userId, Integer pageNum, Integer pageSize,
+                                                      String beginDate, String endDate, String packageName, String status) {
+        QueryWrapper<ExamRecord> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("user_id", userId);
+
+        if (StringUtils.hasText(beginDate) && StringUtils.hasText(endDate)) {
+            queryWrapper.between("exam_date", beginDate, endDate);
+        } else if (StringUtils.hasText(beginDate)) {
+            queryWrapper.ge("exam_date", beginDate);
+        } else if (StringUtils.hasText(endDate)) {
+            queryWrapper.le("exam_date", endDate);
         }
-        return convertToVO(record);
+
+        if (StringUtils.hasText(packageName)) {
+            queryWrapper.like("package_name", packageName);
+        }
+
+        if (StringUtils.hasText(status)) {
+            queryWrapper.eq("status", status);
+        }
+
+        queryWrapper.orderByDesc("exam_date");
+
+        Page<ExamRecord> page = new Page<>(pageNum, pageSize);
+        Page<ExamRecord> resultPage = baseMapper.selectPage(page, queryWrapper);
+
+        List<ExamRecordPageVO> records = resultPage.getRecords().stream()
+                .map(ExamRecordPageVO::fromEntity)
+                .collect(Collectors.toList());
+
+        return CommonPage.restPage(records, resultPage.getTotal(), resultPage.getCurrent(), resultPage.getSize());
     }
 
     @Override
@@ -146,58 +182,16 @@ public class ExamRecordServiceImpl extends ServiceImpl<ExamRecordMapper, ExamRec
     }
 
     @Override
-    public CommonPage<ExamRecordVO> getUserRecords(Long userId, Integer pageNum, Integer pageSize,
-                                                   String beginDate, String endDate, String packageName, String status) {
-        // 创建查询条件
-        QueryWrapper<ExamRecord> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("user_id", userId);
-        
-        // 添加日期范围条件
-        if (StringUtils.hasText(beginDate) && StringUtils.hasText(endDate)) {
-            queryWrapper.between("exam_date", beginDate, endDate);
-        } else if (StringUtils.hasText(beginDate)) {
-            queryWrapper.ge("exam_date", beginDate);
-        } else if (StringUtils.hasText(endDate)) {
-            queryWrapper.le("exam_date", endDate);
-        }
-        
-        // 添加套餐名称条件
-        if (StringUtils.hasText(packageName)) {
-            queryWrapper.like("package_name", packageName);
-        }
-        
-        // 添加状态条件
-        if (StringUtils.hasText(status)) {
-            queryWrapper.eq("status", status);
-        }
-        
-        // 按体检日期降序排序
-        queryWrapper.orderByDesc("exam_date");
-        
-        // 执行分页查询
-        Page<ExamRecord> page = new Page<>(pageNum, pageSize);
-        Page<ExamRecord> resultPage = baseMapper.selectPage(page, queryWrapper);
-        
-        // 转换为VO对象
-        List<ExamRecordVO> records = resultPage.getRecords().stream()
-            .map(this::convertToVO)
-            .collect(Collectors.toList());
-        
-        // 返回分页结果
-        return CommonPage.restPage(records, resultPage.getTotal(), resultPage.getCurrent(), resultPage.getSize());
-    }
-
-    @Override
     public List<ExamRecordVO> getUserRecords(Long userId) {
         // 创建查询条件
         LambdaQueryWrapper<ExamRecord> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(ExamRecord::getUserId, userId)
-               .orderByDesc(ExamRecord::getExamDate);
-        
+                .orderByDesc(ExamRecord::getExamDate);
+
         // 查询结果并转换为VO
         return this.list(wrapper).stream()
-            .map(this::convertToVO)
-            .collect(Collectors.toList());
+                .map(this::convertToVO)
+                .collect(Collectors.toList());
     }
 
     /**
@@ -207,39 +201,35 @@ public class ExamRecordServiceImpl extends ServiceImpl<ExamRecordMapper, ExamRec
         return "EX" + System.currentTimeMillis();
     }
 
-    /**
-     * 将实体转换为VO
-     */
-    private ExamRecordVO convertToVO(ExamRecord record) {
-        ExamRecordVO vo = new ExamRecordVO();
-        BeanUtils.copyProperties(record, vo);
-        
-        // 查询并添加用户详细信息
-        if (record.getUserId() != null) {
-            SysUser user = userService.getById(record.getUserId());
-            if (user != null) {
-                vo.setUserName(user.getRealName());
-                vo.setGender(user.getGender());
-                vo.setPhone(user.getPhone());
-            }
+    @Override
+    public ExamRecordDetailVO getRecordDetail(Long id) {
+        ExamRecordDetailVO detail = examRecordMapper.getRecordDetail(id);
+        if (detail == null) {
+            throw new ApiException(ResultCode.EXAM_RECORD_NOT_EXIST);
         }
-        
-        // 获取预约编号
-        if (record.getAppointmentId() != null) {
-            try {
-                ExamAppointment appointment = appointmentMapper.selectById(record.getAppointmentId());
-                if (appointment != null) {
-                    vo.setAppointmentNo(appointment.getAppointmentNo());
-                }
-            } catch (Exception e) {
-                log.error("获取预约编号失败，预约ID: {}", record.getAppointmentId(), e);
-            }
-        }
-        
-        // 查询体检记录对应的体检结果列表
-        List<ExamResult> examResults = examResultMapper.selectResultsByRecordId(record.getId());
-        List<ExamResultVO> collect = examResults.stream().map(ExamResultVO::toExamResultVO).collect(Collectors.toList());
-        vo.setResults(collect);
-        return vo;
+
+        // 获取体检结果列表
+        List<ExamResultDetailVO> results = examResultMapper.selectResultsByRecordId(id);
+        detail.setResults(results);
+
+        return detail;
     }
+
+    private ExamRecordVO convertToVO(ExamRecord record) {
+            ExamRecordVO vo = ExamRecordVO.fromEntity(record);
+            
+            // 查询并添加用户详细信息
+            if (record.getUserId() != null) {
+                SysUser user = userService.getById(record.getUserId());
+                vo.fillUserInfo(user);
+            }
+    
+            // 获取预约编号
+            if (record.getAppointmentId() != null) {
+                ExamAppointment appointment = appointmentMapper.selectById(record.getAppointmentId());
+                vo.fillAppointmentInfo(appointment);
+            }
+    
+            return vo;
+        }
 }

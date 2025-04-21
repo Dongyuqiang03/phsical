@@ -43,19 +43,17 @@
       <el-table-column label="体检套餐" prop="packageName" min-width="150" />
       <el-table-column label="预约日期" width="120">
         <template slot-scope="{row}">
-          {{ getAppointmentDate(row) }}
+          <date-time-format :value="row.appointmentDate" type="date" />
         </template>
       </el-table-column>
       <el-table-column label="预约时间" width="120">
         <template slot-scope="{row}">
-          {{ getTimeSlotInfo(row) }}
+          <date-time-format :value="row.startTime" type="time" /> - 
+          <date-time-format :value="row.endTime" type="time" />
         </template>
       </el-table-column>
-      <el-table-column label="科室" width="120">
-        <template slot-scope="{row}">
-          {{ getDepartmentName(row) }}
-        </template>
-      </el-table-column>
+      <el-table-column label="科室" prop="deptName" width="120"/>
+
       <el-table-column label="状态" width="100">
         <template slot-scope="{row}">
           <el-tag :type="row.status | statusTypeFilter">
@@ -65,7 +63,7 @@
       </el-table-column>
       <el-table-column label="创建时间" width="180">
         <template slot-scope="{row}">
-          {{ row.createTimeFormatted }}
+          <date-time-format :value="row.createTime" type="datetime" />
         </template>
       </el-table-column>
       <el-table-column label="操作" align="center" width="200">
@@ -138,7 +136,8 @@
               style="width: 100%">
               <el-table-column label="时间段" width="150">
                 <template slot-scope="{row}">
-                  {{ formatTimeRange(row.startTime, row.endTime) }}
+                  <date-time-format :value="row.startTime" type="time" /> - 
+                  <date-time-format :value="row.endTime" type="time" />
                 </template>
               </el-table-column>
               <el-table-column label="科室" width="120">
@@ -179,12 +178,13 @@
 
 <script>
 import { getUserAppointmentList, cancelAppointment, updateAppointmentTime } from '@/api/exam/appointment'
-import { getAvailableTimeSlots, getAvailableTimeSlotsForPackage, getTimeSlotDetail } from '@/api/exam/timeslot'
+import { getAvailableTimeSlotsForPackage, getTimeSlotDetail } from '@/api/exam/timeslot'
 import Pagination from '@/components/Pagination'
+import DateTimeFormat from '@/components/DateTimeFormat'
 
 export default {
   name: 'AppointmentList',
-  components: { Pagination },
+  components: { Pagination, DateTimeFormat  },
   filters: {
     statusFilter(status) {
       const statusMap = {
@@ -364,11 +364,7 @@ export default {
           
           this.total = response.data.total || 0
           console.log('处理后的数据:', this.appointmentList)
-          
-          // 如果有数据，且有timeSlotId，则获取对应的时间段详情
-          if (this.appointmentList.length > 0) {
-            this.fetchTimeSlotDetails()
-          }
+        
         } else {
           this.$message.error(response?.message || '获取预约列表失败')
         }

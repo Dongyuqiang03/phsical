@@ -51,12 +51,12 @@
       <el-table-column prop="deptName" label="预约科室" width="120" />
       <el-table-column label="预约日期" width="110" align="center">
         <template slot-scope="{row}">
-          {{ formatAppointmentDate(row.appointmentDate) }}
+          <date-time-format :value="row.appointmentDate" type="date" />
         </template>
       </el-table-column>
       <el-table-column label="预约时间" width="130" align="center">
         <template slot-scope="{row}">
-          {{ formatTimeSlot(row) }}
+          {{ row.startTime }} - {{ row.endTime }}
         </template>
       </el-table-column>
       <el-table-column label="状态" width="100" align="center">
@@ -66,7 +66,7 @@
       </el-table-column>
       <el-table-column label="创建时间" width="160" align="center">
         <template slot-scope="{row}">
-          {{ formatCreateTime(row.createTime) }}
+          <date-time-format :value="row.createTime" type="datetime" />
         </template>
       </el-table-column>
       <el-table-column label="操作" align="center" width="300">
@@ -136,10 +136,11 @@
 <script>
 import { getAppointmentList, cancelAppointment, completeAppointment, startAppointment } from '@/api/exam/appointment'
 import Pagination from '@/components/Pagination'
+import DateTimeFormat from '@/components/DateTimeFormat'
 
 export default {
   name: 'AppointmentManagement',
-  components: { Pagination },
+  components: { Pagination, DateTimeFormat },
   filters: {
     statusFilter(status) {
       const statusMap = {
@@ -386,4 +387,4 @@ export default {
     flex-wrap: wrap;
   }
 }
-</style> 
+</style>

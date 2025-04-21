@@ -2,6 +2,8 @@ package com.shpes.service;
 
 import com.shpes.common.api.CommonPage;
 import com.shpes.entity.ExamRecord;
+import com.shpes.vo.ExamRecordDetailVO;
+import com.shpes.vo.ExamRecordPageVO;
 import com.shpes.vo.ExamRecordVO;
 
 import java.time.LocalDate;
@@ -16,13 +18,13 @@ public interface ExamRecordService {
     /**
      * 分页查询体检记录
      */
-    CommonPage<ExamRecordVO> getRecordPage(Integer pageNum, Integer pageSize, Long userId, 
-            Integer status, LocalDate startDate, LocalDate endDate);
+    CommonPage<ExamRecordPageVO> getRecordPage(Integer pageNum, Integer pageSize, Long userId,
+                                               Integer status, LocalDate startDate, LocalDate endDate);
 
     /**
      * 获取体检记录详情
      */
-    ExamRecordVO getRecordById(Long id);
+    ExamRecordDetailVO getRecordDetail(Long id);
     
     /**
      * 获取用户的体检记录列表（不分页）
@@ -44,7 +46,7 @@ public interface ExamRecordService {
      * @param status      状态
      * @return 分页结果
      */
-    CommonPage<ExamRecordVO> getUserRecords(Long userId, Integer pageNum, Integer pageSize,
+    CommonPage<ExamRecordPageVO> getUserRecords(Long userId, Integer pageNum, Integer pageSize,
                                          String beginDate, String endDate, String packageName, String status);
 
     /**

@@ -160,8 +160,7 @@ CREATE TABLE exam_item
     PRIMARY KEY (id),
     UNIQUE KEY uk_item_code (code),
     KEY idx_category_id (category_id),
-    KEY idx_dept_id (dept_id),
-    CONSTRAINT fk_item_category FOREIGN KEY (category_id) REFERENCES exam_item_category (id)
+    KEY idx_dept_id (dept_id)
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4 COMMENT ='体检项目表';
 

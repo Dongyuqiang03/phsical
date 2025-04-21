@@ -1,5 +1,6 @@
 package com.shpes.vo;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -53,24 +54,28 @@ public class UserVO {
     private String idCard;
 
     @ApiModelProperty("生日")
+    @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDateTime birthday;
 
     @ApiModelProperty("头像")
     private String avatar;
 
     @ApiModelProperty("最后登录时间")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime lastLoginTime;
 
     @ApiModelProperty("最后登录IP")
     private String lastLoginIp;
 
     @ApiModelProperty("创建时间")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createTime;
 
     @ApiModelProperty("更新时间")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime updateTime;
 
     public boolean isEnabled() {
         return status != null && status == 1;
     }
-} 
+}

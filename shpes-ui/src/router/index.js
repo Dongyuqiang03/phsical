@@ -123,7 +123,7 @@ export const asyncRoutes = [
       },
       {
         path: 'result',
-        component: () => import('../views/exam/result/index.vue'),
+        component: () => import('../views/exam/record/index.vue'),
         name: 'ExamRecord',
         meta: { title: '体检记录管理', icon: 'notebook-2', permissions: ['exam:record'] }
       },

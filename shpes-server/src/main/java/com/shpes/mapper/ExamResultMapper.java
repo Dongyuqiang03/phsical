@@ -3,6 +3,7 @@ package com.shpes.mapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.shpes.entity.ExamResult;
+import com.shpes.vo.ExamResultDetailVO;
 import com.shpes.vo.ExamResultVO;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
@@ -19,7 +20,7 @@ public interface ExamResultMapper extends BaseMapper<ExamResult> {
     /**
      * 根据记录ID查询结果
      */
-    List<ExamResult> selectResultsByRecordId(@Param("recordId") Long recordId);
+    List<ExamResultDetailVO> selectResultsByRecordId(Long recordId);
 
     /**
      * 分页查询体检结果

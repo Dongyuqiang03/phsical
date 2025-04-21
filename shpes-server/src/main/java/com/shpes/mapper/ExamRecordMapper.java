@@ -2,6 +2,7 @@ package com.shpes.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.shpes.entity.ExamRecord;
+import com.shpes.vo.ExamRecordDetailVO;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Mapper;
 
@@ -25,4 +26,11 @@ public interface ExamRecordMapper extends BaseMapper<ExamRecord> {
      */
     List<Map<String, Object>> selectCompletionStats(@Param("startDate") LocalDate startDate,
                                                     @Param("endDate") LocalDate endDate);
+
+    /**
+     * 获取体检记录详情
+     * @param id 记录ID
+     * @return 体检记录详情VO
+     */
+    ExamRecordDetailVO getRecordDetail(@Param("id") Long id);
 }

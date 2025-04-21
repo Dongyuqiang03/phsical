@@ -23,18 +23,24 @@
           </el-button>
         </div>
         <el-descriptions class="margin-top" :column="2" border>
-          <el-descriptions-item label="预约编号">{{ detail.id }}</el-descriptions-item>
+          <el-descriptions-item label="预约编号">{{ detail.appointmentNo }}</el-descriptions-item>
           <el-descriptions-item label="预约状态">
             <el-tag :type="detail.status | statusTypeFilter">
               {{ detail.status | statusFilter }}
             </el-tag>
           </el-descriptions-item>
           <el-descriptions-item label="预约人">{{ detail.userName }}</el-descriptions-item>
-          <el-descriptions-item label="联系电话">{{ detail.phone }}</el-descriptions-item>
-          <el-descriptions-item label="预约日期">{{ detail.appointmentDate }}</el-descriptions-item>
-          <el-descriptions-item label="预约时间">{{ detail.timeSlot }}</el-descriptions-item>
-          <el-descriptions-item label="体检科室">{{ detail.departmentName }}</el-descriptions-item>
-          <el-descriptions-item label="创建时间">{{ detail.createTime }}</el-descriptions-item>
+          <el-descriptions-item label="联系电话">{{ detail.phone || '未设置' }}</el-descriptions-item>
+          <el-descriptions-item label="预约日期">
+            <date-time-format :value="detail.appointmentDate" type="date" />
+          </el-descriptions-item>
+          <el-descriptions-item label="预约时间">
+            {{ detail.startTime }} - {{ detail.endTime }}
+          </el-descriptions-item>
+          <el-descriptions-item label="体检科室">{{ detail.deptName }}</el-descriptions-item>
+          <el-descriptions-item label="创建时间">
+            <date-time-format :value="detail.createTime" type="datetime" />
+          </el-descriptions-item>
         </el-descriptions>
       </el-card>
 
@@ -44,17 +50,17 @@
           <span>体检套餐</span>
         </div>
         <el-descriptions class="margin-top" :column="1" border>
-          <el-descriptions-item label="套餐名称">{{ detail.packageName }}</el-descriptions-item>
-          <el-descriptions-item label="套餐说明">{{ detail.packageDescription }}</el-descriptions-item>
+          <el-descriptions-item label="套餐名称">{{ detail.packageInfo.name }}</el-descriptions-item>
+          <el-descriptions-item label="套餐说明">{{ detail.packageInfo.description || '暂无说明' }}</el-descriptions-item>
         </el-descriptions>
         
         <!-- 体检项目列表 -->
         <div class="sub-title">体检项目列表</div>
         <el-table :data="detail.examItems" border style="width: 100%">
           <el-table-column label="项目名称" prop="name" />
-          <el-table-column label="检查科室" prop="departmentName" width="120" />
+          <!-- <el-table-column label="检查科室" prop="departmentName" width="120" /> -->
           <el-table-column label="项目说明" prop="description" show-overflow-tooltip />
-          <el-table-column label="注意事项" prop="notice" show-overflow-tooltip width="200" />
+          <!-- <el-table-column label="注意事项" prop="notice" show-overflow-tooltip width="200" /> -->
         </el-table>
       </el-card>
 
@@ -115,9 +121,13 @@
 <script>
 import { getAppointmentDetail, cancelAppointment, updateAppointmentTime } from '@/api/exam/appointment'
 import { getAvailableTimeSlots } from '@/api/exam/timeslot'
+import DateTimeFormat from '@/components/DateTimeFormat'
 
 export default {
   name: 'AppointmentDetail',
+  components: {
+    DateTimeFormat
+  },
   filters: {
     statusFilter(status) {
       const statusMap = {
@@ -153,15 +163,19 @@ export default {
       loading: false,
       detail: {
         id: undefined,
+        appointmentNo: '',
         status: '',
         userName: '',
         phone: '',
         appointmentDate: '',
-        timeSlot: '',
-        departmentName: '',
+        startTime: '',
+        endTime: '',
+        deptName: '',
         createTime: '',
-        packageName: '',
-        packageDescription: '',
+        packageInfo: {
+          name: '',
+          description: ''
+        },
         examItems: [],
         examDate: '',
         doctorName: '',
@@ -266,4 +280,4 @@ export default {
     }
   }
 }
-</style> 
+</style>

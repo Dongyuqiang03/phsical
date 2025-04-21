@@ -26,16 +26,17 @@
         <result column="reviewer_name" property="reviewerName"/>
     </resultMap>
 
-  <select id="selectResultsByRecordId" resultMap="DetailResultMap">
-    SELECT r.*, i.name as item_name, i.code as item_code,i.reference_value,
-           u1.real_name as doctor_name, u2.real_name as reviewer_name
-    FROM exam_result r
-    LEFT JOIN exam_item i ON r.item_id = i.id
-    LEFT JOIN sys_user u1 ON r.doctor_id = u1.id
-    LEFT JOIN sys_user u2 ON r.reviewer_id = u2.id
-    WHERE r.record_id = #{recordId}
-    ORDER BY i.id
-</select>
+  <!-- 使用已有的 DetailResultMap -->
+      <select id="selectResultsByRecordId" resultMap="DetailResultMap">
+          SELECT r.*, i.name as item_name, i.code as item_code, i.reference_value,
+                 u1.real_name as doctor_name, u2.real_name as reviewer_name
+          FROM exam_result r
+          LEFT JOIN exam_item i ON r.item_id = i.id
+          LEFT JOIN sys_user u1 ON r.doctor_id = u1.id
+          LEFT JOIN sys_user u2 ON r.reviewer_id = u2.id
+          WHERE r.record_id = #{recordId}
+          ORDER BY i.id
+      </select>
 
 <select id="selectResultPage" resultMap="DetailResultMap">
     SELECT r.*, i.name as item_name, i.code as item_code
@@ -57,5 +58,4 @@
     </where>
     ORDER BY r.create_time DESC
 </select>
-    
 </mapper>

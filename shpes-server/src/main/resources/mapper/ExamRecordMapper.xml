@@ -21,11 +21,35 @@
         <result column="update_time" property="updateTime"/>
     </resultMap>
 
-    <!-- 获取体检记录详情 -->
-    <select id="getRecordDetail" resultMap="BaseResultMap">
-        SELECT er.*, su.real_name as doctor_name, ep.name as package_name
+    <!-- 体检记录详情结果映射 -->
+    <resultMap id="DetailResultMap" type="com.shpes.vo.ExamRecordDetailVO">
+        <id column="id" property="id"/>
+        <result column="exam_no" property="examNo"/>
+        <result column="appointment_no" property="appointmentNo"/>
+        <result column="user_name" property="userName"/>
+        <result column="gender" property="gender"/>
+        <result column="age" property="age"/>
+        <result column="phone" property="phone"/>
+        <result column="package_name" property="packageName"/>
+        <result column="exam_date" property="examDate"/>
+        <result column="conclusion" property="conclusion"/>
+        <result column="suggestion" property="suggestion"/>
+        <result column="status" property="status"/>
+        <result column="complete_time" property="completeTime"/>
+    </resultMap>
+
+    <select id="getRecordDetail" resultMap="DetailResultMap">
+        SELECT 
+            er.*,
+            ea.appointment_no,
+            su.real_name as user_name,
+            su.gender,
+            su.age,
+            su.phone,
+            ep.name as package_name
         FROM exam_record er
-        LEFT JOIN sys_user su ON er.doctor_id = su.id
+        LEFT JOIN exam_appointment ea ON er.appointment_id = ea.id
+        LEFT JOIN sys_user su ON er.user_id = su.id
         LEFT JOIN exam_package ep ON er.package_id = ep.id
         WHERE er.id = #{id}
     </select>

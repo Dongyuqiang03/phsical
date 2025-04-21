@@ -25,7 +25,7 @@
         </el-result>
       </div>
       <div v-else-if="packageList.length === 0" class="empty-container">
-        <el-empty description="暂无可用体检套餐"></el-empty>
+        <el-empty description="暂无套餐"></el-empty>
       </div>
       <el-card v-else v-for="item in packageList" :key="item.id" class="package-card" :class="{ 'is-selected': selectedPackage && selectedPackage.id === item.id }">
         <div slot="header" class="package-header">
@@ -94,7 +94,8 @@
           style="width: 100%">
           <el-table-column label="时间段" width="150">
             <template slot-scope="{row}">
-              {{ formatTimeRange(row.startTime, row.endTime) }}
+              <date-time-format :value="row.startTime" type="time" /> - 
+              <date-time-format :value="row.endTime" type="time" />
             </template>
           </el-table-column>
           <el-table-column label="科室" width="120">
@@ -129,10 +130,16 @@
           <span>{{ selectedPackage ? selectedPackage.name : '' }}</span>
         </el-form-item>
         <el-form-item label="预约日期">
-          <span>{{ selectedDate }}</span>
+          <span>
+            <date-time-format :value="selectedDate" type="date" />
+          </span>
         </el-form-item>
         <el-form-item label="预约时间">
-          <span>{{ getTimeSlotString() }}</span>
+          <span v-if="selectedTimeSlot">
+            <date-time-format :value="selectedTimeSlot.startTime" type="time" /> - 
+            <date-time-format :value="selectedTimeSlot.endTime" type="time" />
+          </span>
+          <span v-else>未选择时间</span>
         </el-form-item>
         <el-form-item label="预约科室">
           <span>{{ getDepartmentName() }}</span>
@@ -161,7 +168,10 @@
               <el-descriptions-item label="预约编号">{{ appointmentInfo.appointmentNo || '生成中...' }}</el-descriptions-item>
               <el-descriptions-item label="体检套餐">{{ selectedPackage ? selectedPackage.name : '' }}</el-descriptions-item>
               <el-descriptions-item label="预约日期">{{ selectedDate }}</el-descriptions-item>
-              <el-descriptions-item label="预约时间">{{ getTimeSlotString() }}</el-descriptions-item>
+              <el-descriptions-item label="预约时间">
+                <date-time-format :value="selectedTimeSlot.startTime" type="time" /> - 
+                <date-time-format :value="selectedTimeSlot.endTime" type="time" />
+              </el-descriptions-item>
               <el-descriptions-item label="预约科室">{{ getDepartmentName() }}</el-descriptions-item>
               <el-descriptions-item label="状态">
                 <el-tag type="success">待体检</el-tag>
@@ -189,9 +199,13 @@
 import { getExamPackageList } from '@/api/exam/package'
 import { getAvailableTimeSlots, getAvailableTimeSlotsForPackage } from '@/api/exam/timeslot'
 import { createAppointment } from '@/api/exam/appointment'
+import DateTimeFormat from '@/components/DateTimeFormat'
 
 export default {
   name: 'Appointment',
+  components: {
+    DateTimeFormat
+  },
   data() {
     return {
       active: 0,
@@ -507,4 +521,4 @@ export default {
     max-width: 600px;
   }
 }
-</style> 
+</style>

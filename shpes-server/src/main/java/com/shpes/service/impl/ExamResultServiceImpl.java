@@ -8,6 +8,7 @@ import com.shpes.common.exception.ApiException;
 import com.shpes.dto.ExamResultUpdateDTO;
 import com.shpes.entity.ExamRecord;
 import com.shpes.entity.ExamResult;
+import com.shpes.mapper.ExamRecordMapper;
 import com.shpes.mapper.ExamResultMapper;
 import com.shpes.service.ExamRecordService;
 import com.shpes.service.ExamResultService;
@@ -39,13 +40,16 @@ public class ExamResultServiceImpl extends ServiceImpl<ExamResultMapper, ExamRes
     
     @Autowired
     private ExamRecordService examRecordService;
+    @Autowired
+    private ExamRecordMapper examRecordMapper;
 
     @Override
     public List<ExamResultVO> getResultsByRecordId(Long recordId) {
-        // 获取数据库实体对象
-        List<ExamResult> results = baseMapper.selectResultsByRecordId(recordId);
-        // 转换为VO对象
-        return convertToVOList(results);
+//        // 获取数据库实体对象
+//        List<ExamResult> results = baseMapper.selectResultsByRecordId(recordId);
+//        // 转换为VO对象
+//        return convertToVOList(results);
+        return null;
     }
 
     @Override
@@ -169,8 +173,8 @@ public class ExamResultServiceImpl extends ServiceImpl<ExamResultMapper, ExamRes
                 Long recordId = results.get(0).getRecordId();
                 
                 // 获取当前记录
-                ExamRecordVO recordVO = examRecordService.getRecordById(recordId);
-                if (recordVO != null) {
+                ExamRecord record = examRecordMapper.selectById(recordId);
+                if (record != null) {
                     // 创建新的记录对象，设置需要更新的字段
                     ExamRecord updateRecord = new ExamRecord();
                     updateRecord.setId(recordId);
@@ -230,8 +234,8 @@ public class ExamResultServiceImpl extends ServiceImpl<ExamResultMapper, ExamRes
                 Long recordId = results.get(0).getRecordId();
                 
                 // 获取当前记录
-                ExamRecordVO recordVO = examRecordService.getRecordById(recordId);
-                if (recordVO != null) {
+                ExamRecord record = examRecordMapper.selectById(recordId);
+                if (record != null) {
                     // 创建新的记录对象，设置需要更新的字段
                     ExamRecord updateRecord = new ExamRecord();
                     updateRecord.setId(recordId);

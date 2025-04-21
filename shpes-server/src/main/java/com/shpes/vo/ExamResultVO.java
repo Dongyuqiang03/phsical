@@ -1,5 +1,6 @@
 package com.shpes.vo;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.shpes.entity.ExamResult;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -54,9 +55,11 @@ public class ExamResultVO {
     private String remark;
 
     @ApiModelProperty("创建时间")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createTime;
 
     @ApiModelProperty("更新时间")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime updateTime;
 
     public static ExamResultVO toExamResultVO(ExamResult result) {
@@ -65,8 +68,6 @@ public class ExamResultVO {
         vo.setId(result.getId());
         vo.setRecordId(result.getRecordId());
         vo.setItemId(result.getItemId());
-        vo.setItemName(result.getItemName());
-        vo.setReferenceValue(result.getReferenceValue());
         vo.setValue(result.getValue());
         vo.setAbnormal(result.getAbnormal());
         vo.setAnalysis(result.getAnalysis());

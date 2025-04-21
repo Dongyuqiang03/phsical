@@ -7,6 +7,8 @@ import com.shpes.entity.ExamRecord;
 import com.shpes.annotation.RequiresPermission;
 import com.shpes.service.ExamRecordService;
 import com.shpes.utils.SecurityUtils;
+import com.shpes.vo.ExamRecordDetailVO;
+import com.shpes.vo.ExamRecordPageVO;
 import com.shpes.vo.ExamRecordVO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -34,7 +36,7 @@ public class ExamRecordController {
     @ApiOperation("获取记录列表")
     @GetMapping("/list")
     @RequiresPermission("exam:record")
-    public CommonResult<CommonPage<ExamRecordVO>> getRecordPage(
+    public CommonResult<CommonPage<ExamRecordPageVO>> getRecordPage(
             @RequestParam(defaultValue = "1") Integer pageNum,
             @RequestParam(defaultValue = "10") Integer pageSize,
             @RequestParam(required = false) Long userId,
@@ -44,11 +46,27 @@ public class ExamRecordController {
         return CommonResult.success(recordService.getRecordPage(pageNum, pageSize, userId, status, startDate, endDate));
     }
 
+    @ApiOperation("获取当前用户的体检记录")
+    @GetMapping("/user/current")
+    @RequiresPermission("exam:result")
+    public CommonResult<CommonPage<ExamRecordPageVO>> getCurrentUserRecords(
+        @ApiParam("页码") @RequestParam(defaultValue = "1") Integer pageNum,
+        @ApiParam("每页记录数") @RequestParam(defaultValue = "10") Integer pageSize,
+        @ApiParam("开始日期") @RequestParam(required = false) String beginDate,
+        @ApiParam("结束日期") @RequestParam(required = false) String endDate,
+        @ApiParam("套餐名称") @RequestParam(required = false) String packageName,
+        @ApiParam("状态") @RequestParam(required = false) String status){
+        
+        Long userId = SecurityUtils.getCurrentUserId();
+        return CommonResult.success(recordService.getUserRecords(userId, pageNum, pageSize, 
+            beginDate, endDate, packageName, status));
+    }
+
     @ApiOperation("获取记录详情")
     @GetMapping("/{id}")
     @RequiresPermission("exam:record")
-    public CommonResult<ExamRecordVO> getRecord(@PathVariable Long id) {
-        return CommonResult.success(recordService.getRecordById(id));
+    public CommonResult<ExamRecordDetailVO> getRecord(@PathVariable Long id) {
+        return CommonResult.success(recordService.getRecordDetail(id));
     }
 
     @ApiOperation("获取用户体检记录列表")
@@ -115,23 +133,4 @@ public class ExamRecordController {
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
         return CommonResult.success(recordService.getCompletionStats(startDate, endDate));
     }
-
-    @ApiOperation("获取当前用户的体检记录")
-    @GetMapping("/user/current")
-    @RequiresPermission("exam:result")
-    public CommonResult<CommonPage<ExamRecordVO>> getCurrentUserRecords(
-        @ApiParam("页码") @RequestParam(defaultValue = "1") Integer pageNum,
-        @ApiParam("每页记录数") @RequestParam(defaultValue = "10") Integer pageSize,
-        @ApiParam("开始日期") @RequestParam(required = false) String beginDate,
-        @ApiParam("结束日期") @RequestParam(required = false) String endDate,
-        @ApiParam("套餐名称") @RequestParam(required = false) String packageName,
-        @ApiParam("状态") @RequestParam(required = false) String status) {
-        
-        // 获取当前登录用户ID
-        Long userId = SecurityUtils.getCurrentUserId();
-        
-        // 调用Service查询当前用户的体检记录
-        return CommonResult.success(recordService.getUserRecords(userId, pageNum, pageSize, 
-            beginDate, endDate, packageName, status));
-    }
-} 
+}

@@ -7,6 +7,7 @@ import com.shpes.entity.ExamAppointment;
 import com.shpes.annotation.RequiresPermission;
 import com.shpes.service.ExamAppointmentService;
 import com.shpes.utils.SecurityUtils;
+import com.shpes.vo.AppointmentDetailVO;
 import com.shpes.vo.AppointmentVO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -44,8 +45,8 @@ public class ExamAppointmentController {
     @ApiOperation("获取预约详情")
     @GetMapping("/{id}")
     @RequiresPermission("exam:appointment")
-    public CommonResult<AppointmentVO> getAppointment(@PathVariable Long id) {
-        return CommonResult.success(appointmentService.getAppointment(id));
+    public CommonResult<AppointmentDetailVO> getAppointment(@PathVariable Long id) {
+        return CommonResult.success(appointmentService.getAppointmentDetail(id));
     }
 
     @ApiOperation("创建预约")

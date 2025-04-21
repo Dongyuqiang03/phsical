@@ -1,0 +1,61 @@
+{
+  "code": 200,
+  "message": "操作成功",
+  "data": {
+      "token": "eyJhbGciOiJIUzUxMiJ9.eyJyZWFsTmFtZSI6Iuezu-e7n-euoeeQhuWRmCIsImRlcHRJZCI6MSwiaWQiOjEsInVzZXJUeXBlIjoxLCJleHAiOjE3NDI5ODAyNjIsImlhdCI6MTc0MjM3NTQ2MiwidXNlcm5hbWUiOiJhZG1pbiJ9.qaual_dZCId5bYTdLu67hHAX-86-Q7flOohqjlYI12sGZTnciOI4eNLacnbN2vwtlW76CZcMLrHaIxiSNMH1yQ",
+      "user": {
+          "id": 1,
+          "username": "admin",
+          "name": null,
+          "phone": null,
+          "email": null,
+          "departmentId": null,
+          "departmentName": null,
+          "userType": 1,
+          "status": 1,
+          "roles": [
+              "ROLE_ADMIN"
+          ],
+          "permissions": [
+              "system:user",
+              "exam",
+              "system:permission",
+              "exam:package",
+              "exam:item",
+              "system",
+              "system:role",
+              "exam:result",
+              "system:department",
+              "exam:record",
+              "exam:appointment",
+              "system:log"
+          ],
+          "password": "31629dcfd1f33ac5d66f29a20ca06aac9d4434e5108b41b2241fe1cac5695073",
+          "gender": null,
+          "idCard": null,
+          "birthday": null,
+          "avatar": null,
+          "roleIds": null,
+          "roleNames": null,
+          "lastLoginTime": null,
+          "lastLoginIp": null,
+          "createTime": [
+              2025,
+              3,
+              17,
+              10,
+              52,
+              12
+          ],
+          "updateTime": [
+              2025,
+              3,
+              19,
+              10,
+              41,
+              43
+          ],
+          "enabled": true
+      }
+  }
+}

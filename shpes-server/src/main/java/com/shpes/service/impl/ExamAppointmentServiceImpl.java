@@ -9,6 +9,7 @@ import com.shpes.common.exception.ApiException;
 import com.shpes.entity.ExamAppointment;
 import com.shpes.entity.ExamTimeSlot;
 import com.shpes.entity.ExamRecord;
+import com.shpes.entity.SysUser;
 import com.shpes.mapper.ExamAppointmentMapper;
 import com.shpes.service.ExamAppointmentService;
 import com.shpes.service.ExamPackageService;
@@ -16,7 +17,9 @@ import com.shpes.service.ExamTimeSlotService;
 import com.shpes.service.SysDepartmentService;
 import com.shpes.service.SysUserService;
 import com.shpes.service.ExamRecordService;
+import com.shpes.vo.AppointmentDetailVO;
 import com.shpes.vo.AppointmentVO;
+import com.shpes.vo.ExamItemVO;
 import com.shpes.vo.ExamPackageVO;
 import com.shpes.utils.SecurityUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -323,5 +326,65 @@ public class ExamAppointmentServiceImpl extends ServiceImpl<ExamAppointmentMappe
             log.error("创建体检记录失败，预约ID：{}", appointment.getId(), e);
             // 这里我们不抛出异常，以避免影响预约状态更新
         }
+    }
+
+    @Override
+    public AppointmentDetailVO getAppointmentDetail(Long id) {
+        // 1. 获取预约基本信息
+        ExamAppointment appointment = getById(id);
+        if (appointment == null) {
+            throw new ApiException(ResultCode.APPOINTMENT_NOT_EXIST);
+        }
+
+        // 2. 构建返回对象
+        AppointmentDetailVO detailVO = new AppointmentDetailVO();
+        BeanUtils.copyProperties(appointment, detailVO);
+
+        // 3. 设置用户联系电话
+        if (appointment.getUserId() != null) {
+            SysUser user = userService.getById(appointment.getUserId());
+            if (user != null) {
+                detailVO.setPhone(user.getPhone());
+                detailVO.setUserName(user.getUsername());
+            }
+        }
+
+        // 4. 设置套餐信息
+        if (appointment.getPackageId() != null) {
+            ExamPackageVO packageVO = packageService.getPackageById(appointment.getPackageId());
+            if (packageVO != null) {
+                AppointmentDetailVO.PackageInfo packageInfo = new AppointmentDetailVO.PackageInfo();
+                packageInfo.setName(packageVO.getName());
+                packageInfo.setDescription(packageVO.getDescription());
+                detailVO.setPackageInfo(packageInfo);
+
+                // 5. 设置体检项目列表
+                List<ExamItemVO> examItems = packageService.getPackageItems(appointment.getPackageId());
+                if (examItems != null && !examItems.isEmpty()) {
+                    List<AppointmentDetailVO.ExamItemInfo> itemInfoList = examItems.stream()
+                        .map(item -> {
+                            AppointmentDetailVO.ExamItemInfo itemInfo = new AppointmentDetailVO.ExamItemInfo();
+                            itemInfo.setName(item.getName());
+                            itemInfo.setDeptName(item.getDeptName());
+                            itemInfo.setDescription(item.getRemark());
+//                            itemInfo.setNotice(item.getNotice());
+                            return itemInfo;
+                        })
+                        .collect(Collectors.toList());
+                    detailVO.setExamItems(itemInfoList);
+                }
+            }
+        }
+
+        // 6. 设置时间信息
+        if (appointment.getTimeSlotId() != null) {
+            ExamTimeSlot timeSlot = timeSlotService.getById(appointment.getTimeSlotId());
+            if (timeSlot != null) {
+                detailVO.setStartTime(timeSlot.getStartTime());
+                detailVO.setEndTime(timeSlot.getEndTime());
+            }
+        }
+
+        return detailVO;
     }
 }

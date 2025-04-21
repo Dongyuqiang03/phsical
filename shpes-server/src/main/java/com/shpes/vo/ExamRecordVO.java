@@ -1,8 +1,15 @@
 package com.shpes.vo;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.shpes.entity.ExamAppointment;
+import com.shpes.entity.ExamRecord;
+import com.shpes.entity.SysUser;
+import com.shpes.mapper.ExamAppointmentMapper;
+import com.shpes.service.SysUserService;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
+import org.springframework.beans.BeanUtils;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -51,6 +58,7 @@ public class ExamRecordVO {
     private Integer status;
     
     @ApiModelProperty("完成时间")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime completeTime;
     
     @ApiModelProperty("总结医生ID")
@@ -72,9 +80,11 @@ public class ExamRecordVO {
     private List<ExamResultVO> results;
     
     @ApiModelProperty("创建时间")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createTime;
     
     @ApiModelProperty("更新时间")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime updateTime;
 
     @ApiModelProperty("用户性别")
@@ -85,4 +95,37 @@ public class ExamRecordVO {
 
     @ApiModelProperty("联系电话")
     private String phone;
-} 
+
+    /**
+     * 将实体转换为VO对象
+     */
+    public static ExamRecordVO fromEntity(ExamRecord record) {
+        if (record == null) {
+            return null;
+        }
+        
+        ExamRecordVO vo = new ExamRecordVO();
+        BeanUtils.copyProperties(record, vo);
+        return vo;
+    }
+
+    /**
+     * 补充用户信息
+     */
+    public void fillUserInfo(SysUser user) {
+        if (user != null) {
+            this.setUserName(user.getRealName());
+            this.setGender(user.getGender());
+            this.setPhone(user.getPhone());
+        }
+    }
+
+    /**
+     * 补充预约信息
+     */
+    public void fillAppointmentInfo(ExamAppointment appointment) {
+        if (appointment != null) {
+            this.setAppointmentNo(appointment.getAppointmentNo());
+        }
+    }
+}

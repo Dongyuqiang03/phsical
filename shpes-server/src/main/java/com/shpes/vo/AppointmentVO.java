@@ -1,5 +1,6 @@
 package com.shpes.vo;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -43,15 +44,19 @@ public class AppointmentVO {
     private String deptName;
     
     @ApiModelProperty("预约日期")
+    @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate appointmentDate;
     
     @ApiModelProperty("开始时间")
+    @JsonFormat(pattern = "HH:mm:ss")
     private LocalTime startTime;
     
     @ApiModelProperty("结束时间")
+    @JsonFormat(pattern = "HH:mm:ss")
     private LocalTime endTime;
     
     @ApiModelProperty("预约时间")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime appointmentTime;
     
     @ApiModelProperty("预约状态：0-待确认, 1-待体检，2-进行中，3-已完成，4-已取消")
@@ -61,8 +66,10 @@ public class AppointmentVO {
     private String cancelReason;
     
     @ApiModelProperty("创建时间")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createTime;
     
     @ApiModelProperty("更新时间")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime updateTime;
 } 

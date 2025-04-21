@@ -2,6 +2,7 @@ package com.shpes.service;
 
 import com.shpes.common.api.CommonPage;
 import com.shpes.entity.ExamAppointment;
+import com.shpes.vo.AppointmentDetailVO;
 import com.shpes.vo.AppointmentVO;
 
 import java.time.LocalDate;
@@ -62,4 +63,12 @@ public interface ExamAppointmentService {
      */
     CommonPage<AppointmentVO> getUserAppointments(Long userId, Integer pageNum, Integer pageSize, 
             LocalDate startDate, LocalDate endDate, Integer status);
+
+    /**
+     * 获取预约详情（包含套餐和体检项目信息）
+     *
+     * @param id 预约ID
+     * @return 预约详情VO
+     */
+    AppointmentDetailVO getAppointmentDetail(Long id);
 }

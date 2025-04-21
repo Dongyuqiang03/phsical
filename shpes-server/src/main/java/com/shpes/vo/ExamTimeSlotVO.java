@@ -1,5 +1,8 @@
 package com.shpes.vo;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -8,9 +11,6 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.LocalDateTime;
 
-/**
- * 体检时间段返回值对象
- */
 @Data
 @ApiModel(description = "体检时间段返回值对象")
 public class ExamTimeSlotVO {
@@ -25,12 +25,15 @@ public class ExamTimeSlotVO {
     private String deptName;
     
     @ApiModelProperty("日期")
+    @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate date;
     
     @ApiModelProperty("开始时间")
+    @JsonFormat(pattern = "HH:mm")
     private LocalTime startTime;
     
     @ApiModelProperty("结束时间")
+    @JsonFormat(pattern = "HH:mm")
     private LocalTime endTime;
     
     @ApiModelProperty("容量")
@@ -49,8 +52,10 @@ public class ExamTimeSlotVO {
     private String remark;
     
     @ApiModelProperty("创建时间")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createTime;
     
     @ApiModelProperty("更新时间")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime updateTime;
-} 
+}

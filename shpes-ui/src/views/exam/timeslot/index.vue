@@ -34,12 +34,13 @@
           style="width: 100%">
           <el-table-column label="日期" width="120">
             <template slot-scope="{row}">
-              {{ formatDate(row.date) }}
+              <date-time-format :value="row.date" type="date" />
             </template>
           </el-table-column>
           <el-table-column label="时间段" width="150">
             <template slot-scope="{row}">
-              {{ formatTimeRange(row.startTime, row.endTime) }}
+              <date-time-format :value="row.startTime" type="time" /> - 
+              <date-time-format :value="row.endTime" type="time" />
             </template>
           </el-table-column>
           <el-table-column label="科室" prop="deptName" width="120" />
@@ -249,10 +250,14 @@ import Pagination from '@/components/Pagination'
 import { getTimeSlotList, createTimeSlot, updateTimeSlot, deleteTimeSlot, batchCreateTimeSlot } from '@/api/exam/timeslot'
 import { getAllDepartments } from '@/api/department'
 import { mapGetters } from 'vuex'
+import DateTimeFormat from '@/components/DateTimeFormat'
 
 export default {
   name: 'TimeSlot',
-  components: { Pagination },
+  components: { 
+    Pagination,
+    DateTimeFormat  // 添加组件注册
+  },
   data() {
     return {
       list: [],
