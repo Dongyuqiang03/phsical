@@ -28,7 +28,6 @@
         <result column="appointment_no" property="appointmentNo"/>
         <result column="user_name" property="userName"/>
         <result column="gender" property="gender"/>
-        <result column="age" property="age"/>
         <result column="phone" property="phone"/>
         <result column="package_name" property="packageName"/>
         <result column="exam_date" property="examDate"/>
@@ -44,7 +43,6 @@
             ea.appointment_no,
             su.real_name as user_name,
             su.gender,
-            su.age,
             su.phone,
             ep.name as package_name
         FROM exam_record er

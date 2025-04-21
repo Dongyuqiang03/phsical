@@ -26,8 +26,6 @@ public class ExamRecordDetailVO {
     @ApiModelProperty("性别")
     private Integer gender;
 
-    @ApiModelProperty("年龄")
-    private Integer age;
 
     @ApiModelProperty("手机号")
     private String phone;

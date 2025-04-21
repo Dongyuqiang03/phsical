@@ -60,11 +60,14 @@
             <el-table-column label="检查结果" min-width="200">
               <template slot-scope="{row}">
                 <!-- 只读模式下显示纯文本 -->
-                <span v-if="isReadonlyMode">{{ row.result || '未填写' }}</span>
+                <span v-if="isReadonlyMode" :class="{'abnormal-text': row.status !== 'NORMAL'}">
+                  {{ row.result || '未填写' }}
+                </span>
                 <!-- 编辑模式下显示输入框 -->
                 <el-input
                   v-else
                   v-model="row.result"
+                  :class="{'abnormal-input': row.status !== 'NORMAL'}"
                   :placeholder="row.inputTip || '请输入检查结果'"
                   @change="handleResultChange(row)"
                 />
@@ -533,99 +536,7 @@ export default {
         this.$message.error(`${this.isEditMode ? '更新' : '提交'}失败: ` + (error.message || '未知错误'))
       }
     },
-    // 使用默认体检项目
-    useDefaultExamItems() {
-      this.examItems = [
-        {
-          id: 'blood_pressure',
-          name: '血压',
-          reference: '90/60-140/90mmHg',
-          result: '',
-          status: 'NORMAL',
-          analysis: ''
-        },
-        {
-          id: 'heart_rate',
-          name: '心率',
-          reference: '60-100次/分',
-          result: '',
-          status: 'NORMAL',
-          analysis: ''
-        },
-        {
-          id: 'respiratory_rate',
-          name: '呼吸频率',
-          reference: '12-20次/分',
-          result: '',
-          status: 'NORMAL',
-          analysis: ''
-        },
-        {
-          id: 'temperature',
-          name: '体温',
-          reference: '36.3-37.2℃',
-          result: '',
-          status: 'NORMAL',
-          analysis: ''
-        },
-        {
-          id: 'blood_routine',
-          name: '血常规',
-          reference: '红细胞(RBC): 4.0-5.5×10^12/L; 血红蛋白(HGB): 120-160g/L; 白细胞(WBC): 4.0-10.0×10^9/L; 血小板(PLT): 100-300×10^9/L',
-          result: '',
-          status: 'NORMAL',
-          analysis: ''
-        },
-        {
-          id: 'urine_routine',
-          name: '尿常规',
-          reference: '颜色: 淡黄色或黄色透明; 尿蛋白: 阴性; 尿糖: 阴性; 尿胆原: 阴性; pH值: 5.0-8.0; 尿比重: 1.003-1.030',
-          result: '',
-          status: 'NORMAL',
-          analysis: ''
-        },
-        {
-          id: 'liver_function',
-          name: '肝功能',
-          reference: '谷丙转氨酶(ALT): 0-40U/L; 谷草转氨酶(AST): 0-40U/L; 总胆红素(TBIL): 5.1-17.1μmol/L; 直接胆红素(DBIL): 0-6.8μmol/L',
-          result: '',
-          status: 'NORMAL',
-          analysis: ''
-        },
-        {
-          id: 'kidney_function',
-          name: '肾功能',
-          reference: '尿素氮(BUN): 2.86-7.14mmol/L; 肌酐(Cr): 44-133μmol/L; 尿酸(UA): 149-416μmol/L',
-          result: '',
-          status: 'NORMAL',
-          analysis: ''
-        },
-        {
-          id: 'blood_lipids',
-          name: '血脂',
-          reference: '总胆固醇(TC): 3.1-5.7mmol/L; 甘油三酯(TG): 0.4-1.7mmol/L; 高密度脂蛋白(HDL-C): 0.9-1.8mmol/L; 低密度脂蛋白(LDL-C): 1.9-3.1mmol/L',
-          result: '',
-          status: 'NORMAL',
-          analysis: ''
-        },
-        {
-          id: 'blood_glucose',
-          name: '血糖',
-          reference: '空腹血糖: 3.9-6.1mmol/L; 餐后2小时血糖: <7.8mmol/L',
-          result: '',
-          status: 'NORMAL',
-          analysis: ''
-        },
-        {
-          id: 'thyroid_function',
-          name: '甲状腺功能',
-          reference: 'TSH: 0.27-4.2mIU/L; FT3: 3.1-6.8pmol/L; FT4: 12-22pmol/L',
-          result: '',
-          status: 'NORMAL',
-          analysis: ''
-        }
-      ];
-    },
+  
     formatGender(gender) {
       // 根据实际需求实现性别格式化逻辑
       if (gender === 1) return '男';
@@ -743,5 +654,13 @@ body .main-container {
   color: #F56C6C;
   font-size: 12px;
   line-height: 1.4;
+}
+.abnormal-text {
+  color: #F56C6C;
+  font-weight: bold;
+}
+
+.abnormal-input {
+  color: #F56C6C;
 }
 </style>
