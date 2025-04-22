@@ -365,8 +365,26 @@ export default {
           packageName: data.packageName || '未知套餐'
         };
 
-        // 设置体检项目和结果
-        if (Array.isArray(data.results)) {
+        // 如果是新建模式，先获取套餐项目列表
+        if (this.mode === 'new' && this.examInfo.packageId) {
+          try {
+            const packageItemsResponse = await getPackageItems(this.examInfo.packageId);
+            if (packageItemsResponse.data && Array.isArray(packageItemsResponse.data)) {
+              this.examItems = packageItemsResponse.data.map(item => ({
+                id: item.id,
+                itemName: item.name || '',
+                referenceValue: item.referenceValue || '暂无参考值',
+                result: '',
+                status: 'NORMAL',
+                analysis: ''
+              }));
+            }
+          } catch (error) {
+            console.error('获取体检套餐项目失败:', error);
+            this.$message.error('获取体检套餐项目失败: ' + (error.message || '未知错误'));
+          }
+        } else if (Array.isArray(data.results)) {
+          // 编辑或只读模式下，使用已有的结果数据
           this.examItems = data.results.map(item => ({
             id: item.itemId,
             itemName: item.itemName || '',

@@ -88,6 +88,13 @@
             @click="handleDetail(row)">
             详情
           </el-button>
+          <el-button
+            v-if="row.status === 3 || row.statusString === 'COMPLETED'"
+            size="mini"
+            type="success"
+            @click="handleViewResult(row)">
+            体检结果
+          </el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -505,6 +512,10 @@ export default {
     handleDetail(row) {
       console.log('查看预约详情:', row.id)
       this.$router.push(`/exam/appointment/detail/${row.id}`)
+    },
+    handleViewResult(row) {
+      console.log('查看体检记录:', row.id)
+      this.$router.push(`/exam/records/appointment/${row.id}`)
     },
     goToManagement() {
       this.$router.push('/exam/appointment/management')

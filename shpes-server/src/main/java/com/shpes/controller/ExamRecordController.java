@@ -69,6 +69,13 @@ public class ExamRecordController {
         return CommonResult.success(recordService.getRecordDetail(id));
     }
 
+//    @ApiOperation("根据预约ID获取记录详情")
+//    @GetMapping("/appointment/{appointmentId}")
+//    @RequiresPermission("exam:record")
+//    public CommonResult<ExamRecordDetailVO> getRecordByAppointmentId(@PathVariable Long appointmentId) {
+//        return CommonResult.success(recordService.getRecordDetailByAppointmentId(appointmentId));
+//    }
+
     @ApiOperation("获取用户体检记录列表")
     @GetMapping("/user/{userId}")
     @RequiresPermission("exam:record")
