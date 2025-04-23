@@ -174,7 +174,7 @@
 </template>
 
 <script>
-import { getExamReport, getPackageItems, submitExamResults, updateExamResults, submitConclusion, getResultsByRecordId } from '@/api/exam/result'
+import { getPackageItems, submitExamResults, updateExamResults } from '@/api/exam/result'
 import { getRecordDetail } from '@/api/exam/record'
 
 export default {
@@ -225,11 +225,6 @@ export default {
              this.conclusionForm.mainFindings && 
              this.conclusionForm.conclusion && 
              this.conclusionForm.suggestion
-    },
-    canSubmitConclusion() {
-      // 只读模式下不允许提交
-      if (this.isReadonlyMode) return false
-      return this.conclusionForm.mainFindings && this.conclusionForm.conclusion && this.conclusionForm.suggestion
     },
     // 编辑模式的计算属性
     isEditMode() {
@@ -289,7 +284,7 @@ export default {
     },
     // 修复滚动问题的方法
     fixScrollIssue() {
-      // 1. 直接给app-main添加样式覆盖
+      // 统一使用样式注入
       let styleEl = document.getElementById('app-main-scroll-fix')
       if (!styleEl) {
         styleEl = document.createElement('style')
@@ -297,37 +292,21 @@ export default {
         document.head.appendChild(styleEl)
       }
       styleEl.textContent = `
-        .app-main {
+        .app-main, .main-container, .exam-result-scroll-wrapper {
           overflow: auto !important;
           height: auto !important;
+        }
+        .app-main {
           min-height: calc(100vh - 50px) !important;
         }
-        .main-container {
-          overflow: auto !important;
-        }
         .exam-result-scroll-wrapper {
-          overflow-y: auto !important;
-          height: auto !important;
           min-height: calc(100vh - 90px) !important;
           padding-bottom: 100px !important;
         }
+        body, html {
+          overflow: auto !important;
+        }
       `
-
-      // 2. 直接修改DOM元素的样式
-      const appMain = document.querySelector('.app-main')
-      if (appMain) {
-        appMain.style.overflow = 'auto'
-        appMain.style.height = 'auto'
-      }
-
-      const mainContainer = document.querySelector('.main-container')
-      if (mainContainer) {
-        mainContainer.style.overflow = 'auto'
-      }
-
-      // 3. 防止页面滚动锁定
-      document.body.style.overflow = 'auto'
-      document.documentElement.style.overflow = 'auto'
     },
 
     async getExamInfo() {
@@ -370,8 +349,9 @@ export default {
           try {
             const packageItemsResponse = await getPackageItems(this.examInfo.packageId);
             if (packageItemsResponse.data && Array.isArray(packageItemsResponse.data)) {
+              // 新增模式下，只使用itemId作为标识
               this.examItems = packageItemsResponse.data.map(item => ({
-                id: item.id,
+                itemId: item.id, // 体检项目ID
                 itemName: item.name || '',
                 referenceValue: item.referenceValue || '暂无参考值',
                 result: '',
@@ -384,9 +364,9 @@ export default {
             this.$message.error('获取体检套餐项目失败: ' + (error.message || '未知错误'));
           }
         } else if (Array.isArray(data.results)) {
-          // 编辑或只读模式下，使用已有的结果数据
+          // 编辑或只读模式下，使用resultId作为标识
           this.examItems = data.results.map(item => ({
-            id: item.itemId,
+            resultId: item.id, // 体检结果ID
             itemName: item.itemName || '',
             referenceValue: item.referenceValue || '暂无参考值',
             result: item.value || '',
@@ -428,13 +408,6 @@ export default {
         type: 'results'
       }
     },
-    handleSubmitConclusion() {
-      this.submitDialog = {
-        visible: true,
-        message: '确认提交体检信息吗？',
-        type: 'conclusion'
-      }
-    },
     async confirmSubmit() {
       await this.saveResults()
       this.submitDialog.visible = false
@@ -471,10 +444,11 @@ export default {
 
     async createResults(filledItems) {
       const data = {
+        id: this.examInfo.id,
         appointmentId: this.examInfo.appointmentId,
         items: filledItems.map(item => ({
-          itemId: Number(item.id),
-          itemName: item.name,
+          itemId: Number(item.itemId), // 新增模式只使用itemId
+          itemName: item.itemName,
           result: item.result,
           status: item.status === 'ABNORMAL' ? 'ABNORMAL' : 'NORMAL',
           analysis: item.analysis || ''
@@ -487,6 +461,9 @@ export default {
       console.log('正在保存体检结果，数据:', data);
       await submitExamResults(data);
       this.$message.success('检查结果保存成功');
+      
+      // 提交成功后跳转到体检记录列表页面
+      this.$router.push('/exam/result')
     },
 
     async updateResults(numericId, filledItems) {
@@ -494,7 +471,7 @@ export default {
         id: numericId,
         appointmentId: this.examInfo.appointmentId,
         items: filledItems.map(item => ({
-          id: Number(item.id),
+          id: Number(item.resultId), // 编辑模式只使用resultId
           result: item.result,
           status: item.status,
           analysis: item.analysis || ''
@@ -507,53 +484,12 @@ export default {
       console.log('正在更新体检结果，数据:', data);
       await updateExamResults(data);
       this.$message.success('检查结果更新成功');
+      // 提交成功后直接跳转到体检记录列表页面，不再调用getExamInfo
+      this.loading = false; // 确保关闭loading状态
+      this.$router.push('/exam/result');
+      return; // 直接返回，避免后续代码执行
     },
-    async saveConclusion() {
-      try {
-        // 确保ID是有效的数字
-        const recordId = this.$route.query.id;
-        const numericId = Number(recordId);
-        if (isNaN(numericId)) {
-          this.$message.error('记录ID不是有效的数字，无法提交结论。');
-          console.error('无效的记录ID:', recordId, typeof recordId);
-          return;
-        }
 
-        const data = {
-          id: numericId, // 使用数字类型ID
-          ...this.conclusionForm
-        }
-
-        console.log(`正在${this.isEditMode ? '更新' : '提交'}体检结论，使用ID:`, numericId);
-        await submitConclusion(data)
-        this.$message.success(`体检结论${this.isEditMode ? '更新' : '提交'}成功`)
-
-        // 根据当前模式决定后续操作
-        if (this.isEditMode) {
-          // 编辑模式下，结论更新成功后可能返回上一页或刷新页面
-          this.$confirm('结论更新成功，是否返回体检记录管理页面?', '提示', {
-            confirmButtonText: '返回列表',
-            cancelButtonText: '继续编辑',
-            type: 'success'
-          }).then(() => {
-            // 返回体检记录管理页面
-            this.$router.push('/exam/result');
-          }).catch(() => {
-            // 继续留在当前页面编辑
-          });
-        } else {
-          // 新建模式下，跳转到报告页面
-          const reportPath = `/exam/report/detail`
-          this.$router.push({
-            path: reportPath,
-            query: {id: numericId}
-          })
-        }
-      } catch (error) {
-        console.error(`${this.isEditMode ? '更新' : '提交'}体检结论失败:`, error)
-        this.$message.error(`${this.isEditMode ? '更新' : '提交'}失败: ` + (error.message || '未知错误'))
-      }
-    },
   
     formatGender(gender) {
       // 根据实际需求实现性别格式化逻辑

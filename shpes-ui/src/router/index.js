@@ -94,19 +94,13 @@ export const asyncRoutes = [
         path: 'appointment',
         component: () => import('../views/exam/appointment/index.vue'),
         name: 'ExamAppointment',
-        meta: { title: '在线预约', icon: 'date', permissions: ['exam:appointment'] }
+        meta: { title: '在线预约', icon: 'date', permissions: ['exam:appointment:online'] }
       },
       {
         path: 'appointment/list',
         component: () => import('../views/exam/appointment/list.vue'),
         name: 'ExamAppointmentList',
-        meta: { title: '我的预约', icon: 'notebook-1', permissions: ['exam:appointment'] }
-      },
-      {
-        path: 'result/my',
-        component: () => import('../views/exam/result/myResult.vue'),
-        name: 'MyExamResult',
-        meta: { title: '我的体检结果', icon: 'view', permissions: ['exam:result'] }
+        meta: { title: '我的预约', icon: 'notebook-1', permissions: ['exam:appointment:my'] }
       },
       {
         path: 'appointment/management',

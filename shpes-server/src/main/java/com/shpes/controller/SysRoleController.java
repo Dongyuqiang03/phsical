@@ -6,6 +6,7 @@ import com.shpes.common.constant.RoleConstants;
 import com.shpes.annotation.RequiresPermission;
 import com.shpes.entity.SysRole;
 import com.shpes.service.SysRoleService;
+import com.shpes.vo.PermissionTreeVO;
 import com.shpes.vo.RoleDetailVO;
 import com.shpes.vo.RoleVO;
 import io.swagger.annotations.Api;
@@ -115,4 +116,11 @@ public class SysRoleController {
     public CommonResult<List<String>> getRoleCodes(@RequestBody List<Long> roleIds) {
         return CommonResult.success(roleService.getRoleCodes(roleIds));
     }
-} 
+
+    @ApiOperation("获取权限树")
+    @GetMapping("/permission-tree")
+    @RequiresPermission("system:role")
+    public CommonResult<List<PermissionTreeVO>> getPermissionTree() {
+        return CommonResult.success(roleService.getPermissionTree());
+    }
+}

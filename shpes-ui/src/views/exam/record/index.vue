@@ -128,13 +128,13 @@
               {{ scope.row.status === 0 ? '查看预约' : '查看详情' }}
             </el-button>
             
-            <!-- 已完成状态：添加打印报告按钮 -->
+            <!-- 确定录入完成后，最后提交体检结果，之后用户就可以看到 -->
             <el-button
               v-if="scope.row.status === 2"
               size="mini"
               type="info"
-              @click="handlePrintReport(scope.row)">
-              打印报告
+              @click="handleSubmitReport(scope.row)">
+              提交报告
             </el-button>
           </template>
         </el-table-column>
@@ -300,7 +300,7 @@ export default {
         query: { id: numericId, mode: 'edit' } 
       });
     },
-    handlePrintReport(row) {
+    handleSubmitReport(row) {
       if (!this.validateRowId(row)) return;
       
       const numericId = Number(row.id);

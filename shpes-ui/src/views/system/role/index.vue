@@ -172,7 +172,8 @@ export default {
       permissionData: [], // 权限树数据
       permissionProps: {
         children: 'children',
-        label: 'name'
+        label: 'permissionName',
+        id: 'id'
       },
       checkedPermissions: [] // 已选权限ID
     }
@@ -303,8 +304,9 @@ export default {
     async handlePermission(row) {
       try {
         const { data } = await getRolePermissions(row.id)
-        this.permissionData = data.permissions
-        this.checkedPermissions = data.checkedKeys
+        this.permissionData = data.permissions || []
+        this.checkedPermissions = data.checkedKeys || []
+        this.temp.id = row.id
         this.permissionVisible = true
       } catch (error) {
         console.error('获取角色权限失败:', error)

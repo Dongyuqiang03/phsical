@@ -3,6 +3,7 @@ package com.shpes.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.shpes.common.api.CommonPage;
 import com.shpes.entity.SysRole;
+import com.shpes.vo.PermissionTreeVO;
 import com.shpes.vo.RoleDetailVO;
 import com.shpes.vo.RoleVO;
 
@@ -83,4 +84,9 @@ public interface SysRoleService extends IService<SysRole> {
      * 获取角色权限ID列表
      */
     List<Long> getRolePermissionIds(Long roleId);
+
+    /**
+     * 获取权限树
+     */
+    List<PermissionTreeVO> getPermissionTree();
 }

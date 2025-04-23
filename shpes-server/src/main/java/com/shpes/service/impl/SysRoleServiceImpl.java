@@ -6,16 +6,20 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.shpes.common.api.CommonPage;
 import com.shpes.common.enums.ResultCode;
 import com.shpes.common.exception.ApiException;
+import com.shpes.entity.SysPermission;
 import com.shpes.entity.SysRole;
 import com.shpes.entity.SysRolePermission;
 import com.shpes.entity.SysUserRole;
+import com.shpes.mapper.SysPermissionMapper;
 import com.shpes.mapper.SysRoleMapper;
 import com.shpes.mapper.SysRolePermissionMapper;
 import com.shpes.mapper.SysUserRoleMapper;
 import com.shpes.service.SysRoleService;
+import com.shpes.vo.PermissionTreeVO;
 import com.shpes.vo.RoleDetailVO;
 import com.shpes.vo.RoleVO;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,10 +27,14 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
 public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> implements SysRoleService {
+
+    @Autowired
+    private SysPermissionMapper permissionMapper;
     
     @Autowired
     private SysRolePermissionMapper rolePermissionMapper;
@@ -247,5 +255,35 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole> impl
         vo.setStatus(role.getStatus());
         vo.setCreateTime(role.getCreateTime());
         return vo;
+    }
+
+    @Override
+    public List<PermissionTreeVO> getPermissionTree() {
+        // 1. 获取所有启用状态的权限列表
+        List<SysPermission> allPermissions = permissionMapper.selectList(
+                new LambdaQueryWrapper<SysPermission>()
+                        .eq(SysPermission::getStatus, 1)
+                        .orderByAsc(SysPermission::getId)
+        );
+
+        // 2. 将权限列表转换为VO对象
+        List<PermissionTreeVO> permissionVOList = allPermissions.stream().map(permission -> {
+            PermissionTreeVO vo = new PermissionTreeVO();
+            BeanUtils.copyProperties(permission, vo);
+            return vo;
+        }).collect(Collectors.toList());
+
+        // 3. 构建父子关系map
+        Map<Long, List<PermissionTreeVO>> parentChildMap = permissionVOList.stream()
+                .filter(vo -> vo.getParentId() != null)
+                .collect(Collectors.groupingBy(PermissionTreeVO::getParentId));
+
+        // 4. 递归设置子节点
+        permissionVOList.forEach(vo -> vo.setChildren(parentChildMap.get(vo.getId())));
+
+        // 5. 返回根节点列表
+        return permissionVOList.stream()
+                .filter(vo -> vo.getParentId() == null)
+                .collect(Collectors.toList());
     }
 }
