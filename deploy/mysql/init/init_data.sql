@@ -114,13 +114,16 @@ INSERT INTO sys_permission (permission_name, permission_code, permission_type, p
 
 -- 体检管理
 ('体检管理', 'exam', 1, NULL, '/exam', 'Layout', 'exam'),
-('体检项目', 'exam:item', 1, 8, 'item', 'exam/item/index', 'item'),
-('体检套餐', 'exam:package', 1, 8, 'package', 'exam/package/index', 'package'),
-('预约时间段', 'exam:timeslot', 1, 8, 'timeslot', 'exam/timeslot/index', 'time'),
-('预约管理', 'exam:appointment', 1, 8, 'appointment', 'exam/appointment/index', 'appointment'),
-('体检记录', 'exam:record', 1, 8, 'record', 'exam/record/index', 'record'),
-('体检结果', 'exam:result', 1, 8, 'result', 'exam/result/index', 'result'),
-('体检项目分类', 'exam:category', 1, 8, 'category', 'exam/category/index', 'category');
+('体检项目', 'exam:item', 1, 7, 'item', 'exam/item/index', 'item'),
+('体检套餐', 'exam:package', 1, 7, 'package', 'exam/package/index', 'package'),
+('预约时间段', 'exam:timeslot', 1, 7, 'timeslot', 'exam/timeslot/index', 'time'),
+('预约管理', 'exam:appointment', 1, 7, 'appointment', 'exam/appointment/index', 'appointment'),
+('体检记录', 'exam:record', 1, 7, 'record', 'exam/record/index', 'record'),
+('体检结果', 'exam:result', 1, 7, 'result', 'exam/result/index', 'result'),
+('体检项目分类', 'exam:category', 1, 7, 'category', 'exam/category/index', 'category'),
+('在线预约','exam:appointment:online',1,7,'appointment','',''),
+('我的预约','exam:appointment:my',1,7,'appointment','','');
+
 
 -- 为系统管理员角色分配所有权限
 INSERT INTO sys_role_permission (role_id, permission_id)
@@ -132,7 +135,7 @@ SELECT 2, id FROM sys_permission WHERE permission_code LIKE 'exam%';
 
 -- 为普通用户分配必要的菜单权限
 INSERT INTO sys_role_permission (role_id, permission_id)
-SELECT 3, id FROM sys_permission WHERE permission_code IN ('exam:item', 'exam:category','exam:appointment');
+SELECT 3, id FROM sys_permission WHERE permission_code IN ('exam', 'exam:appointment:online','exam:appointment:my');
 
 alter table exam_record
     modify status tinyint default 0 not null comment '状态(0:待体检 1-进行中(未录入结果) 2-进行中(已录入结果) 3-已完成';

@@ -94,3 +94,11 @@ export function getAllRoles() {
     method: 'get'
   })
 } 
+
+// 获取所有角色（用于下拉选择）
+export function getPermissionTree() {
+  return request({
+    url: '/api/system/role/permission-tree',
+    method: 'get'
+  })
+} 

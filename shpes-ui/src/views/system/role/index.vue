@@ -135,7 +135,7 @@
 
 <script>
 import { mapGetters } from 'vuex'
-import { getRoleList, createRole, updateRole, deleteRole, batchDeleteRole, updateRoleStatus, getRolePermissions, updateRolePermissions } from '@/api/role'
+import { getRoleList, createRole, updateRole, deleteRole, batchDeleteRole, getPermissionTree, updateRolePermissions } from '@/api/role'
 
 export default {
   name: 'Role',
@@ -303,13 +303,19 @@ export default {
     },
     async handlePermission(row) {
       try {
-        const { data } = await getRolePermissions(row.id)
-        this.permissionData = data.permissions || []
-        this.checkedPermissions = data.checkedKeys || []
+        // 获取权限树数据
+        const { data: treeData } = await getPermissionTree()
+        this.permissionData = treeData || []
+        
+        // 获取当前角色已有的权限
+        const { data: rolePermissions } = await getRolePermissions(row.id)
+        this.checkedPermissions = rolePermissions || []
+        
         this.temp.id = row.id
         this.permissionVisible = true
       } catch (error) {
         console.error('获取角色权限失败:', error)
+        this.$message.error('获取角色权限失败')
       }
     },
     async submitPermissions() {
