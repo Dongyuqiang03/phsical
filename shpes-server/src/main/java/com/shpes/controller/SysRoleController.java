@@ -80,7 +80,7 @@ public class SysRoleController {
     }
 
     @ApiOperation("分配角色权限")
-    @PostMapping("/{roleId}/permissions")
+    @PutMapping("/{roleId}/permissions")
     @RequiresPermission("system:role")
     public CommonResult<Void> assignPermissions(
             @PathVariable Long roleId,

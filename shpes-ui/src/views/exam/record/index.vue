@@ -125,7 +125,7 @@
               size="mini"
               type="success"
               @click="handleReview(scope.row)">
-              {{ scope.row.status === 0 ? '查看预约' : '查看详情' }}
+              {{ scope.row.status === 0 ? '查看预约' : '查看结果' }}
             </el-button>
             
             <!-- 确定录入完成后，最后提交体检结果，之后用户就可以看到 -->
@@ -304,25 +304,21 @@ export default {
       if (!this.validateRowId(row)) return;
       
       const numericId = Number(row.id);
-      console.log('准备打印体检报告，ID:', numericId);
+      console.log('准备提交体检结果，ID:', numericId);
       
-      // 根据实际情况选择实现方式：
-      // 1. 导出PDF文件
-      this.$confirm('确定要导出该体检报告吗?', '提示', {
+      this.$confirm('确定要提交该体检报告吗? 提交后将完成此次体检记录。', '提示', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
-        type: 'info'
+        type: 'warning'
       }).then(() => {
         this.loading = true;
-        // 调用导出报告API，假设API在record.js中定义
-        import('@/api/exam/record').then(({ exportExamReport }) => {
-          exportExamReport(numericId).then(response => {
-            // 处理文件下载
-            this.handleBlobDownload(response, `体检报告_${row.examNo || numericId}.pdf`);
-            this.$message.success('报告导出成功');
+        import('@/api/exam/record').then(({ completeRecord }) => {
+          completeRecord(numericId).then(() => {
+            this.$message.success('体检报告提交成功');
+            this.$router.push('/exam/result')
           }).catch(error => {
-            console.error('导出报告失败:', error);
-            this.$message.error('导出报告失败: ' + (error.message || '未知错误'));
+            console.error('提交报告失败:', error);
+            this.$message.error('提交报告失败: ' + (error.message || '未知错误'));
           }).finally(() => {
             this.loading = false;
           });

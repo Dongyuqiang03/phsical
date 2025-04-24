@@ -14,6 +14,7 @@ import com.shpes.mapper.ExamAppointmentMapper;
 import com.shpes.mapper.ExamRecordMapper;
 import com.shpes.mapper.ExamResultMapper;
 import com.shpes.service.ExamRecordService;
+import com.shpes.service.ExamAppointmentService;
 import com.shpes.service.SysUserService;
 import com.shpes.vo.ExamRecordDetailVO;
 import com.shpes.vo.ExamRecordPageVO;
@@ -157,17 +158,24 @@ public class ExamRecordServiceImpl extends ServiceImpl<ExamRecordMapper, ExamRec
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public ExamRecordVO completeRecord(Long id, String conclusion, String suggestion) {
+    public ExamRecordVO completeRecord(Long id) {
         ExamRecord record = getById(id);
         if (record == null) {
             throw new ApiException(ResultCode.EXAM_RECORD_NOT_EXIST);
         }
         record.setStatus(3); // 设置状态为已完成
-        record.setConclusion(conclusion); // 使用 conclusion 字段替代 summary
-        record.setSuggestion(suggestion);
         record.setCompleteTime(LocalDateTime.now());
         record.setUpdateTime(LocalDateTime.now());
         updateById(record);
+
+        // 直接使用Mapper更新预约记录状态为已完成
+        if (record.getAppointmentId() != null) {
+            ExamAppointment appointment = new ExamAppointment();
+            appointment.setId(record.getAppointmentId());
+            appointment.setStatus(3); // 设置状态为已完成
+            appointment.setUpdateTime(LocalDateTime.now());
+            appointmentMapper.updateById(appointment);
+        }
         return convertToVO(record);
     }
 
@@ -213,6 +221,21 @@ public class ExamRecordServiceImpl extends ServiceImpl<ExamRecordMapper, ExamRec
         detail.setResults(results);
 
         return detail;
+    }
+
+    @Override
+    public ExamRecordDetailVO getRecordDetailByAppointmentId(Long appointmentId) {
+        // 根据预约ID查询体检记录
+        LambdaQueryWrapper<ExamRecord> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(ExamRecord::getAppointmentId, appointmentId);
+        ExamRecord record = getOne(wrapper);
+        
+        if (record == null) {
+            throw new ApiException(ResultCode.EXAM_RECORD_NOT_EXIST);
+        }
+        
+        // 获取体检记录详情
+        return getRecordDetail(record.getId());
     }
 
     private ExamRecordVO convertToVO(ExamRecord record) {

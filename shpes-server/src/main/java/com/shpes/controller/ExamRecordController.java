@@ -69,12 +69,12 @@ public class ExamRecordController {
         return CommonResult.success(recordService.getRecordDetail(id));
     }
 
-//    @ApiOperation("根据预约ID获取记录详情")
-//    @GetMapping("/appointment/{appointmentId}")
-//    @RequiresPermission("exam:record")
-//    public CommonResult<ExamRecordDetailVO> getRecordByAppointmentId(@PathVariable Long appointmentId) {
-//        return CommonResult.success(recordService.getRecordDetailByAppointmentId(appointmentId));
-//    }
+    @ApiOperation("根据预约ID获取记录详情")
+    @GetMapping("/appointment/{appointmentId}")
+    @RequiresPermission("exam:record")
+    public CommonResult<ExamRecordDetailVO> getRecordByAppointmentId(@PathVariable Long appointmentId) {
+        return CommonResult.success(recordService.getRecordDetailByAppointmentId(appointmentId));
+    }
 
     @ApiOperation("获取用户体检记录列表")
     @GetMapping("/user/{userId}")
@@ -119,10 +119,8 @@ public class ExamRecordController {
     @PutMapping("/{id}/complete")
     @RequiresPermission("exam:record")
     public CommonResult<ExamRecordVO> completeRecord(
-            @PathVariable Long id,
-            @RequestParam String conclusion,
-            @RequestParam(required = false) String suggestion) {
-        return CommonResult.success(recordService.completeRecord(id, conclusion, suggestion));
+            @PathVariable Long id) {
+        return CommonResult.success(recordService.completeRecord(id));
     }
 
     @ApiOperation("获取今日体检统计")

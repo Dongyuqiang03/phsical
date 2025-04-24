@@ -25,6 +25,11 @@ public interface ExamRecordService {
      * 获取体检记录详情
      */
     ExamRecordDetailVO getRecordDetail(Long id);
+
+    /**
+     * 根据预约ID获取体检记录详情
+     */
+    ExamRecordDetailVO getRecordDetailByAppointmentId(Long appointmentId);
     
     /**
      * 获取用户的体检记录列表（不分页）
@@ -71,8 +76,10 @@ public interface ExamRecordService {
 
     /**
      * 完成体检记录
+     * @param id 记录ID
+     * @return 更新后的体检记录
      */
-    ExamRecordVO completeRecord(Long id, String conclusion, String suggestion);
+    ExamRecordVO completeRecord(Long id);
 
     /**
      * 获取今日体检统计

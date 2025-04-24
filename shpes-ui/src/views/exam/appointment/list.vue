@@ -514,8 +514,24 @@ export default {
       this.$router.push(`/exam/appointment/detail/${row.id}`)
     },
     handleViewResult(row) {
-      console.log('查看体检记录:', row.id)
-      this.$router.push(`/exam/records/appointment/${row.id}`)
+      if (!row.id) {
+        this.$message.error('该记录缺少ID字段，无法查看详情。请联系管理员检查数据完整性。');
+        return;
+      }
+      
+      const numericId = Number(row.id);
+      if (isNaN(numericId)) {
+        this.$message.error('记录ID不是有效的数字，无法查看详情。');
+        console.error('无效的记录ID:', row.id, typeof row.id);
+        return;
+      }
+      
+      console.log('跳转到详情页面，使用ID:', numericId);
+      // 统一使用input.vue页面，设置为只读模式
+      this.$router.push({ 
+        path: '/exam/result/input', 
+        query: { id: numericId, mode: 'readonly' } 
+      });
     },
     goToManagement() {
       this.$router.push('/exam/appointment/management')

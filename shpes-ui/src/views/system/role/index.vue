@@ -124,7 +124,17 @@
         show-checkbox
         node-key="id"
         :default-checked-keys="checkedPermissions"
-      />
+      >
+        <span slot-scope="{ node, data }" class="custom-tree-node">
+          <span>{{ data.permissionName }}</span>
+          <span class="permission-type" :class="{'menu': data.permissionType === 1, 'button': data.permissionType === 2}">
+            {{ permissionTypeMap[data.permissionType] }}
+          </span>
+          <el-tooltip v-if="data.permissionCode" effect="dark" :content="data.permissionCode" placement="right">
+            <i class="el-icon-info permission-code-icon"></i>
+          </el-tooltip>
+        </span>
+      </el-tree>
       <div slot="footer" class="dialog-footer">
         <el-button @click="permissionVisible = false">取消</el-button>
         <el-button type="primary" @click="submitPermissions">确定</el-button>
@@ -135,7 +145,7 @@
 
 <script>
 import { mapGetters } from 'vuex'
-import { getRoleList, createRole, updateRole, deleteRole, batchDeleteRole, getPermissionTree, updateRolePermissions } from '@/api/role'
+import { getRoleList, createRole, updateRole, deleteRole, batchDeleteRole, getPermissionTree, updateRolePermissions,getRolePermissions } from '@/api/role'
 
 export default {
   name: 'Role',
@@ -175,7 +185,11 @@ export default {
         label: 'permissionName',
         id: 'id'
       },
-      checkedPermissions: [] // 已选权限ID
+      checkedPermissions: [], // 已选权限ID
+      permissionTypeMap: {
+        1: '菜单',
+        2: '按钮'
+      }
     }
   },
   computed: {
@@ -304,31 +318,38 @@ export default {
     async handlePermission(row) {
       try {
         // 获取权限树数据
-        const { data: treeData } = await getPermissionTree()
-        this.permissionData = treeData || []
+        const response = await getPermissionTree()
+        if (response.code === 200) {
+          this.permissionData = response.data || []
+        } else {
+          throw new Error(response.message || '获取权限树失败')
+        }
         
         // 获取当前角色已有的权限
-        const { data: rolePermissions } = await getRolePermissions(row.id)
-        this.checkedPermissions = rolePermissions || []
+        const roleResponse = await getRolePermissions(row.id)
+        if (roleResponse.code === 200) {
+          this.checkedPermissions = roleResponse.data || []
+        } else {
+          throw new Error(roleResponse.message || '获取角色权限失败')
+        }
         
         this.temp.id = row.id
         this.permissionVisible = true
       } catch (error) {
         console.error('获取角色权限失败:', error)
-        this.$message.error('获取角色权限失败')
+        this.$message.error(error.message || '获取角色权限失败')
       }
     },
     async submitPermissions() {
       try {
         const checkedKeys = this.$refs.permissionTree.getCheckedKeys()
         const halfCheckedKeys = this.$refs.permissionTree.getHalfCheckedKeys()
-        await updateRolePermissions(this.temp.id, {
-          permissions: [...checkedKeys, ...halfCheckedKeys]
-        })
+        await updateRolePermissions(this.temp.id, [...checkedKeys, ...halfCheckedKeys])
         this.$message.success('权限设置成功')
         this.permissionVisible = false
       } catch (error) {
         console.error('设置角色权限失败:', error)
+        this.$message.error('设置角色权限失败')
       }
     },
     handleSizeChange(val) {
@@ -386,6 +407,38 @@ export default {
   display: flex;
   justify-content: center;
   background-color: #fff;
+}
+
+.custom-tree-node {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  padding-right: 8px;
+
+  .permission-type {
+    margin-left: 8px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 12px;
+    
+    &.menu {
+      background-color: #e1f3d8;
+      color: #67c23a;
+    }
+    
+    &.button {
+      background-color: #fdf6ec;
+      color: #e6a23c;
+    }
+  }
+
+  .permission-code-icon {
+    margin-left: 8px;
+    font-size: 14px;
+    color: #909399;
+    cursor: help;
+  }
 }
 </style>
 

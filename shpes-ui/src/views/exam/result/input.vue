@@ -317,10 +317,6 @@ export default {
 
         // 转换ID为数字并验证
         const numericId = Number(recordId);
-        if (isNaN(numericId)) {
-          this.$message.error('记录ID不是有效的数字');
-          return;
-        }
 
         // 获取体检记录详情
         const { data } = await getRecordDetail(numericId);
