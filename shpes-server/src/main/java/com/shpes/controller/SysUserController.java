@@ -2,8 +2,7 @@ package com.shpes.controller;
 
 import com.shpes.common.api.CommonPage;
 import com.shpes.common.api.CommonResult;
-import com.shpes.common.constant.RoleConstants;
-import com.shpes.dto.UserDTO;
+import com.shpes.dto.UserCreateDTO;
 import com.shpes.dto.UserQueryDTO;
 import com.shpes.annotation.RequiresPermission;
 import com.shpes.service.SysUserService;
@@ -17,7 +16,6 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import javax.validation.groups.Default;
-import java.util.List;
 
 /**
  * 用户管理控制器 - 处理系统用户管理相关操作
@@ -62,15 +60,15 @@ public class SysUserController {
     @ApiOperation("创建用户")
     @PostMapping
     @RequiresPermission("system:user")
-    public CommonResult<UserVO> createUser(@Validated({UserDTO.Create.class, Default.class}) @RequestBody UserDTO userDTO) {
-        return CommonResult.success(userService.createUser(userDTO));
+    public CommonResult<UserVO> createUser(@Validated({UserCreateDTO.Create.class, Default.class}) @RequestBody UserCreateDTO userCreateDTO) {
+        return CommonResult.success(userService.createUser(userCreateDTO));
     }
 
     @ApiOperation("更新用户")
     @PutMapping("/{id}")
     @RequiresPermission("system:user")
-    public CommonResult<UserVO> updateUser(@PathVariable Long id, @Valid @RequestBody UserDTO userDTO) {
-        return CommonResult.success(userService.updateUser(id, userDTO));
+    public CommonResult<UserVO> updateUser(@PathVariable Long id, @Valid @RequestBody UserCreateDTO userCreateDTO) {
+        return CommonResult.success(userService.updateUser(id, userCreateDTO));
     }
 
     @ApiOperation("删除用户")

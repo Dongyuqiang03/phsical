@@ -6,8 +6,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.shpes.common.api.CommonPage;
 import com.shpes.common.enums.ResultCode;
 import com.shpes.common.exception.ApiException;
-import com.shpes.common.constant.RoleConstants;
-import com.shpes.dto.UserDTO;
+import com.shpes.dto.UserCreateDTO;
 import com.shpes.dto.UserQueryDTO;
 import com.shpes.entity.SysUser;
 import com.shpes.entity.SysUserRole;
@@ -18,23 +17,18 @@ import com.shpes.service.SysDepartmentService;
 import com.shpes.service.SysRoleService;
 import com.shpes.service.SysUserService;
 import com.shpes.utils.PasswordUtils;
-import com.shpes.utils.SecurityUtils;
 import com.shpes.vo.RoleVO;
 import com.shpes.vo.UserVO;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -103,16 +97,16 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public UserVO createUser(UserDTO userDTO) {
+    public UserVO createUser(UserCreateDTO userCreateDTO) {
         // 检查唯一性
-        checkUnique(null, userDTO);
+        checkUnique(null, userCreateDTO);
 
         // 创建用户实体
         SysUser user = new SysUser();
-        BeanUtils.copyProperties(userDTO, user);
+        BeanUtils.copyProperties(userCreateDTO, user);
 
         // 设置密码
-        user.setPassword(org.apache.commons.lang3.StringUtils.isBlank(userDTO.getPassword()) ? PasswordUtils.encode(PasswordUtils.DEFAULT_PASSWORD) : PasswordUtils.encode(userDTO.getPassword()));
+        user.setPassword(org.apache.commons.lang3.StringUtils.isBlank(userCreateDTO.getPassword()) ? PasswordUtils.encode(PasswordUtils.DEFAULT_PASSWORD) : PasswordUtils.encode(userCreateDTO.getPassword()));
         user.setStatus(1);
         user.setCreateTime(LocalDateTime.now());
         user.setUpdateTime(LocalDateTime.now());
@@ -128,7 +122,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public UserVO updateUser(Long id, UserDTO userDTO) {
+    public UserVO updateUser(Long id, UserCreateDTO userCreateDTO) {
         // 检查用户是否存在
         SysUser user = getById(id);
         if (user == null) {
@@ -136,15 +130,15 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         }
 
         // 检查唯一性
-        checkUnique(id, userDTO);
+        checkUnique(id, userCreateDTO);
 
         // 更新用户信息
-        BeanUtils.copyProperties(userDTO, user);
+        BeanUtils.copyProperties(userCreateDTO, user);
         user.setUpdateTime(LocalDateTime.now());
         updateById(user);
 
         // 更新用户角色关系
-        saveUserRoles(id, userDTO.getRoleIds());
+        saveUserRoles(id, userCreateDTO.getRoleIds());
 
         return convertToVO(user);
     }
@@ -262,10 +256,10 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     /**
      * 检查用户信息唯一性
      */
-    private void checkUnique(Long userId, UserDTO userDTO) {
+    private void checkUnique(Long userId, UserCreateDTO userCreateDTO) {
         // 检查用户名
         LambdaQueryWrapper<SysUser> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(SysUser::getUsername, userDTO.getUsername())
+        wrapper.eq(SysUser::getUsername, userCreateDTO.getUsername())
                 .ne(userId != null, SysUser::getId, userId);
         if (count(wrapper) > 0) {
             throw new ApiException(ResultCode.DUPLICATE_USERNAME);
@@ -273,7 +267,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 
         // 检查手机号
         wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(SysUser::getPhone, userDTO.getPhone())
+        wrapper.eq(SysUser::getPhone, userCreateDTO.getPhone())
                 .ne(userId != null, SysUser::getId, userId);
         if (count(wrapper) > 0) {
             throw new ApiException(ResultCode.DUPLICATE_USERNAME);

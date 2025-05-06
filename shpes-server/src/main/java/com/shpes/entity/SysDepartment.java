@@ -24,7 +24,7 @@ public class SysDepartment extends BaseEntity {
     @ApiModelProperty("部门编码")
     private String deptCode;
 
-    @ApiModelProperty("部门类型(1:医疗科室 2:其他部门)")
+    @ApiModelProperty("部门类型(1:医疗科室 2:教学院系 3:其他部门)")
     private Integer deptType;
 
     @ApiModelProperty("部门描述")

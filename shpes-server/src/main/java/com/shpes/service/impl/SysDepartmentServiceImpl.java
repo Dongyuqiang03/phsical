@@ -3,6 +3,8 @@ package com.shpes.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.shpes.common.enums.DepartmentTypeEnum;
+import com.shpes.common.enums.UserTypeEnum;
 import com.shpes.dto.DepartmentDTO;
 import com.shpes.entity.SysDepartment;
 import com.shpes.mapper.SysDepartmentMapper;
@@ -29,7 +31,7 @@ public class SysDepartmentServiceImpl extends ServiceImpl<SysDepartmentMapper, S
     private final SysDepartmentMapper departmentMapper;
 
     @Override
-    public boolean createDepartment(DepartmentDTO departmentDTO) {
+    public Boolean createDepartment(DepartmentDTO departmentDTO) {
         SysDepartment department = new SysDepartment();
         BeanUtils.copyProperties(departmentDTO, department);
         return this.save(department);
@@ -55,28 +57,38 @@ public class SysDepartmentServiceImpl extends ServiceImpl<SysDepartmentMapper, S
     }
 
     @Override
-    public List<DepartmentVO> getDepartmentList() {
-        List<SysDepartment> departments = departmentMapper.getDepartmentList();
-        return departments.stream()
+    public List<DepartmentVO> getDepartmentList(Integer userType) {
+        LambdaQueryWrapper<SysDepartment> wrapper = new LambdaQueryWrapper<>();
+        
+        // 根据用户类型筛选对应的部门类型
+        if (userType != null) {
+            List<Integer> deptTypes = DepartmentTypeEnum.getDeptTypesByUserType(UserTypeEnum.getByValue(userType));
+            wrapper.in(SysDepartment::getDeptType, deptTypes);
+        }
+        
+        wrapper.eq(SysDepartment::getStatus, 1)  // 只查询启用的部门
+                .orderByAsc(SysDepartment::getId);
+        
+        return list(wrapper).stream()
                 .map(this::convertToVO)
                 .collect(Collectors.toList());
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public boolean updateDepartment(SysDepartment department) {
+    public Boolean updateDepartment(SysDepartment department) {
         return this.updateById(department);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public boolean deleteDepartment(Long id) {
+    public Boolean deleteDepartment(Long id) {
         return this.removeById(id);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public boolean batchUpdateStatus(List<Long> ids, Integer status) {
+    public Boolean batchUpdateStatus(List<Long> ids, Integer status) {
         return departmentMapper.batchUpdateStatus(ids, status) > 0;
     }
 

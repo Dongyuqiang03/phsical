@@ -28,6 +28,9 @@ public class DepartmentVO {
     
     @ApiModelProperty("部门描述")
     private String description;
+
+    @ApiModelProperty("部门类型(1:医疗科室 2:教学院系 3:其他部门)")
+    private Integer deptType;
     
     @ApiModelProperty("状态：0-禁用，1-启用")
     private Integer status;

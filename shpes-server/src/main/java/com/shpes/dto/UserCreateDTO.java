@@ -12,7 +12,7 @@ import java.util.List;
  */
 @Data
 @ApiModel(description = "用户数据传输对象")
-public class UserDTO {
+public class UserCreateDTO {
     
     /**
      * 用于标识创建操作的验证组
@@ -23,9 +23,12 @@ public class UserDTO {
     private Long id;
 
     @NotBlank(message = "用户名不能为空", groups = {Create.class})
-    @Pattern(regexp = "^[a-zA-Z0-9_]{3,20}$", message = "用户名必须为3-20个字符，只能包含字母、数字和下划线")
     @ApiModelProperty(value = "用户名", required = true)
     private String username;
+    
+    // @NotBlank(message = "用户编号不能为空", groups = {Create.class})
+    @ApiModelProperty(value = "用户编号(学号/工号/医护编号)", required = true)
+    private String userCode;
     
     @NotBlank(message = "姓名不能为空", groups = {Create.class})
     @ApiModelProperty(value = "姓名", required = true)
@@ -59,4 +62,4 @@ public class UserDTO {
     
     @ApiModelProperty(value = "密码")
     private String password;
-} 
+}

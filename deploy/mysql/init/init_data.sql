@@ -10,7 +10,7 @@ VALUES ('管理员', 'ROLE_ADMIN', '系统管理员，可以进行系统管理')
 
 -- 初始化部门数据
 INSERT INTO sys_department (dept_name, dept_code, parent_id, dept_type, description) VALUES
--- 医疗科室
+-- 医疗科室 (type=1)
 ('内科', 'INTERNAL', NULL, 1, '内科系统检查'),
 ('心内科', 'CARDIOLOGY', 1, 1, '心脏相关检查'),
 ('消化内科', 'GASTROENTEROLOGY', 1, 1, '消化系统检查'),
@@ -28,8 +28,32 @@ INSERT INTO sys_department (dept_name, dept_code, parent_id, dept_type, descript
 ('眼科', 'OPHTHALMOLOGY', NULL, 1, '眼科检查'),
 ('耳鼻喉科', 'ENT', NULL, 1, '耳鼻喉检查'),
 ('口腔科', 'DENTAL', NULL, 1, '口腔检查'),
--- 其他部门
-('系统管理', 'SYSTEM', NULL, 2, '系统管理部门');
+
+-- 教学院系 (type=2)
+('文学院', 'LIBERAL_ARTS', NULL, 2, '文学教育'),
+('外国语学院', 'FOREIGN_LANGUAGE', NULL, 2, '外语教育'),
+('经济学院', 'ECONOMICS', NULL, 2, '经济管理教育'),
+('管理学院', 'MANAGEMENT', NULL, 2, '工商管理教育'),
+('法学院', 'LAW', NULL, 2, '法学教育'),
+('马克思主义学院', 'MARXISM', NULL, 2, '思政教育'),
+('教育学院', 'EDUCATION', NULL, 2, '教育学研究'),
+('体育学院', 'SPORTS', NULL, 2, '体育教育'),
+('艺术学院', 'ARTS', NULL, 2, '艺术教育'),
+('数学与统计学院', 'MATH', NULL, 2, '数学教育'),
+('物理学院', 'PHYSICS', NULL, 2, '物理教育'),
+('化学化工学院', 'CHEMISTRY', NULL, 2, '化学工程教育'),
+('生命科学学院', 'LIFE_SCIENCE', NULL, 2, '生命科学教育'),
+('计算机科学与技术学院', 'CS', NULL, 2, '计算机教育'),
+('电子信息学院', 'ELECTRONICS', NULL, 2, '电子信息教育'),
+('机械工程学院', 'MECHANICAL', NULL, 2, '机械工程教育'),
+('土木工程学院', 'CIVIL', NULL, 2, '土木工程教育'),
+('环境科学与工程学院', 'ENVIRONMENTAL', NULL, 2, '环境工程教育'),
+('材料科学与工程学院', 'MATERIAL', NULL, 2, '材料工程教育'),
+
+-- 其他部门 (type=3)
+('校医院办公室', 'HOSPITAL_OFFICE', NULL, 3, '校医院行政管理'),
+('信息科', 'IT', NULL, 3, '信息系统管理');
+
 
 
 -- 初始化用户角色关联（系统管理员同时具有管理员和医护人员角色）

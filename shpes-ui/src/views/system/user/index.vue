@@ -246,8 +246,7 @@
 import { getToken } from '@/utils/auth'
 import Pagination from '@/components/Pagination'
 import { validUsername, validPhone, validEmail } from '@/utils/validate'
-import { formatDateTime } from '@/utils/date'
-import { getUserList, createUser, updateUser, deleteUser, batchDeleteUser, updateUserStatus, resetUserPassword, exportUser } from '@/api/user'
+import { getUserList, createUser, updateUser, deleteUser, batchDeleteUser, resetUserPassword, exportUser } from '@/api/user'
 import { getAllRoles } from '@/api/system/role'
 import { getAllDepartments } from '@/api/department'
 import { mapGetters } from 'vuex'
@@ -463,7 +462,7 @@ export default {
     },
     async getDepartmentOptions() {
       try {
-        const response = await getAllDepartments()
+        const response = await getAllDepartments(this.temp.userType)
         if (response.code === 200) {
           this.departmentOptions = response.data || []
         } else {
@@ -694,13 +693,10 @@ export default {
     downloadTemplate() {
       // TODO: 下载用户导入模板
     },
-    handleUserTypeChange(value) {
-      // 只更新部门必选验证规则
-      this.$set(this.rules.deptId, 0, {
-        required: value === 1,
-        message: value === 1 ? '医护人员必须选择部门' : '请选择部门',
-        trigger: 'change'
-      });
+    // 添加用户类型变更处理方法
+    async handleUserTypeChange(value) {
+      this.temp.deptId = undefined // 清空已选择的部门
+      await this.getDepartmentOptions() // 重新获取部门列表
     },
     getUserTypeName(type) {
       const typeMap = {

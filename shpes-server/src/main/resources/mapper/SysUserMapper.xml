@@ -7,6 +7,7 @@
         <id column="id" property="id"/>
         <result column="username" property="username"/>
         <result column="password" property="password"/>
+        <result column="user_code" property="userCode"/>
         <result column="real_name" property="realName"/>
         <result column="id_card" property="idCard"/>
         <result column="phone" property="phone"/>

@@ -1,8 +1,7 @@
 package com.shpes.service;
 
 import com.shpes.common.api.CommonPage;
-import com.shpes.dto.RegisterDTO;
-import com.shpes.dto.UserDTO;
+import com.shpes.dto.UserCreateDTO;
 import com.shpes.dto.UserQueryDTO;
 import com.shpes.entity.SysUser;
 import com.shpes.vo.UserVO;
@@ -31,12 +30,12 @@ public interface SysUserService extends IBaseService<SysUser> {
     /**
      * 创建用户
      */
-    UserVO createUser(UserDTO userDTO);
+    UserVO createUser(UserCreateDTO userCreateDTO);
 
     /**
      * 更新用户
      */
-    UserVO updateUser(Long id, UserDTO userDTO);
+    UserVO updateUser(Long id, UserCreateDTO userCreateDTO);
 
     /**
      * 更新用户状态

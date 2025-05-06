@@ -28,6 +28,9 @@ public class SysUser extends BaseEntity {
     @ApiModelProperty("密码")
     private String password;
 
+    @ApiModelProperty("用户编号(学号/工号/医护编号)")
+    private String userCode;
+
     @ApiModelProperty("真实姓名")
     private String realName;
 

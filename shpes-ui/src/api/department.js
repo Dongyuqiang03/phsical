@@ -36,10 +36,11 @@ export function getDepartmentUsers(id) {
 }
 
 // 获取所有部门（用于下拉选择）
-export function getAllDepartments() {
+export function getAllDepartments(userType) {
   return request({
-    url: '/api/system/department/all',
-    method: 'get'
+    url: '/system/department/all',
+    method: 'get',
+    params: { userType }
   })
 }
 
@@ -61,4 +62,4 @@ export function batchUpdateStatus(ids, status) {
       status
     }
   })
-} 
+}

@@ -15,6 +15,7 @@ CREATE TABLE sys_user
 (
     id          BIGINT       NOT NULL AUTO_INCREMENT COMMENT '用户ID',
     username    VARCHAR(50)  NOT NULL COMMENT '用户名',
+    user_code   VARCHAR(50)  NOT NULL COMMENT '用户编号(学号/工号/医护编号)',
     password    VARCHAR(100) NOT NULL COMMENT '密码',
     real_name   VARCHAR(50)  NOT NULL COMMENT '真实姓名',
     id_card     VARCHAR(18) COMMENT '身份证号',
@@ -67,7 +68,7 @@ CREATE TABLE sys_department
     dept_name   VARCHAR(50) NOT NULL COMMENT '部门名称',
     dept_code   VARCHAR(50) NOT NULL COMMENT '部门编码',
     parent_id   BIGINT COMMENT '父部门ID',
-    dept_type TINYINT NOT NULL COMMENT '部门类型(1:医疗科室 2:其他部门)',
+    dept_type TINYINT NOT NULL COMMENT '部门类型(1:医疗科室 2:行政部门 3:教学院系 4:后勤部门 5:其他部门)',
     description VARCHAR(255) COMMENT '部门描述',
     status      TINYINT     NOT NULL DEFAULT 1 COMMENT '状态(0:禁用 1:启用)',
     create_time DATETIME    NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',

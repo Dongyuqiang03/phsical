@@ -39,8 +39,10 @@ public class SysDepartmentController {
 
     @ApiOperation("获取部门列表")
     @GetMapping("/all")
-    public CommonResult<List<DepartmentVO>> all() {
-        return CommonResult.success(departmentService.getDepartmentList());
+    public CommonResult<List<DepartmentVO>> all(
+            @ApiParam("用户类型：1-医护人员，2-教职工，3-学生") 
+            @RequestParam(required = false) Integer userType) {
+        return CommonResult.success(departmentService.getDepartmentList(userType));
     }
 
     @ApiOperation("创建部门")

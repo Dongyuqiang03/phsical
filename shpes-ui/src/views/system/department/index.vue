@@ -29,7 +29,7 @@
       <div class="table-container" style="overflow: auto; max-height: calc(100vh - 280px);">
         <el-table
           v-loading="listLoading"
-          :data="paginatedData"
+          :data="list"
           border
           fit
           highlight-current-row
@@ -39,7 +39,7 @@
           <el-table-column label="部门名称" prop="deptName" />
           <el-table-column label="部门类型" prop="deptType">
             <template slot-scope="{row}">
-              <el-tag :type="row.deptType === 1 ? 'success' : 'info'">{{ row.deptType === 1 ? '医疗科室' : '其他部门' }}</el-tag>
+              <el-tag :type="getDeptTypeTag(row.deptType)">{{ getDeptTypeLabel(row.deptType) }}</el-tag>
             </template>
           </el-table-column>
           <el-table-column label="部门编码" prop="deptCode" width="120" />
@@ -74,9 +74,9 @@
         <el-pagination
           class="department-pagination"
           :pager-count="device === 'mobile' ? 3 : 5"
-          :current-page="page"
+          :current-page="listQuery.pageNum"
           :page-sizes="[10, 20, 30, 50]"
-          :page-size="size"
+          :page-size="listQuery.pageSize"
           :layout="device === 'mobile' ? 'prev, pager, next' : 'total, sizes, prev, pager, next'"
           :total="effectiveTotal"
           @size-change="handleSizeChange"
@@ -162,7 +162,7 @@ export default {
       total: 0,
       selectedIds: [],
       listQuery: {
-        dpName: '',
+        deptName: '', // 修改参数名从name为deptName
         pageNum: 1,
         pageSize: 10
       },
@@ -185,9 +185,7 @@ export default {
           { required: true, message: '请输入部门编码', trigger: 'blur' }
         ]
       },
-      userList: [],
-      page: 1,
-      size: 10
+      userList: []
     }
   },
   computed: {
@@ -195,7 +193,26 @@ export default {
       'device'
     ]),
     effectiveTotal() {
-      return this.list.length;
+      // 如果API返回的total大于0，则使用API返回的total
+      if (this.total > 0) {
+        return this.total;
+      }
+      
+      // 如果API返回total为0但是有数据，则至少返回列表长度或者一个估算值
+      if (this.list.length > 0) {
+        // 如果当前不是第一页，我们可以估算总数
+        if (this.listQuery.pageNum > 1) {
+          return (this.listQuery.pageNum - 1) * this.listQuery.pageSize + this.list.length;
+        }
+        // 如果是第一页且记录不满一页，返回实际记录数
+        if (this.list.length < this.listQuery.pageSize) {
+          return this.list.length;
+        }
+        // 如果是第一页且记录数等于每页数量，返回每页数量的2倍作为估计
+        return this.list.length * 2;
+      }
+      
+      return 0;
     },
     totalPages() {
       return Math.ceil(this.list.length / this.size);
@@ -215,16 +232,12 @@ export default {
     async getList() {
       this.listLoading = true
       try {
-        // Update listQuery with current page and size
-        this.listQuery.pageNum = this.page
-        this.listQuery.pageSize = this.size
-        
         const res = await getDepartmentList(this.listQuery)
         if (res.code === 200) {
-          this.list = res.data.records || res.data
-          if (res.data.total) {
-            this.total = res.data.total
-          }
+          this.list = res.data.records
+          this.total = res.data.total
+          this.page = res.data.current
+          this.size = res.data.size
         }
       } finally {
         this.listLoading = false
@@ -239,8 +252,7 @@ export default {
       this.listQuery = {
         pageNum: 1,
         pageSize: 10,
-        dpName: '',
-        name: undefined
+        deptName: '' // 修改参数名
       }
       this.page = 1
       this.size = 10
@@ -388,20 +400,41 @@ export default {
       })
     },
     handleSizeChange(val) {
-      this.size = val;
-      this.page = 1;
-      this.getList();
-      // Fix scrolling issue when changing page size
-      this.$nextTick(() => {
-        document.documentElement.scrollTop = 0;
-        document.body.scrollTop = 0;
-        const mainContent = document.querySelector('.main-content');
-        if (mainContent) mainContent.scrollTop = 0;
-      });
-    },
-    handleCurrentChange(page) {
-      this.page = page
+      this.listQuery.pageSize = val
       this.getList()
+    },
+    handleCurrentChange(val) {
+      this.listQuery.pageNum = val
+      this.getList()
+    },
+    resetQuery() {
+      this.listQuery = {
+        pageNum: 1,
+        pageSize: 10,
+        deptName: ''
+      }
+      this.getList()
+    },
+    handleFilter() {
+      this.listQuery.pageNum = 1
+      this.getList()
+    },
+    
+    getDeptTypeLabel(type) {
+      const typeMap = {
+      1: '医疗科室',
+      2: '教学院系',
+      3: '其他部门'
+      }
+      return typeMap[type] || '未知类型'
+    },
+    getDeptTypeTag(type) {
+      const typeMap = {
+      1: 'success',
+      2: 'warning',
+      3: 'info'
+    }
+    return typeMap[type] || ''  
     }
   }
 }

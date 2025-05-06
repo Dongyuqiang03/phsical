@@ -26,7 +26,7 @@ public class DepartmentDTO {
     private String deptCode;
 
     @NotNull(message = "部门类型不能为空")
-    @ApiModelProperty("部门类型(1:医疗科室 2:其他部门)")
+    @ApiModelProperty("部门类型(1:医疗科室 2:教学院系 3:其他部门)")
     private Integer deptType;
 
     @ApiModelProperty("部门描述")

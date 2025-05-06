@@ -3,8 +3,7 @@ package com.shpes.controller;
 import com.shpes.common.api.CommonResult;
 import com.shpes.utils.CaptchaUtils;
 import com.shpes.dto.LoginDTO;
-import com.shpes.dto.PasswordDTO;
-import com.shpes.dto.UserDTO;
+import com.shpes.dto.UserCreateDTO;
 import com.shpes.service.AuthService;
 import com.shpes.service.SysUserService;
 import com.shpes.utils.SecurityUtils;
@@ -13,14 +12,12 @@ import com.shpes.vo.LoginVO;
 import com.shpes.vo.UserVO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
-import javax.validation.constraints.NotBlank;
 
 /**
  * 认证控制器 - 处理认证和当前用户相关操作
@@ -84,8 +81,8 @@ public class AuthController {
 
     @ApiOperation("更新当前用户信息")
     @PutMapping("/current")
-    public CommonResult<UserVO> updateCurrentUser(@Valid @RequestBody UserDTO userDTO) {
+    public CommonResult<UserVO> updateCurrentUser(@Valid @RequestBody UserCreateDTO userCreateDTO) {
         Long userId = SecurityUtils.getCurrentUserId();
-        return CommonResult.success(userService.updateUser(userId, userDTO));
+        return CommonResult.success(userService.updateUser(userId, userCreateDTO));
     }
 }
