@@ -7,6 +7,7 @@ import com.shpes.common.api.CommonPage;
 import com.shpes.common.enums.ResultCode;
 import com.shpes.common.exception.ApiException;
 import com.shpes.entity.ExamPackage;
+import com.shpes.mapper.ExamItemMapper;
 import com.shpes.mapper.ExamPackageMapper;
 import com.shpes.service.ExamItemService;
 import com.shpes.service.ExamPackageService;
@@ -17,14 +18,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
 public class ExamPackageServiceImpl extends ServiceImpl<ExamPackageMapper, ExamPackage> implements ExamPackageService {
 
     @Autowired
-    private ExamItemService itemService;
+    private ExamItemMapper itemMapper;
 
     @Override
     public CommonPage<ExamPackageVO> getPackagePage(Integer pageNum, Integer pageSize, String name, Integer gender, Integer status) {
@@ -121,9 +124,21 @@ public class ExamPackageServiceImpl extends ServiceImpl<ExamPackageMapper, ExamP
         // 删除原有配置
         baseMapper.deletePackageItems(packageId);
 
-        // 添加新配置
+        // 添加新配置并计算总价
         if (itemIds != null && !itemIds.isEmpty()) {
+            // 使用Mapper直接查询价格并计算总和
+            Integer totalPrice = itemMapper.selectItemsPriceSum(itemIds);
+            
+            // 更新套餐价格
+            examPackage.setPrice(totalPrice != null ? totalPrice : 0);
+            updateById(examPackage);
+            
+            // 插入套餐项目关联
             baseMapper.insertPackageItems(packageId, itemIds);
+        } else {
+            // 如果没有项目，价格设为0
+            examPackage.setPrice(0);
+            updateById(examPackage);
         }
 
         return convertToVO(examPackage);

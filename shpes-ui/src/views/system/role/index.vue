@@ -124,6 +124,8 @@
         show-checkbox
         node-key="id"
         :default-checked-keys="checkedPermissions"
+        :check-strictly="true"
+        :default-expand-all="true"
       >
         <span slot-scope="{ node, data }" class="custom-tree-node">
           <span>{{ data.permissionName }}</span>

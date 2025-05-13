@@ -24,6 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
@@ -138,7 +139,9 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         updateById(user);
 
         // 更新用户角色关系
-        saveUserRoles(id, userCreateDTO.getRoleIds());
+        if(!CollectionUtils.isEmpty(userCreateDTO.getRoleIds())){
+            saveUserRoles(id, userCreateDTO.getRoleIds());
+        }
 
         return convertToVO(user);
     }

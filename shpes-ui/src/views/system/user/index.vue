@@ -153,6 +153,9 @@
         :model="temp"
         label-position="right"
         label-width="100px">
+        <el-form-item label="用户编号" prop="userCode">
+          <el-input v-model="temp.userCode" placeholder="请输入用户编号" />
+        </el-form-item>
         <el-form-item label="用户名" prop="username">
           <el-input v-model="temp.username" placeholder="请输入用户名" />
         </el-form-item>
@@ -296,6 +299,7 @@ export default {
       importVisible: false,
       temp: {
         id: undefined,
+        userCode: '',  // 添加用户编号字段
         username: '',
         realName: '',
         userType: undefined,
@@ -535,6 +539,7 @@ export default {
       
       this.temp = {
         id: row.id,
+        userCode: row.userCode,  // 添加用户编号
         username: row.username,
         realName: row.realName,
         userType: row.userType,

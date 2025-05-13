@@ -25,13 +25,13 @@ public class ExamPackage extends BaseEntity {
     private String description;
 
     @ApiModelProperty("套餐价格（分）")
-    private Integer price;
+    private Integer price=0;
 
     @ApiModelProperty("原价（分）")
-    private Integer originalPrice;
+    private Integer originalPrice=0;
 
     @ApiModelProperty("适用性别：0-不限，1-男，2-女")
-    private Integer gender;
+    private Integer gender=0;
 
     @ApiModelProperty("状态：0-禁用，1-启用")
     private Integer status;

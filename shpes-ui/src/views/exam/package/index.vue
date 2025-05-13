@@ -46,7 +46,6 @@
           <span>{{ formatPrice(row.price) }}</span>
         </template>
       </el-table-column>
-      <el-table-column label="排序" prop="sort" width="80" align="center" />
       <el-table-column label="创建时间" width="180">
         <template slot-scope="{row}">
           <span>{{ formatDateTime(row.createTime) }}</span>

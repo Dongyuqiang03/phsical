@@ -128,9 +128,17 @@ export default {
     }
   },
   created() {
-    // 使用 Vuex action 清除认证信息
-    this.$store.dispatch('user/resetToken')
-    this.getCaptcha()
+    // 清除认证信息
+  this.$store.dispatch('user/resetToken')
+  // 清除路由缓存
+  this.$store.dispatch('permission/resetRoutes')
+  // 清除所有本地存储
+  localStorage.clear()
+  sessionStorage.clear()
+  // 清除标签页缓存
+  this.$store.dispatch('tagsView/delAllViews')
+  
+  this.getCaptcha()
   },
   watch: {
     $route: {

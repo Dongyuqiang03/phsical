@@ -62,7 +62,7 @@
           <el-table-column label="操作" align="center" width="230">
             <template slot-scope="{row}">
               <el-button type="primary" size="mini" @click="handleUpdate(row)">编辑</el-button>
-              <el-button type="info" size="mini" @click="handleUsers(row)">人员</el-button>
+              <!-- <el-button type="info" size="mini" @click="handleUsers(row)">人员</el-button> -->
               <el-button type="danger" size="mini" @click="handleDelete(row)">删除</el-button>
             </template>
           </el-table-column>
@@ -111,7 +111,8 @@
         <el-form-item label="部门类型" prop="deptType">
           <el-radio-group v-model="temp.deptType">
             <el-radio :label="1">医疗科室</el-radio>
-            <el-radio :label="2">其他部门</el-radio>
+            <el-radio :label="2">教学院系</el-radio>
+            <el-radio :label="3">其他部门</el-radio>
           </el-radio-group>
         </el-form-item>
         <el-form-item label="部门描述" prop="description">
@@ -264,7 +265,7 @@ export default {
         id: undefined,
         deptName: '',
         deptCode: '',
-        deptType: 2,
+        deptType: 1,
         description: '',
         status: 1
       }
@@ -308,10 +309,19 @@ export default {
       this.$refs['dataForm'].validate(async (valid) => {
         if (valid) {
           try {
+            const submitData = {
+              id: this.temp.id,
+              deptName: this.temp.deptName,
+              deptCode: this.temp.deptCode,
+              deptType: this.temp.deptType,
+              description: this.temp.description,
+              status: this.temp.status
+            }
+            
             if (this.temp.id) {
-              await updateDepartment(this.temp)
+              await updateDepartment(submitData)
             } else {
-              await createDepartment(this.temp)
+              await createDepartment(submitData)
             }
             this.dialogVisible = false
             this.$message.success('保存成功')
@@ -339,10 +349,15 @@ export default {
         type: 'warning'
       }).then(async () => {
         try {
-          await updateDepartment({
-            ...row,
+          const submitData = {
+            id: row.id,
+            deptName: row.deptName,
+            deptCode: row.deptCode,
+            deptType: row.deptType,
+            description: row.description,
             status: row.status
-          })
+          }
+          await updateDepartment(submitData)
           this.$message.success(`${statusText}成功`)
         } catch (error) {
           console.error(`状态修改失败:`, error)

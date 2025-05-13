@@ -38,7 +38,7 @@ export function getDepartmentUsers(id) {
 // 获取所有部门（用于下拉选择）
 export function getAllDepartments(userType) {
   return request({
-    url: '/system/department/all',
+    url: '/api/system/department/all',
     method: 'get',
     params: { userType }
   })
