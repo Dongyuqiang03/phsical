@@ -28,7 +28,7 @@ public class ExamItemController {
 
     @ApiOperation("获取项目列表")
     @GetMapping("/list")
-    @RequiresPermission("exam:item")
+//    @RequiresPermission("exam:item")
     public CommonResult<CommonPage<ExamItemVO>> getItemPage(
             @RequestParam(defaultValue = "1") Integer pageNum,
             @RequestParam(defaultValue = "10") Integer pageSize,
@@ -38,14 +38,14 @@ public class ExamItemController {
 
     @ApiOperation("获取项目详情")
     @GetMapping("/{id}")
-    @RequiresPermission("exam:item")
+//    @RequiresPermission("exam:item")
     public CommonResult<ExamItem> getItem(@PathVariable Long id) {
         return CommonResult.success(itemService.getItem(id));
     }
 
     @ApiOperation("创建项目")
     @PostMapping
-    @RequiresPermission("exam:item")
+//    @RequiresPermission("exam:item")
     public CommonResult<Void> createItem(@Valid @RequestBody ExamItem item) {
         itemService.createItem(item);
         return CommonResult.success(null);
@@ -53,7 +53,7 @@ public class ExamItemController {
 
     @ApiOperation("更新项目")
     @PutMapping("/{id}")
-    @RequiresPermission("exam:item")
+//    @RequiresPermission("exam:item")
     public CommonResult<Void> updateItem(@PathVariable Long id, @Valid @RequestBody ExamItem item) {
         item.setId(id);
         itemService.updateItem(item);

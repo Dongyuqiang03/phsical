@@ -31,7 +31,7 @@ public class ExamAppointmentController {
 
     @ApiOperation("获取预约列表")
     @GetMapping("/list")
-    @RequiresPermission("exam:appointment")
+//    @RequiresPermission("exam:appointment")
     public CommonResult<CommonPage<AppointmentVO>> getAppointmentPage(
             @RequestParam(defaultValue = "1") Integer pageNum,
             @RequestParam(defaultValue = "10") Integer pageSize,
@@ -44,14 +44,14 @@ public class ExamAppointmentController {
 
     @ApiOperation("获取预约详情")
     @GetMapping("/{id}")
-    @RequiresPermission("exam:appointment")
+//    @RequiresPermission("exam:appointment")
     public CommonResult<AppointmentDetailVO> getAppointment(@PathVariable Long id) {
         return CommonResult.success(appointmentService.getAppointmentDetail(id));
     }
 
     @ApiOperation("创建预约")
     @PostMapping
-    @RequiresPermission("exam:appointment")
+//    @RequiresPermission("exam:appointment")
     public CommonResult<AppointmentVO> createAppointment(@Valid @RequestBody ExamAppointment appointment) {
         // 设置当前登录用户ID
         appointment.setUserId(SecurityUtils.getCurrentUserId());
@@ -64,7 +64,7 @@ public class ExamAppointmentController {
 
     @ApiOperation("取消预约")
     @PutMapping("/{id}/cancel")
-    @RequiresPermission("exam:appointment")
+//    @RequiresPermission("exam:appointment")
     public CommonResult<Void> cancelAppointment(
             @PathVariable Long id,
             @RequestParam String reason) {
@@ -74,7 +74,7 @@ public class ExamAppointmentController {
 
     @ApiOperation("更新预约时间")
     @PutMapping("/{id}/time")
-    @RequiresPermission("exam:appointment")
+//    @RequiresPermission("exam:appointment")
     public CommonResult<Void> updateAppointmentTime(
             @PathVariable Long id,
             @RequestParam Long timeSlotId) {
@@ -84,7 +84,7 @@ public class ExamAppointmentController {
 
     @ApiOperation("完成预约")
     @PutMapping("/{id}/complete")
-    @RequiresPermission("exam:appointment")
+//    @RequiresPermission("exam:appointment")
     public CommonResult<Void> completeAppointment(@PathVariable Long id) {
         appointmentService.completeAppointment(id);
         return CommonResult.success(null);
@@ -100,7 +100,7 @@ public class ExamAppointmentController {
 
     @ApiOperation("获取当前用户的预约列表")
     @GetMapping("/user")
-    @RequiresPermission("exam:appointment")
+//    @RequiresPermission("exam:appointment")
     public CommonResult<CommonPage<AppointmentVO>> getUserAppointments(
             @RequestParam(defaultValue = "1") Integer pageNum,
             @RequestParam(defaultValue = "10") Integer pageSize,

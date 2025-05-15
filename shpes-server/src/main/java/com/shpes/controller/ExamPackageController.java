@@ -31,7 +31,7 @@ public class ExamPackageController {
 
     @ApiOperation("分页查询体检套餐")
     @GetMapping("/list")
-    @RequiresPermission("exam:package")
+//    @RequiresPermission("exam:package")
     public CommonResult<CommonPage<ExamPackageVO>> getPackagePage(
             @ApiParam("页码") @RequestParam(defaultValue = "1") Integer pageNum,
             @ApiParam("每页记录数") @RequestParam(defaultValue = "10") Integer pageSize,
@@ -43,14 +43,14 @@ public class ExamPackageController {
 
     @ApiOperation("获取体检套餐详情")
     @GetMapping("/{id}")
-    @RequiresPermission("exam:package")
+//    @RequiresPermission("exam:package")
     public CommonResult<ExamPackageVO> getPackageById(@PathVariable Long id) {
         return CommonResult.success(packageService.getPackageById(id));
     }
 
     @ApiOperation("获取所有可用套餐")
     @GetMapping("/available")
-    @RequiresPermission("exam:package")
+//    @RequiresPermission("exam:package")
     public CommonResult<List<ExamPackageVO>> getAvailablePackages(
             @ApiParam("适用性别：0-不限，1-男，2-女") @RequestParam(required = false) Integer gender) {
         return CommonResult.success(packageService.getAvailablePackages(gender));
@@ -99,14 +99,14 @@ public class ExamPackageController {
 
     @ApiOperation("获取套餐项目列表")
     @GetMapping("/{id}/items")
-    @RequiresPermission("exam:package")
+//    @RequiresPermission("exam:package")
     public CommonResult<List<ExamItemVO>> getPackageItems(@PathVariable Long id) {
         return CommonResult.success(packageService.getPackageItems(id));
     }
 
     @ApiOperation("获取套餐统计信息")
     @GetMapping("/stats")
-    @RequiresPermission("exam:package")
+//    @RequiresPermission("exam:package")
     public CommonResult<Object> getPackageStats() {
         return CommonResult.success(packageService.getPackageStats());
     }

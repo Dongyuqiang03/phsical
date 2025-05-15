@@ -37,7 +37,7 @@ public class ExamTimeSlotController {
 
     @ApiOperation("获取时间段列表")
     @GetMapping("/list")
-    @RequiresPermission("exam:timeslot")
+//    @RequiresPermission("exam:timeslot")
     public CommonResult<CommonPage<ExamTimeSlotVO>> getTimeSlotPage(
             @RequestParam(defaultValue = "1") Integer pageNum,
             @RequestParam(defaultValue = "10") Integer pageSize,
@@ -48,14 +48,14 @@ public class ExamTimeSlotController {
 
     @ApiOperation("获取时间段详情")
     @GetMapping("/{id}")
-    @RequiresPermission("exam:timeslot")
+//    @RequiresPermission("exam:timeslot")
     public CommonResult<ExamTimeSlotVO> getTimeSlot(@PathVariable Long id) {
         return CommonResult.success(timeSlotService.getTimeSlot(id));
     }
 
     @ApiOperation("获取可预约时间段")
     @GetMapping("/available")
-    @RequiresPermission("exam:timeslot")
+//    @RequiresPermission("exam:timeslot")
     public CommonResult<List<ExamTimeSlotVO>> getAvailableTimeSlots(
             @RequestParam Long deptId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
@@ -64,7 +64,7 @@ public class ExamTimeSlotController {
     
     @ApiOperation("根据套餐ID获取可预约时间段")
     @GetMapping("/available/package")
-    @RequiresPermission("exam:appointment")
+//    @RequiresPermission("exam:appointment")
     public CommonResult<List<ExamTimeSlotVO>> getAvailableTimeSlotsForPackage(
             @RequestParam Long packageId,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
