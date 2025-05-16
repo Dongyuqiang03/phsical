@@ -39,14 +39,12 @@ public class ExamResultController {
 
     @ApiOperation("获取体检结果列表")
     @GetMapping("/record/{recordId}")
-    @RequiresPermission("exam:result")
     public CommonResult<List<ExamResultVO>> getResultsByRecordId(@PathVariable Long recordId) {
         return CommonResult.success(resultService.getResultsByRecordId(recordId));
     }
 
     @ApiOperation("分页查询体检结果")
     @GetMapping("/list")
-    @RequiresPermission("exam:result")
     public CommonResult<CommonPage<ExamResultVO>> getResultPage(
             @ApiParam("页码") @RequestParam(defaultValue = "1") Integer pageNum,
             @ApiParam("每页记录数") @RequestParam(defaultValue = "10") Integer pageSize,
@@ -59,7 +57,7 @@ public class ExamResultController {
 
     @ApiOperation("获取体检结果详情")
     @GetMapping("/{id}")
-    @RequiresPermission("exam:result")
+//    @RequiresPermission("exam:result")
     public CommonResult<ExamResultVO> getResult(@PathVariable Long id) {
         return CommonResult.success(resultService.getResultsByRecordId(id).get(0));
     }
@@ -120,14 +118,12 @@ public class ExamResultController {
 
     @ApiOperation("导出体检报告")
     @GetMapping("/export/{recordId}")
-    @RequiresPermission("exam:result")
     public CommonResult<String> exportReport(@PathVariable Long recordId) {
         return CommonResult.success(resultService.exportReport(recordId));
     }
 
     @ApiOperation("获取异常结果列表")
     @GetMapping("/abnormal")
-    @RequiresPermission("exam:result")
     public CommonResult<List<ExamResultVO>> getAbnormalResults(
             @RequestParam(required = false) Long userId,
             @RequestParam(required = false) Long recordId) {
@@ -136,7 +132,6 @@ public class ExamResultController {
 
     @ApiOperation("获取当前用户的体检结果")
     @GetMapping("/user/current")
-    @RequiresPermission("exam:result")
     public CommonResult<CommonPage<ExamResultVO>> getCurrentUserResults(
             @ApiParam("页码") @RequestParam(defaultValue = "1") Integer pageNum,
             @ApiParam("每页记录数") @RequestParam(defaultValue = "10") Integer pageSize,

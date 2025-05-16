@@ -35,7 +35,7 @@ public class ExamRecordController {
 
     @ApiOperation("获取记录列表")
     @GetMapping("/list")
-    @RequiresPermission("exam:record")
+//    @RequiresPermission("exam:record")
     public CommonResult<CommonPage<ExamRecordPageVO>> getRecordPage(
             @RequestParam(defaultValue = "1") Integer pageNum,
             @RequestParam(defaultValue = "10") Integer pageSize,
@@ -48,7 +48,7 @@ public class ExamRecordController {
 
     @ApiOperation("获取当前用户的体检记录")
     @GetMapping("/user/current")
-    @RequiresPermission("exam:result")
+//    @RequiresPermission("exam:result")
     public CommonResult<CommonPage<ExamRecordPageVO>> getCurrentUserRecords(
         @ApiParam("页码") @RequestParam(defaultValue = "1") Integer pageNum,
         @ApiParam("每页记录数") @RequestParam(defaultValue = "10") Integer pageSize,
@@ -64,21 +64,21 @@ public class ExamRecordController {
 
     @ApiOperation("获取记录详情")
     @GetMapping("/{id}")
-    @RequiresPermission("exam:record")
+//    @RequiresPermission("exam:record")
     public CommonResult<ExamRecordDetailVO> getRecord(@PathVariable Long id) {
         return CommonResult.success(recordService.getRecordDetail(id));
     }
 
     @ApiOperation("根据预约ID获取记录详情")
     @GetMapping("/appointment/{appointmentId}")
-    @RequiresPermission("exam:record")
+//    @RequiresPermission("exam:record")
     public CommonResult<ExamRecordDetailVO> getRecordByAppointmentId(@PathVariable Long appointmentId) {
         return CommonResult.success(recordService.getRecordDetailByAppointmentId(appointmentId));
     }
 
     @ApiOperation("获取用户体检记录列表")
     @GetMapping("/user/{userId}")
-    @RequiresPermission("exam:record")
+//    @RequiresPermission("exam:record")
     public CommonResult<List<ExamRecordVO>> getUserRecords(@PathVariable Long userId) {
         return CommonResult.success(recordService.getUserRecords(userId));
     }
@@ -125,14 +125,14 @@ public class ExamRecordController {
 
     @ApiOperation("获取今日体检统计")
     @GetMapping("/stats/today")
-    @RequiresPermission("exam:record")
+//    @RequiresPermission("exam:record")
     public CommonResult<Object> getTodayStats() {
         return CommonResult.success(recordService.getTodayStats());
     }
 
     @ApiOperation("获取体检完成率统计")
     @GetMapping("/stats/completion")
-    @RequiresPermission("exam:record")
+//    @RequiresPermission("exam:record")
     public CommonResult<List<Map<String, Object>>> getCompletionStats(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {

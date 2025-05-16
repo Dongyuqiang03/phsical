@@ -527,10 +527,9 @@ export default {
       }
       
       console.log('跳转到详情页面，使用ID:', numericId);
-      // 统一使用input.vue页面，设置为只读模式
       this.$router.push({ 
-        path: '/exam/result/input', 
-        query: { id: numericId, mode: 'readonly' } 
+        path: '/exam/result/view', 
+        query: { id: numericId } 
       });
     },
     goToManagement() {

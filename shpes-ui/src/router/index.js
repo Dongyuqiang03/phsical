@@ -109,10 +109,10 @@ export const asyncRoutes = [
         meta: { title: '预约管理', icon: 'tickets', permissions: ['exam:appointment'] }
       },
       {
-        path: 'appointment/detail/:id',
-        component: () => import('../views/exam/appointment/detail.vue'),
-        name: 'ExamAppointmentDetail',
-        meta: { title: '预约详情', icon: 'document', permissions: ['exam:appointment'] },
+        path: '/exam/appointment/detail/:id',
+        component: () => import('@/views/exam/appointment/detail.vue'),
+        name: 'AppointmentDetail',
+        meta: { title: '预约详情' },
         hidden: true
       },
       {
@@ -132,7 +132,14 @@ export const asyncRoutes = [
         path: 'result/review',
         component: () => import('../views/exam/result/review.vue'),
         name: 'ExamResultReview',
-        meta: { title: '查看体检结果', permissions: ['exam:result'] },
+        meta: { title: '查看复查结果',  },
+        hidden: true
+      },
+      {
+        path: 'result/view',
+        component: () => import('../views/exam/result/view.vue'),
+        name: 'ExamResultView',
+        meta: { title: '查看体检结果' },
         hidden: true
       }
     ]

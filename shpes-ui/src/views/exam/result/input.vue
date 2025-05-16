@@ -431,7 +431,6 @@ export default {
           await this.createResults(filledItems);
         }
 
-        this.getExamInfo();
       } catch (error) {
         console.error(`${this.isEditMode ? '更新' : '保存'}检查结果失败:`, error);
         this.$message.error(`${this.isEditMode ? '更新' : '保存'}失败: ` + (error.message || '未知错误'));

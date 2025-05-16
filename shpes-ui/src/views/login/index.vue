@@ -196,10 +196,11 @@ export default {
             const { redirectPath } = await this.$store.dispatch('user/login', loginData)
             
             // 跳转到目标页面
-            const targetPath = this.redirect || redirectPath
-            console.log('Redirecting to:', targetPath)
-            await this.$router.push(targetPath)
-            
+            // const targetPath = this.redirect || redirectPath
+            // console.log('Redirecting to:', targetPath)
+            // await this.$router.push(targetPath)
+             // 登录成功后强制跳转到 dashboard
+            await this.$router.push('/dashboard')
             // 显示登录成功消息
             this.$message.success('登录成功')
           } catch (error) {
