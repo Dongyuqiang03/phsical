@@ -16,7 +16,8 @@ const service = axios.create({
 const whiteList = [
   '/api/auth/login',
   '/api/auth/captcha',
-  '/api/auth/register'
+  '/api/auth/register',
+  '/api/system/department/all'  // 添加部门列表接口到白名单
 ]
 
 // Request interceptor for API calls

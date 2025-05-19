@@ -61,6 +61,9 @@
       <el-button :loading="loading" type="primary" style="width:100%;margin-bottom:30px;" @click.native.prevent="handleLogin">
         登录
       </el-button>
+      <el-button type="text" style="width:100%;" @click.native.prevent="handleRegister">
+        还没有账号？立即注册
+      </el-button>
     </el-form>
   </div>
 </template>
@@ -128,16 +131,9 @@ export default {
     }
   },
   created() {
-    // 清除认证信息
-  this.$store.dispatch('user/resetToken')
-  // 清除路由缓存
-  this.$store.dispatch('permission/resetRoutes')
   // 清除所有本地存储
   localStorage.clear()
   sessionStorage.clear()
-  // 清除标签页缓存
-  this.$store.dispatch('tagsView/delAllViews')
-  
   this.getCaptcha()
   },
   watch: {
@@ -195,10 +191,6 @@ export default {
             // 调用登录接口
             const { redirectPath } = await this.$store.dispatch('user/login', loginData)
             
-            // 跳转到目标页面
-            // const targetPath = this.redirect || redirectPath
-            // console.log('Redirecting to:', targetPath)
-            // await this.$router.push(targetPath)
              // 登录成功后强制跳转到 dashboard
             await this.$router.push('/dashboard')
             // 显示登录成功消息
@@ -221,6 +213,9 @@ export default {
         }
         return acc
       }, {})
+    },
+    handleRegister() {
+      this.$router.push('/register')
     }
   }
 }

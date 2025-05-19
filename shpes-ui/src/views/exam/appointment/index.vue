@@ -384,45 +384,6 @@ export default {
     backToHome() {
       this.$router.push('/dashboard')
     },
-    formatTimeRange(startTime, endTime) {
-      if (!startTime || !endTime) return '未设置';
-      
-      // 处理数组格式的时间
-      if (Array.isArray(startTime) && Array.isArray(endTime)) {
-        const formatTime = (timeArray) => {
-          if (timeArray.length < 3) return '';
-          return `${timeArray[0].toString().padStart(2, '0')}:${timeArray[1].toString().padStart(2, '0')}`;
-        };
-        
-        return `${formatTime(startTime)}-${formatTime(endTime)}`;
-      }
-      
-      // 处理字符串或其他格式的时间
-      try {
-        const startStr = new Date(startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        const endStr = new Date(endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        return `${startStr}-${endStr}`;
-      } catch (e) {
-        console.error('时间格式化错误:', e);
-        return '时间格式错误';
-      }
-    },
-    formatDate(dateArray) {
-      if (!dateArray) return '';
-      
-      if (Array.isArray(dateArray)) {
-        if (dateArray.length < 3) return '';
-        const [year, month, day] = dateArray;
-        return `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
-      }
-      
-      return dateArray;
-    },
-    // 在确认预约页面展示时间段信息的方法
-    getTimeSlotString() {
-      if (!this.selectedTimeSlot) return '';
-      return this.formatTimeRange(this.selectedTimeSlot.startTime, this.selectedTimeSlot.endTime);
-    },
     // 在确认预约页面展示科室信息的方法
     getDepartmentName() {
       if (!this.selectedTimeSlot) return '';

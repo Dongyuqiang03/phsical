@@ -7,13 +7,18 @@ import store from '@/store'
 Vue.use(VueRouter)
 
 // 白名单列表，不需要登录就可以访问的路由
-const whiteList = ['/login']
+const whiteList = ['/login', '/register']
 
 // 基础路由，不需要权限
 export const constantRoutes = [
   {
     path: '/login',
     component: () => import('../views/login/index.vue'),
+    hidden: true
+  },
+  {
+    path: '/register',
+    component: () => import('../views/register/index.vue'),
     hidden: true
   },
   {

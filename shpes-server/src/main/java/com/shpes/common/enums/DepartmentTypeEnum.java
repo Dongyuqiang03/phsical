@@ -48,9 +48,6 @@ public enum DepartmentTypeEnum {
                     OTHER.getValue()
                 );
             case TEACHER:
-                return Arrays.asList(
-                    ACADEMIC.getValue()
-                );
             case STUDENT:
                 return Collections.singletonList(ACADEMIC.getValue());
             default:

@@ -99,7 +99,7 @@ public class AuthServiceImpl implements AuthService {
             throw new ApiException(ResultCode.USERNAME_OR_PASSWORD_ERROR);
         } catch (UsernameNotFoundException e) {
             log.error("登录失败，用户不存在：{}", e.getMessage(), e);
-            throw new ApiException(ResultCode.USERNAME_OR_PASSWORD_ERROR);
+            throw new ApiException(ResultCode.USER_NOT_EXIST);
         } catch (Exception e) {
             log.error("登录失败，系统异常：", e);
             throw new ApiException(ResultCode.FAILED);

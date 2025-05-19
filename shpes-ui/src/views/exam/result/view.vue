@@ -217,7 +217,7 @@ export default {
       return gender || '未知';
     },
     handleBack() {
-      this.$router.push('/exam/record')
+      this.$router.back()
     },
     handlePrint() {
       const recordId = this.$route.query.id;
